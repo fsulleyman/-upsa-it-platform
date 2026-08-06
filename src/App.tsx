@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useHashLocation } from './utils/hashRouter';
-import { PROGRAMMES, PROJECTS, PROMO_SLIDES } from './data/groundTruth';
+import { AuthProvider } from './context/AuthContext';
+import { useData } from './hooks/useData';
 import type { NavSectionId, AcademicProgramme, StudentProject } from './types';
 
 import { Navbar } from './components/layout/Navbar';
@@ -18,15 +19,19 @@ import { ContactSection } from './components/sections/ContactSection';
 import { JoinHubModal } from './components/modals/JoinHubModal';
 import { ProjectDetailModal } from './components/modals/ProjectDetailModal';
 import { ProgrammeDetailModal } from './components/modals/ProgrammeDetailModal';
+import { AdminDashboard } from './components/admin/AdminDashboard';
 
 import { SpeedInsights } from '@vercel/speed-insights/react';
 
-export function App() {
+function AppContent() {
   const [hashState, updateHash] = useHashLocation();
+  const { programmes, projects, promoSlides } = useData();
 
-  // Sync scrolling when section changes in URL hash
+  // Route to Admin Control Center if hash is #admin
+  const isAdminRoute = hashState.section === 'admin';
+
   useEffect(() => {
-    if (hashState.section) {
+    if (hashState.section && !isAdminRoute) {
       const element = document.getElementById(hashState.section);
       if (element) {
         element.scrollIntoView({ behavior: 'smooth' });
@@ -34,7 +39,7 @@ export function App() {
         window.scrollTo({ top: 0, behavior: 'smooth' });
       }
     }
-  }, [hashState.section]);
+  }, [hashState.section, isAdminRoute]);
 
   const handleNavigateSection = (section: NavSectionId) => {
     updateHash({ section, modal: null, programmeId: null, projectId: null });
@@ -53,14 +58,23 @@ export function App() {
   };
 
   const selectedProgramme = hashState.programmeId
-    ? PROGRAMMES.find((p) => p.id === hashState.programmeId) || null
+    ? programmes.find((p) => p.id === hashState.programmeId) || null
     : null;
 
   const selectedProject = hashState.projectId
-    ? PROJECTS.find((p) => p.id === hashState.projectId) || null
+    ? projects.find((p) => p.id === hashState.projectId) || null
     : null;
 
   const isJoinModalOpen = hashState.modal === 'join-hub';
+
+  if (isAdminRoute) {
+    return (
+      <>
+        <SpeedInsights />
+        <AdminDashboard onNavigateHome={() => updateHash({ section: 'home', modal: null })} />
+      </>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-white text-[#1A1A1A] font-sans selection:bg-[#F2B705] selection:text-[#003366]">
@@ -75,7 +89,7 @@ export function App() {
       {/* Main Content Sections (pt-28 sits flush right below 112px fixed navbar) */}
       <main className="relative pt-28">
         <div id="home">
-          <PromoSlider slides={PROMO_SLIDES} onNavigate={handleNavigateSection} />
+          <PromoSlider slides={promoSlides} onNavigate={handleNavigateSection} />
           <HeroSection onNavigate={handleNavigateSection} />
         </div>
 
@@ -121,4 +135,10 @@ export function App() {
   );
 }
 
-export default App;
+export function App() {
+  return (
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
+  );
+}

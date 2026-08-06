@@ -1,4 +1,4 @@
-export type NavSectionId = 'home' | 'about' | 'academics' | 'hub' | 'innovation' | 'community' | 'contact';
+export type NavSectionId = 'home' | 'about' | 'academics' | 'hub' | 'innovation' | 'community' | 'contact' | 'admin';
 
 export type DegreeLevel = 'Undergraduate' | 'Postgraduate' | 'Diploma';
 
