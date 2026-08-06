@@ -1,20 +1,27 @@
 -- ============================================================================
 -- UPSA DEPARTMENT OF INFORMATION TECHNOLOGY STUDIES
--- SUPABASE DATABASE SCHEMA & EXPLICIT ADMIN-ROLE RLS SECURITY POLICIES
+-- SUPABASE DATABASE SCHEMA & ZERO-TRUST RLS SECURITY POLICIES
 -- ============================================================================
 
 -- 0. ADMIN USERS REGISTRY TABLE
--- Stores specific authorized admin user IDs. Even if public sign-up is enabled in Supabase,
--- only authenticated users whose UUID exists in this table can write/edit/delete content.
+-- Stores specific authorized admin user IDs. Client-side access is ZERO-TRUST.
 CREATE TABLE IF NOT EXISTS admin_users (
   user_id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
-  email TEXT NOT NULL,
+  email TEXT NOT NULL UNIQUE,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Enable RLS on admin_users table itself
+-- Enable RLS on admin_users table
 ALTER TABLE admin_users ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Admins can view admin registry" ON admin_users FOR SELECT TO authenticated USING (true);
+
+-- LOCKDOWN POLICIES FOR admin_users TABLE:
+-- 1. NO INSERT policy for public/authenticated clients (Client INSERT is DENIED BY DEFAULT under RLS).
+-- 2. NO UPDATE policy for public/authenticated clients (Client UPDATE is DENIED BY DEFAULT under RLS).
+-- 3. NO DELETE policy for public/authenticated clients (Client DELETE is DENIED BY DEFAULT under RLS).
+-- 4. NO SELECT policy for public/authenticated clients (Client SELECT is DENIED BY DEFAULT under RLS).
+-- Result: admin_users is 100% inaccessible to all client queries, and can ONLY be populated
+-- directly in the Supabase SQL Editor / Dashboard by the database owner.
+-- The Postgres RLS engine evaluates membership internally via SECURITY DEFINER logic during content write attempts.
 
 
 -- 1. PROGRAMMES TABLE
