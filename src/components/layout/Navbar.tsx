@@ -1,19 +1,15 @@
 import React, { useState } from 'react';
 import type { NavSectionId } from '../../types';
-import { Search, Sun, Moon, Menu, X, GraduationCap } from 'lucide-react';
+import { Search, Menu, X, GraduationCap } from 'lucide-react';
 
 interface NavbarProps {
   activeSection: NavSectionId;
   onNavigate: (section: NavSectionId) => void;
-  isDarkMode: boolean;
-  onToggleTheme: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
   activeSection,
-  onNavigate,
-  isDarkMode,
-  onToggleTheme
+  onNavigate
 }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
@@ -44,15 +40,15 @@ export const Navbar: React.FC<NavbarProps> = ({
   };
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 w-full shadow-md bg-white dark:bg-slate-900">
+    <header className="fixed top-0 left-0 right-0 z-50 w-full shadow-lg bg-[#0B132B]">
       
       {/* Top Utility Bar */}
-      <div className="w-full bg-[#003366] text-white text-xs py-2 px-4 sm:px-6 lg:px-8 border-b border-[#002244]">
+      <div className="w-full bg-[#001B40] text-white text-xs py-2 px-4 sm:px-6 lg:px-8 border-b border-[#003366]">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-2 font-semibold">
             <span className="text-[#F2B705] font-extrabold">FITCS • UPSA ACCRA</span>
-            <span className="hidden md:inline text-slate-300">|</span>
-            <span className="hidden md:inline text-slate-100">Department of Information Technology Studies</span>
+            <span className="hidden md:inline text-slate-400">|</span>
+            <span className="hidden md:inline text-slate-200">Department of Information Technology Studies</span>
           </div>
 
           <div className="flex items-center gap-4 text-xs font-bold tracking-wider">
@@ -62,25 +58,16 @@ export const Navbar: React.FC<NavbarProps> = ({
             <a href="#hub" onClick={() => onNavigate('hub')} className="hover:text-[#F2B705] transition-colors flex items-center gap-1">
               <span>DEVELOPERS HUB</span>
             </a>
-            
-            {/* Theme Switcher */}
-            <button
-              onClick={onToggleTheme}
-              className="p-1 rounded bg-[#002244] hover:bg-blue-900 text-slate-200 transition-colors"
-              title="Toggle theme"
-            >
-              {isDarkMode ? <Sun className="w-3.5 h-3.5 text-[#F2B705]" /> : <Moon className="w-3.5 h-3.5 text-slate-200" />}
-            </button>
           </div>
         </div>
       </div>
 
       {/* Main Navigation Bar */}
-      <div className={`w-full ${isDarkMode ? 'bg-slate-900 border-b border-slate-800 text-slate-100' : 'bg-white border-b border-slate-200 text-[#1A1A1A]'} transition-colors duration-200`}>
+      <div className="w-full bg-[#0B132B] border-b border-slate-800 text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-20 gap-3">
             
-            {/* Official UPSA Identity Crest (Left - shrink-0) */}
+            {/* Official UPSA Identity Crest */}
             <div 
               onClick={() => handleNavClick('home')}
               className="flex items-center gap-3 cursor-pointer group shrink-0"
@@ -90,7 +77,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               </div>
 
               <div>
-                <span className="text-sm sm:text-base font-bold tracking-tight text-[#1A1A1A] dark:text-white uppercase block">
+                <span className="text-sm sm:text-base font-bold tracking-tight text-white uppercase block">
                   UPSA <span className="text-xs font-bold text-[#00AEEF] font-sans tracking-normal uppercase">• IT STUDIES</span>
                 </span>
                 <span className="text-[9px] sm:text-[10px] font-extrabold tracking-widest text-[#F2B705] uppercase block">
@@ -99,111 +86,106 @@ export const Navbar: React.FC<NavbarProps> = ({
               </div>
             </div>
 
-            {/* Desktop Navigation Links (Center - responsive text size & gap) */}
-            <nav className="hidden lg:flex items-center gap-1 xl:gap-1.5 min-w-0">
+            {/* Desktop Navigation Links */}
+            <nav className="hidden lg:flex items-center gap-1 xl:gap-2">
               {navItems.map((item) => {
                 const isActive = activeSection === item.id;
                 return (
                   <button
                     key={item.id}
                     onClick={() => handleNavClick(item.id)}
-                    className={`px-2.5 xl:px-3 py-1.5 rounded-md text-[11px] xl:text-xs font-extrabold tracking-wider transition-all whitespace-nowrap ${
+                    className={`px-3 py-2 text-xs font-extrabold tracking-wider transition-all relative ${
                       isActive
-                        ? 'text-[#003366] dark:text-[#00AEEF] bg-[#F5F7FA] dark:bg-slate-800 border-b-2 border-[#F2B705]'
-                        : 'text-slate-700 dark:text-slate-300 hover:text-[#003366] dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800/60'
+                        ? 'text-[#F2B705]'
+                        : 'text-slate-200 hover:text-white hover:bg-slate-800/60 rounded-md'
                     }`}
                   >
                     {item.label}
+                    {isActive && (
+                      <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#F2B705] rounded-full" />
+                    )}
                   </button>
                 );
               })}
             </nav>
 
-            {/* Right Action Items: Expandable Search + Rectangular APPLY NOW Button (Fixes Overflow & Button Shape) */}
-            <div className="flex items-center gap-2 sm:gap-3 shrink-0 ml-auto lg:ml-0">
+            {/* Right Action Trigger Group */}
+            <div className="flex items-center gap-3 shrink-0">
               
-              {/* Expandable Search Icon / Input */}
-              {searchOpen ? (
-                <form onSubmit={handleSearchSubmit} className="relative flex items-center">
-                  <input
-                    type="text"
-                    autoFocus
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search programmes..."
-                    className="w-36 sm:w-48 pl-3 pr-8 py-1.5 rounded-lg text-xs border border-[#003366] bg-white text-[#1A1A1A] focus:outline-none shadow-sm"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setSearchOpen(false)}
-                    className="absolute right-1 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-700"
-                  >
-                    <X className="w-3.5 h-3.5" />
-                  </button>
-                </form>
-              ) : (
-                <button
-                  onClick={() => setSearchOpen(true)}
-                  className="p-2 rounded-lg bg-[#F5F7FA] dark:bg-slate-800 text-[#003366] dark:text-slate-200 border border-slate-300 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
-                  title="Search programmes"
-                >
-                  <Search className="w-4 h-4" />
-                </button>
-              )}
-
-              {/* Rectangular APPLY NOW Button (Fixes Issue 1 & 2: rounded-lg 8px border radius, shrink-0, 100% visible) */}
+              {/* Search Toggle */}
               <button
-                onClick={() => {
-                  onNavigate('hub');
-                  window.location.hash = '#hub?modal=join-hub';
-                }}
-                className="px-4 py-2 rounded-lg bg-[#F2B705] text-[#003366] font-extrabold text-xs tracking-wider uppercase hover:bg-amber-400 shadow-sm transition-all shrink-0 border border-[#003366]/30 whitespace-nowrap"
+                onClick={() => setSearchOpen(!searchOpen)}
+                className="p-2.5 rounded-lg bg-[#001B40] text-slate-200 hover:text-white hover:bg-blue-900/60 border border-slate-700 transition-colors"
+                title="Search platform"
               >
-                APPLY NOW
+                <Search className="w-4 h-4" />
               </button>
 
-              {/* Mobile Menu Toggle */}
+              {/* Rectangular Apply Now CTA */}
+              <a
+                href="#contact"
+                onClick={() => handleNavClick('contact')}
+                className="px-4 py-2.5 rounded-lg bg-[#003366] hover:bg-blue-900 text-white font-extrabold text-xs uppercase tracking-wider shadow-sm border border-[#F2B705]/40 transition-colors whitespace-nowrap"
+              >
+                APPLY NOW
+              </a>
+
+              {/* Mobile Hamburger Toggle */}
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="lg:hidden p-2 rounded-lg bg-[#F5F7FA] dark:bg-slate-800 text-slate-800 dark:text-slate-200"
-                aria-label="Toggle mobile menu"
+                className="lg:hidden p-2.5 rounded-lg bg-[#001B40] text-slate-200 hover:text-white hover:bg-blue-900/60 border border-slate-700 transition-colors"
               >
                 {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
               </button>
-
             </div>
 
           </div>
         </div>
       </div>
 
-      {/* Mobile Menu Drawer */}
-      {mobileMenuOpen && (
-        <div className="lg:hidden bg-[#003366] border-b border-slate-800 text-white px-4 pt-3 pb-6 space-y-2">
-          {navItems.map((item) => (
-            <button
-              key={item.id}
-              onClick={() => handleNavClick(item.id)}
-              className={`w-full text-left px-4 py-3 rounded-lg text-xs font-bold tracking-wider ${
-                activeSection === item.id
-                  ? 'bg-blue-900 text-[#F2B705] border-l-4 border-[#F2B705]'
-                  : 'text-slate-200 hover:bg-blue-900/60'
-              }`}
-            >
-              {item.label}
-            </button>
-          ))}
-          <div className="pt-2">
-            <button
-              onClick={() => {
-                handleNavClick('hub');
-                window.location.hash = '#hub?modal=join-hub';
-              }}
-              className="w-full py-2.5 rounded-lg bg-[#F2B705] text-[#003366] font-extrabold text-xs tracking-wider uppercase text-center"
-            >
-              APPLY NOW / JOIN HUB
-            </button>
+      {/* Expanded Search Drawer Overlay */}
+      {searchOpen && (
+        <div className="w-full bg-[#001B40] border-b border-[#003366] p-4 animate-in slide-in-from-top duration-200">
+          <div className="max-w-3xl mx-auto">
+            <form onSubmit={handleSearchSubmit} className="flex gap-2">
+              <input
+                type="text"
+                placeholder="Search programmes, projects, faculty, or entry requirements..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="flex-1 px-4 py-2 rounded-lg bg-[#0B132B] border border-slate-700 text-white placeholder-slate-400 focus:outline-none focus:border-[#F2B705] text-sm"
+                autoFocus
+              />
+              <button
+                type="submit"
+                className="px-5 py-2 rounded-lg bg-[#003366] hover:bg-blue-900 text-white font-bold text-xs uppercase tracking-wider transition-colors"
+              >
+                Search
+              </button>
+            </form>
           </div>
+        </div>
+      )}
+
+      {/* Mobile Drawer Menu */}
+      {mobileMenuOpen && (
+        <div className="lg:hidden bg-[#0B132B] border-b border-slate-800 px-4 pt-2 pb-6 space-y-2 animate-in slide-in-from-top duration-200">
+          {navItems.map((item) => {
+            const isActive = activeSection === item.id;
+            return (
+              <button
+                key={item.id}
+                onClick={() => handleNavClick(item.id)}
+                className={`w-full text-left px-4 py-3 rounded-lg text-xs font-extrabold tracking-wider transition-all ${
+                  isActive
+                    ? 'bg-[#003366] text-[#F2B705] font-black border-l-4 border-[#F2B705]'
+                    : 'text-slate-200 hover:bg-slate-800 hover:text-white'
+                }`}
+              >
+                {item.label}
+              </button>
+            );
+          })}
         </div>
       )}
 

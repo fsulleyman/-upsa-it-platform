@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { useHashLocation } from './utils/hashRouter';
 import { PROGRAMMES, PROJECTS, PROMO_SLIDES } from './data/groundTruth';
 import type { NavSectionId, AcademicProgramme, StudentProject } from './types';
@@ -21,7 +21,6 @@ import { ProgrammeDetailModal } from './components/modals/ProgrammeDetailModal';
 
 export function App() {
   const [hashState, updateHash] = useHashLocation();
-  const [isDarkMode, setIsDarkMode] = useState(false);
 
   // Sync scrolling when section changes in URL hash
   useEffect(() => {
@@ -62,14 +61,12 @@ export function App() {
   const isJoinModalOpen = hashState.modal === 'join-hub';
 
   return (
-    <div className={`min-h-screen ${isDarkMode ? 'bg-slate-950 text-slate-100 dark' : 'bg-slate-50 text-slate-900'} font-sans selection:bg-cyan-500 selection:text-slate-950`}>
+    <div className="min-h-screen bg-[#0B132B] text-slate-100 font-sans selection:bg-[#F2B705] selection:text-[#003366] dark">
       
       {/* Header Navigation */}
       <Navbar
         activeSection={hashState.section}
         onNavigate={handleNavigateSection}
-        isDarkMode={isDarkMode}
-        onToggleTheme={() => setIsDarkMode(!isDarkMode)}
       />
 
       {/* Main Content Sections (pt-28 sm:pt-32 ensures content starts below fixed navbar) */}
@@ -101,20 +98,20 @@ export function App() {
       {/* Footer */}
       <Footer onNavigate={handleNavigateSection} />
 
-      {/* Modals with Hash-State Integration */}
-      <JoinHubModal
-        isOpen={isJoinModalOpen}
-        onClose={() => updateHash({ modal: null })}
-      />
-
+      {/* Interactive Detail Modals */}
       <ProgrammeDetailModal
         programme={selectedProgramme}
-        onClose={() => updateHash({ modal: null, programmeId: null })}
+        onClose={() => updateHash({ programmeId: null, modal: null })}
       />
 
       <ProjectDetailModal
         project={selectedProject}
-        onClose={() => updateHash({ modal: null, projectId: null })}
+        onClose={() => updateHash({ projectId: null, modal: null })}
+      />
+
+      <JoinHubModal
+        isOpen={isJoinModalOpen}
+        onClose={() => updateHash({ modal: null })}
       />
 
     </div>
