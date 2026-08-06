@@ -121,15 +121,6 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <Search className="w-4 h-4" />
               </button>
 
-              {/* Rectangular Apply Now CTA */}
-              <a
-                href="#contact"
-                onClick={() => handleNavClick('contact')}
-                className="px-4 py-2.5 rounded-lg bg-[#003366] hover:bg-blue-900 text-white font-extrabold text-xs uppercase tracking-wider shadow-sm border border-[#F2B705]/40 transition-colors whitespace-nowrap"
-              >
-                APPLY NOW
-              </a>
-
               {/* Mobile Hamburger Toggle */}
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
