@@ -9,7 +9,7 @@ export const AdminDashboard: React.FC<{ onNavigateHome: () => void }> = ({ onNav
   const { logout, isAdminLoggedIn } = useAuth();
   const { programmes, projects, faculty, promoSlides, refreshData } = useData();
 
-  const [emailInput, setEmailInput] = useState('admin@upsa.edu.gh');
+  const [emailInput, setEmailInput] = useState('');
   const [passwordInput, setPasswordInput] = useState('');
   const [loginError, setLoginError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'programmes' | 'projects' | 'faculty' | 'slides'>('programmes');

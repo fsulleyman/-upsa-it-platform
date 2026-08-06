@@ -17,9 +17,6 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
-  const [localAdmin, setLocalAdmin] = useState<boolean>(() => {
-    return localStorage.getItem('upsa_admin_session') === 'true';
-  });
   const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
@@ -50,28 +47,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
       if (error) return { error: error.message };
       return { error: null };
-    } else {
-      // Fallback local admin authentication for initial local test mode before Supabase credentials
-      if (email.trim().toLowerCase() === 'admin@upsa.edu.gh' && pass === 'upsa2026') {
-        localStorage.setItem('upsa_admin_session', 'true');
-        setLocalAdmin(true);
-        return { error: null };
-      }
-      return { error: 'Invalid admin credentials.' };
     }
+    return { error: 'Authentication service not configured. Please set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY on Vercel.' };
   };
 
   const logout = async () => {
     if (isSupabaseConfigured && supabase) {
       await supabase.auth.signOut();
     }
-    localStorage.removeItem('upsa_admin_session');
-    setLocalAdmin(false);
     setUser(null);
     setSession(null);
   };
 
-  const isAdminLoggedIn = Boolean(user || localAdmin);
+  const isAdminLoggedIn = Boolean(user);
 
   return (
     <AuthContext.Provider

@@ -1,7 +1,21 @@
 -- ============================================================================
 -- UPSA DEPARTMENT OF INFORMATION TECHNOLOGY STUDIES
--- SUPABASE DATABASE SCHEMA & ROW LEVEL SECURITY (RLS) POLICIES
+-- SUPABASE DATABASE SCHEMA & EXPLICIT ADMIN-ROLE RLS SECURITY POLICIES
 -- ============================================================================
+
+-- 0. ADMIN USERS REGISTRY TABLE
+-- Stores specific authorized admin user IDs. Even if public sign-up is enabled in Supabase,
+-- only authenticated users whose UUID exists in this table can write/edit/delete content.
+CREATE TABLE IF NOT EXISTS admin_users (
+  user_id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  email TEXT NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Enable RLS on admin_users table itself
+ALTER TABLE admin_users ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Admins can view admin registry" ON admin_users FOR SELECT TO authenticated USING (true);
+
 
 -- 1. PROGRAMMES TABLE
 CREATE TABLE IF NOT EXISTS programmes (
@@ -122,10 +136,10 @@ CREATE TABLE IF NOT EXISTS developers_hub (
 
 
 -- ============================================================================
--- ROW LEVEL SECURITY (RLS) POLICIES & ENFORCEMENT
+-- ROW LEVEL SECURITY (RLS) POLICIES — EXPLICIT ADMIN ROLE CHECK
 -- ============================================================================
 
--- Enable RLS explicitly on all tables
+-- Enable RLS on all data tables
 ALTER TABLE programmes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE projects ENABLE ROW LEVEL SECURITY;
 ALTER TABLE faculty ENABLE ROW LEVEL SECURITY;
@@ -134,7 +148,7 @@ ALTER TABLE institution_info ENABLE ROW LEVEL SECURITY;
 ALTER TABLE developers_hub ENABLE ROW LEVEL SECURITY;
 
 -- ----------------------------------------------------------------------------
--- Public Anonymous Read Policies (SELECT allowed for everyone)
+-- Public Anonymous Read Policies (SELECT allowed for all site visitors)
 -- ----------------------------------------------------------------------------
 CREATE POLICY "Public Read Programmes" ON programmes FOR SELECT USING (true);
 CREATE POLICY "Public Read Projects" ON projects FOR SELECT USING (true);
@@ -144,11 +158,28 @@ CREATE POLICY "Public Read Institution Info" ON institution_info FOR SELECT USIN
 CREATE POLICY "Public Read Developers Hub" ON developers_hub FOR SELECT USING (true);
 
 -- ----------------------------------------------------------------------------
--- Authenticated Admin Write Policies (INSERT/UPDATE/DELETE restricted to authenticated users)
+-- Strict Admin Write Policies (INSERT/UPDATE/DELETE restricted strictly to user_ids in admin_users)
 -- ----------------------------------------------------------------------------
-CREATE POLICY "Admin Write Programmes" ON programmes FOR ALL TO authenticated USING (true) WITH CHECK (true);
-CREATE POLICY "Admin Write Projects" ON projects FOR ALL TO authenticated USING (true) WITH CHECK (true);
-CREATE POLICY "Admin Write Faculty" ON faculty FOR ALL TO authenticated USING (true) WITH CHECK (true);
-CREATE POLICY "Admin Write Promo Slides" ON promo_slides FOR ALL TO authenticated USING (true) WITH CHECK (true);
-CREATE POLICY "Admin Write Institution Info" ON institution_info FOR ALL TO authenticated USING (true) WITH CHECK (true);
-CREATE POLICY "Admin Write Developers Hub" ON developers_hub FOR ALL TO authenticated USING (true) WITH CHECK (true);
+CREATE POLICY "Admin Write Programmes" ON programmes FOR ALL TO authenticated
+  USING (auth.uid() IN (SELECT user_id FROM admin_users))
+  WITH CHECK (auth.uid() IN (SELECT user_id FROM admin_users));
+
+CREATE POLICY "Admin Write Projects" ON projects FOR ALL TO authenticated
+  USING (auth.uid() IN (SELECT user_id FROM admin_users))
+  WITH CHECK (auth.uid() IN (SELECT user_id FROM admin_users));
+
+CREATE POLICY "Admin Write Faculty" ON faculty FOR ALL TO authenticated
+  USING (auth.uid() IN (SELECT user_id FROM admin_users))
+  WITH CHECK (auth.uid() IN (SELECT user_id FROM admin_users));
+
+CREATE POLICY "Admin Write Promo Slides" ON promo_slides FOR ALL TO authenticated
+  USING (auth.uid() IN (SELECT user_id FROM admin_users))
+  WITH CHECK (auth.uid() IN (SELECT user_id FROM admin_users));
+
+CREATE POLICY "Admin Write Institution Info" ON institution_info FOR ALL TO authenticated
+  USING (auth.uid() IN (SELECT user_id FROM admin_users))
+  WITH CHECK (auth.uid() IN (SELECT user_id FROM admin_users));
+
+CREATE POLICY "Admin Write Developers Hub" ON developers_hub FOR ALL TO authenticated
+  USING (auth.uid() IN (SELECT user_id FROM admin_users))
+  WITH CHECK (auth.uid() IN (SELECT user_id FROM admin_users));
