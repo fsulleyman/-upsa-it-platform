@@ -69,8 +69,8 @@ export function App() {
         onNavigate={handleNavigateSection}
       />
 
-      {/* Main Content Sections (pt-28 sm:pt-32 ensures content starts below fixed navbar) */}
-      <main className="relative pt-28 sm:pt-32">
+      {/* Main Content Sections (pt-28 sits flush right below 112px fixed navbar) */}
+      <main className="relative pt-28">
         <div id="home">
           <PromoSlider slides={PROMO_SLIDES} onNavigate={handleNavigateSection} />
           <HeroSection onNavigate={handleNavigateSection} />
