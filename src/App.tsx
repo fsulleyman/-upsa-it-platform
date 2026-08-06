@@ -19,6 +19,8 @@ import { JoinHubModal } from './components/modals/JoinHubModal';
 import { ProjectDetailModal } from './components/modals/ProjectDetailModal';
 import { ProgrammeDetailModal } from './components/modals/ProgrammeDetailModal';
 
+import { SpeedInsights } from '@vercel/speed-insights/react';
+
 export function App() {
   const [hashState, updateHash] = useHashLocation();
 
@@ -62,6 +64,7 @@ export function App() {
 
   return (
     <div className="min-h-screen bg-white text-[#1A1A1A] font-sans selection:bg-[#F2B705] selection:text-[#003366]">
+      <SpeedInsights />
       
       {/* Header Navigation (Permanently Dark Navbar) */}
       <Navbar
