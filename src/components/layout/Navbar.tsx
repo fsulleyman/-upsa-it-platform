@@ -40,15 +40,15 @@ export const Navbar: React.FC<NavbarProps> = ({
   };
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 w-full shadow-lg bg-[#0B132B]">
+    <header className="fixed top-0 left-0 right-0 z-50 w-full shadow-md bg-slate-900">
       
-      {/* Top Utility Bar */}
-      <div className="w-full bg-[#001B40] text-white text-xs py-2 px-4 sm:px-6 lg:px-8 border-b border-[#003366]">
+      {/* Top Utility Bar - Always Dark UPSA Navy */}
+      <div className="w-full bg-[#003366] text-white text-xs py-2 px-4 sm:px-6 lg:px-8 border-b border-[#002244]">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-2 font-semibold">
             <span className="text-[#F2B705] font-extrabold">FITCS • UPSA ACCRA</span>
-            <span className="hidden md:inline text-slate-400">|</span>
-            <span className="hidden md:inline text-slate-200">Department of Information Technology Studies</span>
+            <span className="hidden md:inline text-slate-300">|</span>
+            <span className="hidden md:inline text-slate-100">Department of Information Technology Studies</span>
           </div>
 
           <div className="flex items-center gap-4 text-xs font-bold tracking-wider">
@@ -62,12 +62,12 @@ export const Navbar: React.FC<NavbarProps> = ({
         </div>
       </div>
 
-      {/* Main Navigation Bar */}
-      <div className="w-full bg-[#0B132B] border-b border-slate-800 text-white">
+      {/* Main Navigation Bar - Permanently Dark Slate/Navy */}
+      <div className="w-full bg-slate-900 border-b border-slate-800 text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-20 gap-3">
             
-            {/* Official UPSA Identity Crest */}
+            {/* Official UPSA Identity Crest (Left - shrink-0) */}
             <div 
               onClick={() => handleNavClick('home')}
               className="flex items-center gap-3 cursor-pointer group shrink-0"
@@ -97,7 +97,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                     className={`px-3 py-2 text-xs font-extrabold tracking-wider transition-all relative ${
                       isActive
                         ? 'text-[#F2B705]'
-                        : 'text-slate-200 hover:text-white hover:bg-slate-800/60 rounded-md'
+                        : 'text-slate-200 hover:text-white hover:bg-slate-800 rounded-md'
                     }`}
                   >
                     {item.label}
@@ -115,7 +115,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               {/* Search Toggle */}
               <button
                 onClick={() => setSearchOpen(!searchOpen)}
-                className="p-2.5 rounded-lg bg-[#001B40] text-slate-200 hover:text-white hover:bg-blue-900/60 border border-slate-700 transition-colors"
+                className="p-2.5 rounded-lg bg-slate-800 text-slate-200 hover:text-white hover:bg-slate-700 transition-colors"
                 title="Search platform"
               >
                 <Search className="w-4 h-4" />
@@ -133,7 +133,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               {/* Mobile Hamburger Toggle */}
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="lg:hidden p-2.5 rounded-lg bg-[#001B40] text-slate-200 hover:text-white hover:bg-blue-900/60 border border-slate-700 transition-colors"
+                className="lg:hidden p-2.5 rounded-lg bg-slate-800 text-slate-200 hover:text-white hover:bg-slate-700 transition-colors"
               >
                 {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
               </button>
@@ -145,7 +145,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
       {/* Expanded Search Drawer Overlay */}
       {searchOpen && (
-        <div className="w-full bg-[#001B40] border-b border-[#003366] p-4 animate-in slide-in-from-top duration-200">
+        <div className="w-full bg-slate-800 border-b border-slate-700 p-4 animate-in slide-in-from-top duration-200">
           <div className="max-w-3xl mx-auto">
             <form onSubmit={handleSearchSubmit} className="flex gap-2">
               <input
@@ -153,7 +153,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 placeholder="Search programmes, projects, faculty, or entry requirements..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="flex-1 px-4 py-2 rounded-lg bg-[#0B132B] border border-slate-700 text-white placeholder-slate-400 focus:outline-none focus:border-[#F2B705] text-sm"
+                className="flex-1 px-4 py-2 rounded-lg bg-slate-900 border border-slate-700 text-white placeholder-slate-400 focus:outline-none focus:border-[#F2B705] text-sm"
                 autoFocus
               />
               <button
@@ -169,7 +169,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
       {/* Mobile Drawer Menu */}
       {mobileMenuOpen && (
-        <div className="lg:hidden bg-[#0B132B] border-b border-slate-800 px-4 pt-2 pb-6 space-y-2 animate-in slide-in-from-top duration-200">
+        <div className="lg:hidden bg-slate-900 border-b border-slate-800 px-4 pt-2 pb-6 space-y-2 animate-in slide-in-from-top duration-200">
           {navItems.map((item) => {
             const isActive = activeSection === item.id;
             return (

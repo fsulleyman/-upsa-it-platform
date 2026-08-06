@@ -2,14 +2,12 @@
 
 :root {
   --upsa-blue: #003366;
-  --upsa-dark-blue: #001B40;
-  --upsa-card-blue: #002244;
-  --upsa-bg-dark: #0B132B;
   --upsa-gold: #F2B705;
+  --bg-white: #FFFFFF;
+  --bg-light-grey: #F5F7FA;
   --tech-cyan: #00AEEF;
-  --text-primary: #FFFFFF;
-  --text-secondary: #E2E8F0;
-  --text-muted: #94A3B8;
+  --text-primary: #1A1A1A;
+  --text-secondary: #555555;
 }
 
 @layer base {
@@ -18,12 +16,11 @@
     font-family: 'Inter', 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     max-width: 100vw;
     overflow-x: hidden;
-    color-scheme: dark;
   }
 
   body {
-    background-color: #0B132B;
-    color: #FFFFFF;
+    background-color: #FFFFFF;
+    color: #1A1A1A;
     font-size: 17px;
     line-height: 1.65;
     max-width: 100vw;
@@ -33,13 +30,13 @@
   }
 }
 
-/* Permanent Rich Dark Mode Typography System */
+/* JOMACS-Grade Confident & High-Contrast Typography System */
 .hero-heading {
   font-size: 68px;
   font-weight: 800;
   line-height: 1.08;
   letter-spacing: -0.025em;
-  color: #FFFFFF;
+  color: #1A1A1A;
 }
 
 @media (max-width: 1024px) {
@@ -59,7 +56,7 @@
   font-size: 22px;
   font-weight: 500;
   line-height: 1.5;
-  color: #E2E8F0;
+  color: #555555;
 }
 
 @media (max-width: 640px) {
@@ -68,13 +65,13 @@
   }
 }
 
-/* Section Headings - Crisp High-Contrast White for Dark Backgrounds */
+/* Section Headings - Default High-Contrast #1A1A1A for Light Backgrounds */
 .section-heading {
   font-size: 34px;
   font-weight: 800;
   line-height: 1.18;
   letter-spacing: -0.015em;
-  color: #FFFFFF;
+  color: #1A1A1A;
 }
 
 @media (max-width: 640px) {
@@ -83,25 +80,25 @@
   }
 }
 
-/* Subheadings - Crisp High-Contrast White */
+/* Subheadings - Default High-Contrast #1A1A1A for Light Backgrounds */
 .subheading {
   font-size: 22px;
   font-weight: 700;
   line-height: 1.25;
-  color: #FFFFFF;
+  color: #1A1A1A;
 }
 
 .body-text {
   font-size: 17px;
   font-weight: 400;
   line-height: 1.65;
-  color: #E2E8F0;
+  color: #555555;
 }
 
 .small-text {
   font-size: 13px;
   line-height: 1.45;
-  color: #94A3B8;
+  color: #555555;
 }
 
 /* Stat & Emphasis Number Pop */
@@ -109,10 +106,28 @@
   font-size: 42px;
   font-weight: 900;
   line-height: 1;
-  color: #F2B705;
+  color: #003366;
 }
 
-/* UPSA Dark Theme Color Utility Classes */
+/* Explicit Dark Background Typography Overrides (for Developers Hub, Footer, etc.) */
+.dark-section .hero-heading,
+.dark-section .section-heading,
+.dark-section .subheading,
+.dark-card .subheading,
+.dark-card h2,
+.dark-card h3,
+.dark-card h4 {
+  color: #FFFFFF !important;
+}
+
+.dark-section .body-text,
+.dark-section .small-text,
+.dark-card .body-text,
+.dark-card .small-text {
+  color: #E2E8F0 !important;
+}
+
+/* UPSA Color System Utility Classes */
 .bg-upsa-blue {
   background-color: #003366;
 }
@@ -135,23 +150,4 @@
 
 .border-upsa-gold {
   border-color: #F2B705;
-}
-
-/* Custom Scrollbar for Dark Theme */
-::-webkit-scrollbar {
-  width: 10px;
-}
-
-::-webkit-scrollbar-track {
-  background: #0B132B;
-}
-
-::-webkit-scrollbar-thumb {
-  background: #003366;
-  border-radius: 5px;
-  border: 2px solid #0B132B;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #00AEEF;
 }

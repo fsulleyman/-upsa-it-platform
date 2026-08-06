@@ -23,7 +23,7 @@ export const JoinHubModal: React.FC<JoinHubModalProps> = ({ isOpen, onClose }) =
     setSubmitted(true);
   };
 
-  const inputStyles = "w-full px-3 py-2 rounded-lg bg-[#0B132B] border border-slate-700 text-white placeholder-slate-400 text-xs font-medium focus:outline-none focus:border-[#F2B705] transition-all";
+  const inputStyles = "w-full px-3 py-2 rounded-lg bg-[#F5F7FA] border border-slate-300 text-[#1A1A1A] text-xs font-medium focus:outline-none focus:bg-white focus:border-[#003366] transition-all";
 
   return (
     <Modal
@@ -38,11 +38,11 @@ export const JoinHubModal: React.FC<JoinHubModalProps> = ({ isOpen, onClose }) =
     >
       {submitted ? (
         <div className="py-8 text-center space-y-4">
-          <div className="w-12 h-12 rounded-full bg-[#F2B705]/20 border border-[#F2B705] text-[#F2B705] flex items-center justify-center mx-auto text-xl font-black">
+          <div className="w-12 h-12 rounded-full bg-[#003366] text-[#F2B705] flex items-center justify-center mx-auto text-xl font-black">
             ✓
           </div>
-          <h4 className="text-lg font-extrabold text-white">Application Submitted</h4>
-          <p className="text-xs text-slate-300 max-w-sm mx-auto leading-relaxed">
+          <h4 className="text-lg font-extrabold text-[#1A1A1A]">Application Submitted</h4>
+          <p className="text-xs text-[#555555] max-w-sm mx-auto leading-relaxed">
             Thank you for applying to join the UPSA Developers Hub cohort. Your application will be reviewed by department faculty mentors.
           </p>
           <button
@@ -50,19 +50,19 @@ export const JoinHubModal: React.FC<JoinHubModalProps> = ({ isOpen, onClose }) =
               setSubmitted(false);
               onClose();
             }}
-            className="px-5 py-2.5 rounded-lg bg-[#003366] text-[#F2B705] border border-[#F2B705]/40 text-xs font-extrabold hover:bg-blue-900"
+            className="px-5 py-2.5 rounded-lg bg-[#003366] text-white text-xs font-extrabold hover:bg-blue-900"
           >
             Close Application Window
           </button>
         </div>
       ) : (
-        <form onSubmit={handleSubmit} className="space-y-4 text-xs text-white">
-          <div className="p-3.5 rounded-xl bg-[#003366] border border-[#F2B705]/40 text-[#F2B705] text-xs font-semibold leading-relaxed">
+        <form onSubmit={handleSubmit} className="space-y-4 text-xs text-[#1A1A1A]">
+          <div className="p-3.5 rounded-xl bg-blue-50 border border-blue-200 text-[#003366] text-xs font-semibold leading-relaxed">
             Open primarily to IT Studies students and selected cross-programme students with software development aptitude.
           </div>
 
           <div>
-            <label className="block font-extrabold text-white mb-1">Full Student Name *</label>
+            <label className="block font-extrabold text-[#1A1A1A] mb-1">Full Student Name *</label>
             <input
               type="text"
               required
@@ -75,7 +75,7 @@ export const JoinHubModal: React.FC<JoinHubModalProps> = ({ isOpen, onClose }) =
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="block font-extrabold text-white mb-1">UPSA Student ID *</label>
+              <label className="block font-extrabold text-[#1A1A1A] mb-1">UPSA Student ID *</label>
               <input
                 type="text"
                 required
@@ -86,7 +86,7 @@ export const JoinHubModal: React.FC<JoinHubModalProps> = ({ isOpen, onClose }) =
               />
             </div>
             <div>
-              <label className="block font-extrabold text-white mb-1">UPSA / Personal Email *</label>
+              <label className="block font-extrabold text-[#1A1A1A] mb-1">UPSA / Personal Email *</label>
               <input
                 type="email"
                 required
@@ -100,7 +100,7 @@ export const JoinHubModal: React.FC<JoinHubModalProps> = ({ isOpen, onClose }) =
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="block font-extrabold text-white mb-1">Current Academic Programme</label>
+              <label className="block font-extrabold text-[#1A1A1A] mb-1">Current Academic Programme</label>
               <select
                 value={formData.programme}
                 onChange={(e) => setFormData({ ...formData, programme: e.target.value })}
@@ -113,7 +113,7 @@ export const JoinHubModal: React.FC<JoinHubModalProps> = ({ isOpen, onClose }) =
               </select>
             </div>
             <div>
-              <label className="block font-extrabold text-white mb-1">Level / Year</label>
+              <label className="block font-extrabold text-[#1A1A1A] mb-1">Level / Year</label>
               <select
                 value={formData.level}
                 onChange={(e) => setFormData({ ...formData, level: e.target.value })}
@@ -129,7 +129,7 @@ export const JoinHubModal: React.FC<JoinHubModalProps> = ({ isOpen, onClose }) =
           </div>
 
           <div>
-            <label className="block font-extrabold text-white mb-1">Primary Area of Interest</label>
+            <label className="block font-extrabold text-[#1A1A1A] mb-1">Primary Area of Interest</label>
             <select
               value={formData.primaryInterest}
               onChange={(e) => setFormData({ ...formData, primaryInterest: e.target.value })}
@@ -144,7 +144,7 @@ export const JoinHubModal: React.FC<JoinHubModalProps> = ({ isOpen, onClose }) =
           </div>
 
           <div>
-            <label className="block font-extrabold text-white mb-1">GitHub Profile / Portfolio Link (Optional)</label>
+            <label className="block font-extrabold text-[#1A1A1A] mb-1">GitHub Profile / Portfolio Link (Optional)</label>
             <input
               type="url"
               placeholder="https://github.com/your-username"
@@ -158,13 +158,13 @@ export const JoinHubModal: React.FC<JoinHubModalProps> = ({ isOpen, onClose }) =
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 rounded-lg bg-[#0B132B] border border-slate-700 text-slate-300 text-xs font-bold hover:bg-slate-800"
+              className="px-4 py-2 rounded-lg bg-slate-100 border border-slate-300 text-[#555555] text-xs font-bold hover:bg-slate-200"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-5 py-2 rounded-lg bg-[#003366] text-[#F2B705] border border-[#F2B705]/40 text-xs font-extrabold hover:bg-blue-900 shadow-md"
+              className="px-5 py-2 rounded-lg bg-[#003366] text-white text-xs font-extrabold hover:bg-blue-900 shadow-sm"
             >
               Submit Application
             </button>

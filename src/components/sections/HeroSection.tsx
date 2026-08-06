@@ -8,14 +8,14 @@ interface HeroSectionProps {
 
 export const HeroSection: React.FC<HeroSectionProps> = ({ onNavigate }) => {
   return (
-    <section className="relative w-full max-w-full overflow-hidden pt-10 pb-16 bg-[#0B132B] border-b border-slate-800">
+    <section className="relative w-full max-w-full overflow-hidden pt-10 pb-16 bg-[#FFFFFF] border-b border-slate-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Top Institutional Line */}
-        <div className="flex items-center gap-2.5 text-xs font-bold text-[#F2B705] uppercase tracking-wider mb-5 flex-wrap">
+        <div className="flex items-center gap-2.5 text-xs font-bold text-[#003366] uppercase tracking-wider mb-5 flex-wrap">
           <span>UPSA ACCRA</span>
           <span>•</span>
-          <span className="text-slate-300">FACULTY OF INFORMATION TECHNOLOGY & COMMUNICATION STUDIES</span>
+          <span>FACULTY OF INFORMATION TECHNOLOGY & COMMUNICATION STUDIES</span>
           <span>•</span>
           <span className="text-[#00AEEF]">EST. 1965</span>
         </div>
@@ -25,13 +25,13 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onNavigate }) => {
           
           <div className="lg:col-span-7 space-y-6 text-left">
             
-            {/* JOMACS-Grade Confident Hero Headline */}
-            <h1 className="hero-heading text-white">
+            {/* JOMACS-Grade Confident Hero Headline (68px desktop) */}
+            <h1 className="hero-heading">
               Department of Information Technology Studies
             </h1>
 
-            {/* Hero Subtext */}
-            <p className="hero-subtext max-w-2xl text-slate-200">
+            {/* Hero Subtext (22px medium weight line) */}
+            <p className="hero-subtext max-w-2xl">
               University of Professional Studies, Accra (UPSA). Delivering undergraduate and postgraduate qualifications combining enterprise software architecture, cybersecurity, and data science with professional IT management.
             </p>
 
@@ -39,7 +39,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onNavigate }) => {
             <div className="flex flex-wrap items-center gap-3.5 pt-2">
               <button
                 onClick={() => onNavigate('academics')}
-                className="px-6 py-3.5 rounded-lg bg-[#003366] text-white font-extrabold text-xs sm:text-sm uppercase tracking-wider shadow-md hover:bg-blue-900 border border-[#F2B705] transition-all flex items-center gap-2 group"
+                className="px-6 py-3.5 rounded-lg bg-[#003366] text-white font-extrabold text-xs sm:text-sm uppercase tracking-wider shadow-sm hover:bg-blue-900 border border-[#F2B705] transition-all flex items-center gap-2 group"
               >
                 <span>Explore Academic Programmes</span>
                 <ArrowRight className="w-4 h-4 text-[#F2B705] group-hover:translate-x-1 transition-transform" />
@@ -47,7 +47,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onNavigate }) => {
 
               <button
                 onClick={() => onNavigate('innovation')}
-                className="px-5 py-3.5 rounded-lg bg-[#001B40] border border-slate-700 text-slate-200 hover:text-white hover:bg-slate-800 font-extrabold text-xs sm:text-sm uppercase tracking-wider transition-all"
+                className="px-5 py-3.5 rounded-lg bg-[#F5F7FA] border border-slate-300 text-[#1A1A1A] hover:text-[#003366] hover:bg-slate-200 font-extrabold text-xs sm:text-sm uppercase tracking-wider transition-all"
               >
                 <span>Inspect Student Systems & Code</span>
               </button>
@@ -56,39 +56,39 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onNavigate }) => {
 
           {/* Right Column: Developers Hub Brief Info Card */}
           <div className="lg:col-span-5">
-            <div className="p-6 rounded-xl bg-[#001B40] border border-slate-800 shadow-xl space-y-4">
+            <div className="p-6 rounded-xl bg-[#F5F7FA] border border-slate-300 shadow-sm space-y-4">
               
-              <div className="pb-3 border-b border-slate-800 flex justify-between items-center">
-                <h2 className="subheading font-extrabold text-[#F2B705]">
+              <div className="pb-3 border-b border-slate-200 flex justify-between items-center">
+                <h2 className="subheading font-extrabold text-[#003366]">
                   UPSA Developers Hub
                 </h2>
-                <span className="text-xs font-bold text-slate-400">Est. 17 Dec 2025</span>
+                <span className="text-xs font-bold text-[#555555]">Est. 17 Dec 2025</span>
               </div>
 
-              <p className="body-text text-sm text-slate-300 leading-relaxed">
+              <p className="body-text text-sm text-[#555555] leading-relaxed">
                 Student-led practical engineering ecosystem operating directly from the UPSA Computer Laboratory.
               </p>
 
               {/* Definition List Layout */}
               <dl className="space-y-2.5 text-xs pt-1">
-                <div className="flex justify-between py-1 border-b border-slate-800">
-                  <dt className="font-extrabold text-[#00AEEF]">Faculty Mentor</dt>
-                  <dd className="font-bold text-white">Dr. Augustina Dede Agor</dd>
+                <div className="flex justify-between py-1 border-b border-slate-200">
+                  <dt className="font-extrabold text-[#003366]">Faculty Mentor</dt>
+                  <dd className="font-bold text-[#1A1A1A]">Dr. Augustina Dede Agor</dd>
                 </div>
-                <div className="flex justify-between py-1 border-b border-slate-800">
-                  <dt className="font-extrabold text-[#00AEEF]">Latest Milestone</dt>
-                  <dd className="font-bold text-white">400 Students • Network Exposure</dd>
+                <div className="flex justify-between py-1 border-b border-slate-200">
+                  <dt className="font-extrabold text-[#003366]">Latest Milestone</dt>
+                  <dd className="font-bold text-[#1A1A1A]">400 Students • Network Exposure</dd>
                 </div>
-                <div className="flex justify-between py-1 border-b border-slate-800">
-                  <dt className="font-extrabold text-[#00AEEF]">Venue Anchor</dt>
-                  <dd className="font-bold text-white">UPSA Computer Laboratory</dd>
+                <div className="flex justify-between py-1 border-b border-slate-200">
+                  <dt className="font-extrabold text-[#003366]">Venue Anchor</dt>
+                  <dd className="font-bold text-[#1A1A1A]">UPSA Computer Laboratory</dd>
                 </div>
               </dl>
 
               <div className="pt-2">
                 <button
                   onClick={() => onNavigate('hub')}
-                  className="w-full py-3 rounded-lg bg-[#003366] text-[#F2B705] hover:bg-blue-900 border border-[#F2B705]/40 font-extrabold text-xs uppercase tracking-wider text-center transition-all block"
+                  className="w-full py-3 rounded-lg bg-[#003366] text-white hover:bg-blue-900 font-extrabold text-xs uppercase tracking-wider text-center transition-all block"
                 >
                   View Developers Hub Initiative
                 </button>

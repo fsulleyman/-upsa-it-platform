@@ -15,18 +15,18 @@ export const ContactSection: React.FC = () => {
     setSubmitted(true);
   };
 
-  const inputStyles = "w-full px-4 py-3 rounded-lg bg-[#0B132B] border border-slate-700 text-white placeholder-slate-400 text-sm font-medium focus:outline-none focus:border-[#F2B705] focus:ring-2 focus:ring-[#F2B705]/20 transition-all";
+  const inputStyles = "w-full px-4 py-3 rounded-lg bg-[#F5F7FA] border border-slate-300 text-[#1A1A1A] text-sm font-medium focus:outline-none focus:bg-white focus:border-[#003366] focus:ring-2 focus:ring-[#003366]/20 transition-all";
 
   return (
-    <section id="contact" className="py-16 bg-[#0B132B] border-b border-slate-800 w-full max-w-full overflow-hidden">
+    <section id="contact" className="py-16 bg-[#FFFFFF] border-b border-slate-200 w-full max-w-full overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Header */}
         <div className="max-w-3xl mb-12 space-y-3">
-          <h2 className="section-heading text-white">
+          <h2 className="section-heading">
             Official Enquiries & Admissions Contact
           </h2>
-          <p className="body-text text-lg text-slate-300">
+          <p className="body-text text-lg text-[#555555]">
             Reach out to the Department Secretariat regarding academic programmes, Developers Hub admissions, or research partnerships.
           </p>
         </div>
@@ -37,25 +37,25 @@ export const ContactSection: React.FC = () => {
           <div className="lg:col-span-5 space-y-6">
             
             {/* Secretariat Office Details */}
-            <div className="p-7 rounded-2xl bg-[#001B40] border border-slate-800 shadow-md space-y-5">
-              <h3 className="subheading text-2xl font-black text-[#F2B705]">Faculty Secretariat Office</h3>
+            <div className="p-7 rounded-2xl bg-[#F5F7FA] border border-slate-300 shadow-sm space-y-5">
+              <h3 className="subheading text-2xl font-black text-[#003366]">Faculty Secretariat Office</h3>
 
               <div className="space-y-4">
                 <div>
-                  <span className="text-[#00AEEF] block font-extrabold text-xs uppercase tracking-wider mb-0.5">Physical Location</span>
-                  <p className="body-text text-sm text-slate-300 leading-relaxed">{INSTITUTION_INFO.facultyLocation}</p>
+                  <span className="text-[#003366] block font-extrabold text-xs uppercase tracking-wider mb-0.5">Physical Location</span>
+                  <p className="body-text text-sm text-[#555555] leading-relaxed">{INSTITUTION_INFO.facultyLocation}</p>
                 </div>
 
-                <div className="pt-2 border-t border-slate-800">
-                  <span className="text-[#00AEEF] block font-extrabold text-xs uppercase tracking-wider mb-0.5">Postal Address & Email</span>
-                  <p className="body-text text-sm text-slate-300">{INSTITUTION_INFO.address}</p>
-                  <a href={`mailto:${INSTITUTION_INFO.email}`} className="text-[#F2B705] font-bold text-sm hover:underline block mt-0.5">{INSTITUTION_INFO.email}</a>
+                <div className="pt-2 border-t border-slate-200">
+                  <span className="text-[#003366] block font-extrabold text-xs uppercase tracking-wider mb-0.5">Postal Address & Email</span>
+                  <p className="body-text text-sm text-[#555555]">{INSTITUTION_INFO.address}</p>
+                  <a href={`mailto:${INSTITUTION_INFO.email}`} className="text-[#003366] font-bold text-sm hover:underline block mt-0.5">{INSTITUTION_INFO.email}</a>
                 </div>
 
-                <div className="pt-2 border-t border-slate-800">
-                  <span className="text-[#00AEEF] block font-extrabold text-xs uppercase tracking-wider mb-0.5">Telephone Contacts</span>
-                  <span className="font-extrabold text-[#F2B705] text-sm block">{INSTITUTION_INFO.facultyPhone}</span>
-                  <span className="text-xs text-slate-400 block mt-0.5">
+                <div className="pt-2 border-t border-slate-200">
+                  <span className="text-[#003366] block font-extrabold text-xs uppercase tracking-wider mb-0.5">Telephone Contacts</span>
+                  <span className="font-extrabold text-[#003366] text-sm block">{INSTITUTION_INFO.facultyPhone}</span>
+                  <span className="text-xs text-slate-500 block mt-0.5">
                     Switchboard: {INSTITUTION_INFO.switchboard}
                   </span>
                 </div>
@@ -63,12 +63,12 @@ export const ContactSection: React.FC = () => {
             </div>
 
             {/* Academic Office Hours */}
-            <div className="p-7 rounded-2xl bg-[#001B40] border border-slate-800 shadow-md space-y-3">
-              <h3 className="subheading text-xl font-bold text-white">Academic Office Hours</h3>
-              <p className="body-text text-sm text-slate-300">
-                Monday to Friday: <strong className="text-white">8:00 AM – 5:00 PM</strong> (GMT)
+            <div className="p-7 rounded-2xl bg-[#F5F7FA] border border-slate-300 shadow-sm space-y-3">
+              <h3 className="subheading text-xl font-bold text-[#1A1A1A]">Academic Office Hours</h3>
+              <p className="body-text text-sm text-[#555555]">
+                Monday to Friday: <strong className="text-[#1A1A1A]">8:00 AM – 5:00 PM</strong> (GMT)
               </p>
-              <p className="small-text text-slate-400">
+              <p className="small-text text-slate-500">
                 Secretariat closed on national public holidays.
               </p>
             </div>
@@ -76,20 +76,20 @@ export const ContactSection: React.FC = () => {
           </div>
 
           {/* Inquiry Form (Primary Visual Card) */}
-          <div className="lg:col-span-7 p-8 sm:p-10 rounded-2xl bg-[#002244] border-2 border-[#F2B705]/50 shadow-xl">
+          <div className="lg:col-span-7 p-8 sm:p-10 rounded-2xl bg-white border-2 border-[#003366]/20 shadow-md">
             
             {submitted ? (
-              <div className="p-8 rounded-xl bg-[#001B40] border border-[#F2B705] text-center space-y-4">
-                <div className="w-12 h-12 rounded-full bg-[#F2B705]/20 border border-[#F2B705] text-[#F2B705] flex items-center justify-center mx-auto text-xl font-black">
+              <div className="p-8 rounded-xl bg-blue-50 border border-blue-200 text-center space-y-4">
+                <div className="w-12 h-12 rounded-full bg-[#003366] text-[#F2B705] flex items-center justify-center mx-auto text-xl font-black">
                   ✓
                 </div>
-                <h3 className="subheading text-2xl font-extrabold text-white">Inquiry Submitted</h3>
-                <p className="body-text text-sm text-slate-300 leading-relaxed">
+                <h3 className="subheading text-2xl font-extrabold text-[#003366]">Inquiry Submitted</h3>
+                <p className="body-text text-sm text-[#555555] leading-relaxed">
                   Thank you for contacting the Department of Information Technology Studies. The faculty secretariat will respond to your email.
                 </p>
                 <button
                   onClick={() => setSubmitted(false)}
-                  className="px-6 py-2.5 rounded-lg bg-[#003366] text-[#F2B705] border border-[#F2B705]/40 text-xs font-bold uppercase tracking-wider hover:bg-blue-900 transition-colors"
+                  className="px-6 py-2.5 rounded-lg bg-[#003366] text-white text-xs font-bold uppercase tracking-wider hover:bg-blue-900 transition-colors"
                 >
                   Send Another Inquiry
                 </button>
@@ -97,17 +97,17 @@ export const ContactSection: React.FC = () => {
             ) : (
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div>
-                  <h3 className="subheading text-2xl sm:text-3xl font-extrabold text-white">
+                  <h3 className="subheading text-2xl sm:text-3xl font-extrabold text-[#003366]">
                     Send an Official Inquiry
                   </h3>
-                  <p className="body-text text-sm text-slate-300 mt-1">
+                  <p className="body-text text-sm text-[#555555] mt-1">
                     Fill out the form below to connect directly with the IT Studies department office.
                   </p>
                 </div>
 
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-xs font-bold uppercase tracking-wider text-[#F2B705] mb-1.5">
+                    <label className="block text-xs font-extrabold uppercase tracking-wider text-[#1A1A1A] mb-1.5">
                       Full Name *
                     </label>
                     <input
@@ -121,7 +121,7 @@ export const ContactSection: React.FC = () => {
                   </div>
 
                   <div>
-                    <label className="block text-xs font-bold uppercase tracking-wider text-[#F2B705] mb-1.5">
+                    <label className="block text-xs font-extrabold uppercase tracking-wider text-[#1A1A1A] mb-1.5">
                       Email Address *
                     </label>
                     <input
@@ -135,7 +135,7 @@ export const ContactSection: React.FC = () => {
                   </div>
 
                   <div>
-                    <label className="block text-xs font-bold uppercase tracking-wider text-[#F2B705] mb-1.5">
+                    <label className="block text-xs font-extrabold uppercase tracking-wider text-[#1A1A1A] mb-1.5">
                       Programme / Subject of Interest
                     </label>
                     <select
@@ -154,7 +154,7 @@ export const ContactSection: React.FC = () => {
                   </div>
 
                   <div>
-                    <label className="block text-xs font-bold uppercase tracking-wider text-[#F2B705] mb-1.5">
+                    <label className="block text-xs font-extrabold uppercase tracking-wider text-[#1A1A1A] mb-1.5">
                       Message Details *
                     </label>
                     <textarea
@@ -170,7 +170,7 @@ export const ContactSection: React.FC = () => {
 
                 <button
                   type="submit"
-                  className="w-full py-4 rounded-lg bg-[#003366] hover:bg-blue-900 text-white border border-[#F2B705] font-extrabold text-sm uppercase tracking-wider shadow-md transition-all text-center"
+                  className="w-full py-4 rounded-lg bg-[#003366] hover:bg-blue-900 text-white font-extrabold text-sm uppercase tracking-wider shadow-md transition-all text-center"
                 >
                   Submit Official Inquiry
                 </button>

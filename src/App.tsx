@@ -61,9 +61,9 @@ export function App() {
   const isJoinModalOpen = hashState.modal === 'join-hub';
 
   return (
-    <div className="min-h-screen bg-[#0B132B] text-slate-100 font-sans selection:bg-[#F2B705] selection:text-[#003366] dark">
+    <div className="min-h-screen bg-white text-[#1A1A1A] font-sans selection:bg-[#F2B705] selection:text-[#003366]">
       
-      {/* Header Navigation */}
+      {/* Header Navigation (Permanently Dark Navbar) */}
       <Navbar
         activeSection={hashState.section}
         onNavigate={handleNavigateSection}
