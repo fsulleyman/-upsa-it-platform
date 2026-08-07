@@ -25,7 +25,7 @@ import { SpeedInsights } from '@vercel/speed-insights/react';
 
 function AppContent() {
   const [hashState, updateHash] = useHashLocation();
-  const { programmes, projects, promoSlides } = useData();
+  const { programmes, projects, faculty, promoSlides, hubDetails } = useData();
 
   // Route to Admin Control Center if hash is #admin
   const isAdminRoute = hashState.section === 'admin';
@@ -93,15 +93,17 @@ function AppContent() {
           <HeroSection onNavigate={handleNavigateSection} />
         </div>
 
-        <AboutSection />
+        <AboutSection faculty={faculty} />
 
-        <AcademicsSection onSelectProgramme={handleSelectProgramme} />
+        <AcademicsSection programmes={programmes} onSelectProgramme={handleSelectProgramme} />
 
         <DevelopersHubSection
+          hubDetails={hubDetails}
           onOpenJoinModal={() => updateHash({ section: 'hub', modal: 'join-hub' })}
         />
 
         <InnovationShowcase
+          projects={projects}
           onSelectProject={handleSelectProject}
           activeCategoryFilter={hashState.categoryFilter}
           onFilterCategory={handleFilterCategory}

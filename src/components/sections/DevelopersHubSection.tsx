@@ -1,12 +1,26 @@
 import React from 'react';
-import { HUB_DETAILS } from '../../data/groundTruth';
+import type { HubMilestone } from '../../types';
 
 interface DevelopersHubSectionProps {
   onOpenJoinModal: () => void;
+  hubDetails?: {
+    nature: string;
+    mission: string;
+    milestone: HubMilestone;
+  };
 }
 
-export const DevelopersHubSection: React.FC<DevelopersHubSectionProps> = ({ onOpenJoinModal }) => {
-  const milestone = HUB_DETAILS.milestone;
+export const DevelopersHubSection: React.FC<DevelopersHubSectionProps> = ({ onOpenJoinModal, hubDetails }) => {
+  const milestone = hubDetails?.milestone || {
+    id: "net-infra-2026",
+    date: "24–27 March 2026",
+    title: "UPSA Live Network Infrastructure Guided Exposure",
+    location: "UPSA Data Center & Central Server Room",
+    participantsCount: "~400",
+    description: "Over 400 Developers Hub members engaged in a hands-on exploration of UPSA's enterprise network infrastructure, guided by the university's IT Services Department."
+  };
+
+  const nature = hubDetails?.nature || "Student-led, department-guided, project-based learning community.";
 
   return (
     <section id="hub" className="dark-section py-16 bg-[#003366] text-white border-b-4 border-[#F2B705] relative w-full max-w-full overflow-hidden">
@@ -22,87 +36,42 @@ export const DevelopersHubSection: React.FC<DevelopersHubSectionProps> = ({ onOp
             UPSA Developers Hub
           </h2>
           <p className="body-text text-lg text-slate-200 leading-relaxed">
-            {HUB_DETAILS.nature} Anchored in the UPSA Computer Laboratory, the Hub bridges classroom software theory with practical enterprise systems engineering.
+            {nature} Anchored in the UPSA Computer Laboratory, the Hub bridges classroom software theory with practical enterprise systems engineering.
           </p>
         </div>
 
-        {/* Feature Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-10">
-          
-          {/* Main Hub Brief */}
-          <div className="dark-card lg:col-span-7 p-8 rounded-xl bg-[#002244] border border-blue-900 shadow-lg space-y-5 flex flex-col justify-between">
-            <div className="space-y-3">
-              <div className="flex items-center justify-between text-xs text-[#F2B705]">
-                <span className="font-mono font-bold">ESTABLISHED 17 DECEMBER 2025</span>
-                <span>UPSA Computer Lab</span>
-              </div>
-              <h3 className="subheading text-2xl font-extrabold text-white">
-                Project-Based Systems Engineering
-              </h3>
-              <p className="body-text text-sm sm:text-base text-slate-200 leading-relaxed">
-                {HUB_DETAILS.mission} Open to IT Studies students and selected cross-programme peers with demonstrated aptitude for software architecture and data engineering.
-              </p>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4 pt-4 border-t border-blue-950">
-              <div className="p-4 rounded-lg bg-[#001B40] border border-blue-900">
-                <div className="text-white font-extrabold text-base">Practice Cohorts</div>
-                <div className="small-text text-slate-300">Continuous code triage</div>
-              </div>
-              <div className="p-4 rounded-lg bg-[#001B40] border border-blue-900">
-                <div className="text-[#00AEEF] font-extrabold text-base">Faculty Guidance</div>
-                <div className="small-text text-slate-300">Direct academic review</div>
-              </div>
-            </div>
-          </div>
-
-          {/* Mentorship Spotlight */}
-          <div className="dark-card lg:col-span-5 p-8 rounded-xl bg-[#002244] border-2 border-[#F2B705] shadow-lg space-y-5 flex flex-col justify-between">
-            <div className="space-y-3">
-              <span className="text-xs font-mono font-bold text-[#F2B705] uppercase tracking-wider block">
-                FACULTY MENTOR
-              </span>
-              <div>
-                <h4 className="subheading text-2xl font-extrabold text-white">{HUB_DETAILS.facultyMentor.name}</h4>
-                <p className="small-text text-slate-300 mt-0.5">{HUB_DETAILS.facultyMentor.degree}</p>
-              </div>
-              <p className="body-text text-sm sm:text-base text-slate-200 leading-relaxed">
-                {HUB_DETAILS.facultyMentor.role}. Guiding students in software engineering standards, open-source project management, and collaborative hackathons.
-              </p>
-            </div>
-
-            <div className="pt-4 border-t border-blue-950">
-              <button
-                onClick={onOpenJoinModal}
-                className="w-full py-3 rounded-lg bg-[#F2B705] text-[#003366] font-extrabold text-xs uppercase tracking-wider hover:bg-amber-400 shadow-md transition-all text-center border border-[#003366]/30"
-              >
-                Apply to Join Developers Hub
-              </button>
-            </div>
-          </div>
-
-        </div>
-
-        {/* Milestone Showcase Box with Color Pop Emphasis Numbers */}
-        <div className="dark-card p-8 rounded-xl bg-[#002244] border border-blue-900 space-y-5">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-blue-950">
+        {/* Highlight Milestone Card */}
+        <div className="p-6 sm:p-8 rounded-2xl bg-slate-900/90 border border-slate-700 shadow-2xl space-y-6 mb-10">
+          <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-800 pb-4">
             <div>
-              <span className="small-text font-mono font-bold text-[#00AEEF] uppercase tracking-wider block mb-1">
-                VERIFIED MILESTONE
+              <span className="text-xs font-mono font-bold text-[#00AEEF] uppercase block">
+                RECENT MILESTONE ({milestone.date})
               </span>
-              <h3 className="subheading text-xl sm:text-2xl font-extrabold text-white">{milestone.title}</h3>
-              <p className="small-text text-slate-300 mt-0.5">Date: {milestone.date} • Venue: {milestone.location}</p>
+              <h3 className="text-xl sm:text-2xl font-extrabold text-white mt-1">
+                {milestone.title}
+              </h3>
             </div>
-
-            <div className="p-4 rounded-xl bg-[#001B40] text-center shrink-0 border-2 border-[#F2B705]">
-              <div className="stat-number text-[#F2B705] text-3xl font-black">{milestone.participantsCount}</div>
-              <div className="text-[11px] font-mono text-slate-300 font-bold uppercase tracking-wider">Students Exposed</div>
-            </div>
+            <span className="px-4 py-1.5 rounded-full bg-[#003366] text-[#F2B705] font-extrabold font-mono text-sm border border-[#F2B705]">
+              {milestone.participantsCount} PARTICIPANTS
+            </span>
           </div>
 
-          <p className="body-text text-sm sm:text-base text-slate-200 leading-relaxed">
+          <p className="body-text text-sm sm:text-base text-slate-300 leading-relaxed">
             {milestone.description}
           </p>
+
+          <div className="pt-2 flex flex-wrap items-center justify-between gap-4">
+            <span className="text-xs font-semibold text-slate-400">
+              Location: <strong className="text-white">{milestone.location}</strong>
+            </span>
+
+            <button
+              onClick={onOpenJoinModal}
+              className="px-6 py-3 rounded-xl bg-[#F2B705] hover:bg-yellow-400 text-[#003366] font-extrabold text-xs uppercase tracking-wider shadow-lg transition-colors"
+            >
+              Join Developers Hub Cohort
+            </button>
+          </div>
         </div>
 
       </div>

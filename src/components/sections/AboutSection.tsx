@@ -1,8 +1,14 @@
 import React from 'react';
-import { INSTITUTION_INFO, FACULTY_DIRECTORY } from '../../data/groundTruth';
-import { ConfirmBadge } from '../common/ConfirmBadge';
+import type { FacultyMember } from '../../types';
+import { INSTITUTION_INFO } from '../../data/groundTruth';
 
-export const AboutSection: React.FC = () => {
+interface AboutSectionProps {
+  faculty?: FacultyMember[];
+}
+
+export const AboutSection: React.FC<AboutSectionProps> = ({ faculty }) => {
+  const displayFaculty = faculty && faculty.length > 0 ? faculty : [];
+
   return (
     <section id="about" className="py-16 bg-[#F5F7FA] border-b border-slate-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -18,102 +24,84 @@ export const AboutSection: React.FC = () => {
         </div>
 
         {/* Editorial Split Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-16 items-stretch">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-16 items-start">
           
-          {/* Prominent Navy Credo & Vision Callout Block */}
-          <div className="lg:col-span-7 p-8 rounded-2xl bg-[#003366] text-white space-y-6 flex flex-col justify-between border-2 border-[#F2B705] shadow-md">
-            <div className="space-y-4">
-              <span className="text-xs font-mono font-black text-[#F2B705] uppercase tracking-widest block">
-                FACULTY CREDO & VISION
-              </span>
-              <h3 className="text-2xl sm:text-3xl font-extrabold text-white leading-snug">
-                "{INSTITUTION_INFO.facultyCredo}"
+          {/* Main Editorial Block */}
+          <div className="lg:col-span-8 space-y-6">
+            <div className="p-6 sm:p-8 rounded-2xl bg-white border border-slate-300 shadow-sm space-y-4">
+              <h3 className="subheading text-xl font-extrabold text-[#1A1A1A]">
+                Faculty Mission & Academic Credo
               </h3>
-              <p className="body-text text-sm sm:text-base text-slate-200 leading-relaxed italic border-l-2 border-[#F2B705] pl-4 py-1">
-                Vision: "{INSTITUTION_INFO.facultyVision}"
+              <blockquote className="p-4 rounded-xl bg-blue-50 border-l-4 border-[#003366] text-[#003366] font-bold italic text-sm sm:text-base">
+                "{INSTITUTION_INFO.facultyCredo}"
+              </blockquote>
+              <p className="body-text text-sm sm:text-base text-[#555555] leading-relaxed">
+                {INSTITUTION_INFO.facultyVision}
               </p>
-            </div>
-            <div className="pt-4 border-t border-blue-900/80 flex items-center justify-between text-xs font-mono text-slate-300">
-              <span>Established 2008</span>
-              <span className="text-[#F2B705] font-bold">Scholarship with Professionalism</span>
             </div>
           </div>
 
-          {/* Location & Secretariat Information Block */}
-          <div className="lg:col-span-5 p-8 rounded-2xl bg-white border border-slate-300 shadow-sm space-y-5 flex flex-col justify-between">
-            <div className="space-y-4">
-              <span className="text-xs font-mono font-bold text-[#00AEEF] uppercase tracking-wider block">
-                CAMPUS SECRETARIAT LOCATION
+          {/* Location & Secretariat Card */}
+          <div className="lg:col-span-4 space-y-4">
+            <div className="p-6 rounded-2xl bg-white border border-slate-300 shadow-sm space-y-3">
+              <span className="text-xs font-mono font-bold text-[#003366] uppercase tracking-wider block">
+                PHYSICAL LOCATION
               </span>
-              <h3 className="subheading text-2xl font-extrabold text-[#1A1A1A]">
-                Justice Aryeetey Building
-              </h3>
-              <p className="body-text text-sm sm:text-base text-[#555555] leading-relaxed">
+              <h4 className="font-extrabold text-[#1A1A1A] text-base">Justice Aryeetey Building</h4>
+              <p className="body-text text-xs text-[#555555] leading-relaxed">
                 {INSTITUTION_INFO.facultyLocation}
               </p>
-
-              <div className="space-y-2 text-xs font-mono text-[#1A1A1A] pt-2 border-t border-slate-100">
-                <div className="flex justify-between">
-                  <span className="font-bold text-[#003366]">Secretariat Rooms:</span>
-                  <span>Rooms 310 / 311 / 410</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="font-bold text-[#003366]">Digital Address:</span>
-                  <span>{INSTITUTION_INFO.digitalAddress}</span>
-                </div>
+              <div className="pt-2 border-t border-slate-200 flex items-center justify-between text-xs font-semibold text-[#555555]">
+                <span>Est. {INSTITUTION_INFO.facultyEst}</span>
+                <span>Madina, Accra</span>
               </div>
-            </div>
-
-            <div className="p-4 rounded-xl bg-[#F5F7FA] border border-slate-200 flex justify-between items-center text-xs">
-              <span className="text-[#555555] font-bold">Official Campus Contact</span>
-              <a href="#contact" className="text-[#003366] font-extrabold hover:underline">
-                Secretariat Desk →
-              </a>
             </div>
           </div>
 
         </div>
 
-        {/* Directory Section */}
-        <div>
-          <div className="mb-6">
+        {/* Faculty Leadership Directory */}
+        <div className="space-y-6">
+          <div className="flex items-center justify-between border-b border-slate-300 pb-4">
             <h3 className="subheading text-2xl font-extrabold text-[#1A1A1A]">
               Academic & Department Leadership
             </h3>
-            <p className="body-text text-sm text-[#555555]">
-              Key faculty officers leading administration, curriculum development, and student mentorship.
-            </p>
+            <span className="text-xs font-mono font-bold text-[#003366] uppercase">
+              FACULTY EXCELLENCE
+            </span>
           </div>
 
-          <div className="space-y-4">
-            {FACULTY_DIRECTORY.map((member) => (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {displayFaculty.map((member) => (
               <div
                 key={member.id}
-                className="p-6 rounded-xl bg-white border border-slate-200 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-5"
+                className="p-6 rounded-2xl bg-white border border-slate-300 shadow-sm space-y-4 hover:border-[#003366] transition-all flex flex-col justify-between"
               >
-                <div className="flex items-start gap-4 max-w-2xl">
+                <div className="space-y-4">
+                  {/* Portrait Avatar */}
                   {member.avatarUrl && (
-                    <img
-                      src={member.avatarUrl}
-                      alt={member.name}
-                      className="w-16 h-16 sm:w-20 sm:h-20 rounded-xl object-cover object-top border-2 border-[#003366] shrink-0 shadow-sm"
-                    />
-                  )}
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-3 flex-wrap">
-                      <h4 className="subheading text-lg font-bold text-[#1A1A1A]">{member.name}</h4>
-                      {member.isUnconfirmedHOD && (
-                        <ConfirmBadge tooltip="Current HOD name requires official institutional verification" />
-                      )}
+                    <div className="w-24 h-24 rounded-full overflow-hidden bg-slate-100 border-2 border-[#003366] mx-auto shadow-md">
+                      <img
+                        src={member.avatarUrl}
+                        alt={member.name}
+                        className="w-full h-full object-cover"
+                      />
                     </div>
-                    <p className="text-xs font-extrabold text-[#003366]">{member.title} • <span className="font-mono text-[#555555] font-semibold">{member.academicDegree}</span></p>
-                    <p className="body-text text-sm text-[#555555] pt-1 leading-relaxed">{member.bio}</p>
+                  )}
+
+                  <div className="text-center space-y-1">
+                    <h4 className="font-extrabold text-[#1A1A1A] text-base">{member.name}</h4>
+                    <span className="text-xs font-bold text-[#003366] block">{member.title}</span>
+                    <span className="text-[11px] font-mono text-[#555555] block">{member.academicDegree}</span>
                   </div>
+
+                  <p className="body-text text-xs text-[#555555] text-center leading-relaxed">
+                    {member.bio}
+                  </p>
                 </div>
 
-                <div className="text-left md:text-right shrink-0 border-t md:border-t-0 pt-3 md:pt-0 border-slate-100">
-                  <span className="text-xs font-extrabold text-[#003366] block">Office Location</span>
-                  <span className="text-xs font-semibold text-[#555555] block mt-0.5">{member.officeLocation}</span>
+                <div className="pt-3 border-t border-slate-200 text-center">
+                  <span className="text-[11px] font-semibold text-[#555555] block">{member.officeLocation}</span>
                 </div>
               </div>
             ))}

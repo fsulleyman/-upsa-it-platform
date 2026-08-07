@@ -1,18 +1,18 @@
 import React, { useState } from 'react';
-import { PROGRAMMES } from '../../data/groundTruth';
 import type { AcademicProgramme } from '../../types';
 import { ArrowUpRight } from 'lucide-react';
 
 interface AcademicsSectionProps {
+  programmes: AcademicProgramme[];
   onSelectProgramme: (programme: AcademicProgramme) => void;
 }
 
-export const AcademicsSection: React.FC<AcademicsSectionProps> = ({ onSelectProgramme }) => {
+export const AcademicsSection: React.FC<AcademicsSectionProps> = ({ programmes, onSelectProgramme }) => {
   const [selectedLevel, setSelectedLevel] = useState<string>('All');
 
   const filterTabs = ['All', 'Undergraduate', 'Postgraduate', 'Diploma'];
 
-  const filteredProgrammes = PROGRAMMES.filter((p) => {
+  const filteredProgrammes = programmes.filter((p) => {
     if (selectedLevel === 'All') return true;
     return p.level === selectedLevel;
   });
@@ -97,7 +97,7 @@ export const AcademicsSection: React.FC<AcademicsSectionProps> = ({ onSelectProg
                 <p className="body-text text-sm sm:text-base text-[#555555] leading-relaxed">{prog.description}</p>
 
                 <div className="flex flex-wrap gap-2 pt-1">
-                  {prog.skillsDeveloped.slice(0, 5).map((skill, idx) => (
+                  {(prog.skillsDeveloped || []).slice(0, 5).map((skill, idx) => (
                     <span
                       key={idx}
                       className="px-2.5 py-1 rounded bg-white text-[#1A1A1A] text-xs font-semibold border border-slate-200"
