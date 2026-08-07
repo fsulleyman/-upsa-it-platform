@@ -103,8 +103,17 @@ export const AdminDashboard: React.FC<{ onNavigateHome: () => void }> = ({ onNav
       alert('Programme Name and Code are required.');
       return;
     }
+
     if (isSupabaseConfigured && supabase) {
-      const { error } = await supabase.from('programmes').upsert({
+      const { data: { session } } = await supabase.auth.getSession();
+      console.log('[SUPABASE WRITE ATTEMPT DEBUG]', {
+        authenticatedUser: session?.user?.email,
+        userId: session?.user?.id,
+        hasAccessToken: Boolean(session?.access_token),
+        tokenSnippet: session?.access_token ? `${session.access_token.slice(0, 15)}...` : 'NONE'
+      });
+
+      const payload = {
         id: editingProg.id || editingProg.code.toLowerCase().replace(/\s+/g, '-'),
         code: editingProg.code,
         name: editingProg.name,
@@ -113,11 +122,15 @@ export const AdminDashboard: React.FC<{ onNavigateHome: () => void }> = ({ onNav
         tagline: editingProg.tagline || '',
         description: editingProg.description || '',
         image_url: editingProg.imageUrl || ''
-      });
+      };
+
+      const { data, error } = await supabase.from('programmes').upsert(payload);
       if (error) {
-        alert(`Supabase RLS Error: ${error.message}`);
+        console.error('[SUPABASE RLS ERROR DETAILED]', error);
+        alert(`Supabase RLS Error [Code ${error.code}]: ${error.message}\n\nHint: Please ensure the SQL migration script in src/lib/supabase_schema_and_rls.sql has been executed in your Supabase project SQL Editor.`);
         return;
       }
+      console.log('[SUPABASE WRITE SUCCESS]', data);
     }
     refreshData();
     setEditingProg(null);

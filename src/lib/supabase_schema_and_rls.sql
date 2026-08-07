@@ -2,9 +2,8 @@
 -- UPSA DEPARTMENT OF INFORMATION TECHNOLOGY STUDIES
 -- SUPABASE COMPLETE IDEMPOTENT SCHEMA MIGRATION & RLS SECURITY POLICIES
 -- ============================================================================
--- Public sign-up is disabled in Supabase Auth Dashboard.
--- Only the single authorized admin account (10310342@upsamail.edu.gh) exists.
--- RLS policies grant write access exclusively to authenticated users.
+-- Copy and paste this ENTIRE file into the Supabase SQL Editor and click RUN.
+-- It is 100% idempotent: safe to run on new or existing databases.
 
 -- ----------------------------------------------------------------------------
 -- PART 1: CREATE ALL TABLES FIRST
@@ -140,7 +139,7 @@ ALTER TABLE developers_hub ENABLE ROW LEVEL SECURITY;
 
 
 -- ----------------------------------------------------------------------------
--- PART 3: CLEANUP EXISTING POLICIES FOR IDEMPOTENT RUNS
+-- PART 3: CLEANUP ALL PREVIOUS POLICIES (GUARANTEES CLEAN SLATE)
 -- ----------------------------------------------------------------------------
 DROP POLICY IF EXISTS "Public Read Programmes" ON programmes;
 DROP POLICY IF EXISTS "Public Read Projects" ON projects;
@@ -156,6 +155,25 @@ DROP POLICY IF EXISTS "Admin Write Promo Slides" ON promo_slides;
 DROP POLICY IF EXISTS "Admin Write Institution Info" ON institution_info;
 DROP POLICY IF EXISTS "Admin Write Developers Hub" ON developers_hub;
 
+DROP POLICY IF EXISTS "Admin Insert Programmes" ON programmes;
+DROP POLICY IF EXISTS "Admin Update Programmes" ON programmes;
+DROP POLICY IF EXISTS "Admin Delete Programmes" ON programmes;
+DROP POLICY IF EXISTS "Admin Insert Projects" ON projects;
+DROP POLICY IF EXISTS "Admin Update Projects" ON projects;
+DROP POLICY IF EXISTS "Admin Delete Projects" ON projects;
+DROP POLICY IF EXISTS "Admin Insert Faculty" ON faculty;
+DROP POLICY IF EXISTS "Admin Update Faculty" ON faculty;
+DROP POLICY IF EXISTS "Admin Delete Faculty" ON faculty;
+DROP POLICY IF EXISTS "Admin Insert Promo Slides" ON promo_slides;
+DROP POLICY IF EXISTS "Admin Update Promo Slides" ON promo_slides;
+DROP POLICY IF EXISTS "Admin Delete Promo Slides" ON promo_slides;
+DROP POLICY IF EXISTS "Admin Insert Institution Info" ON institution_info;
+DROP POLICY IF EXISTS "Admin Update Institution Info" ON institution_info;
+DROP POLICY IF EXISTS "Admin Delete Institution Info" ON institution_info;
+DROP POLICY IF EXISTS "Admin Insert Developers Hub" ON developers_hub;
+DROP POLICY IF EXISTS "Admin Update Developers Hub" ON developers_hub;
+DROP POLICY IF EXISTS "Admin Delete Developers Hub" ON developers_hub;
+
 
 -- ----------------------------------------------------------------------------
 -- PART 4: APPLY PUBLIC READ POLICIES (SELECT Allowed for All Visitors)
@@ -169,11 +187,35 @@ CREATE POLICY "Public Read Developers Hub" ON developers_hub FOR SELECT USING (t
 
 
 -- ----------------------------------------------------------------------------
--- PART 5: APPLY ADMIN WRITE POLICIES (INSERT/UPDATE/DELETE Restricted to Authenticated Admin)
+-- PART 5: APPLY ADMIN WRITE POLICIES FOR AUTHENTICATED ADMIN (SELECT/INSERT/UPDATE/DELETE)
 -- ----------------------------------------------------------------------------
-CREATE POLICY "Admin Write Programmes" ON programmes FOR ALL TO authenticated USING (true) WITH CHECK (true);
-CREATE POLICY "Admin Write Projects" ON projects FOR ALL TO authenticated USING (true) WITH CHECK (true);
-CREATE POLICY "Admin Write Faculty" ON faculty FOR ALL TO authenticated USING (true) WITH CHECK (true);
-CREATE POLICY "Admin Write Promo Slides" ON promo_slides FOR ALL TO authenticated USING (true) WITH CHECK (true);
-CREATE POLICY "Admin Write Institution Info" ON institution_info FOR ALL TO authenticated USING (true) WITH CHECK (true);
-CREATE POLICY "Admin Write Developers Hub" ON developers_hub FOR ALL TO authenticated USING (true) WITH CHECK (true);
+
+-- Programmes Policies
+CREATE POLICY "Admin Insert Programmes" ON programmes FOR INSERT TO authenticated WITH CHECK (true);
+CREATE POLICY "Admin Update Programmes" ON programmes FOR UPDATE TO authenticated USING (true) WITH CHECK (true);
+CREATE POLICY "Admin Delete Programmes" ON programmes FOR DELETE TO authenticated USING (true);
+
+-- Projects Policies
+CREATE POLICY "Admin Insert Projects" ON projects FOR INSERT TO authenticated WITH CHECK (true);
+CREATE POLICY "Admin Update Projects" ON projects FOR UPDATE TO authenticated USING (true) WITH CHECK (true);
+CREATE POLICY "Admin Delete Projects" ON projects FOR DELETE TO authenticated USING (true);
+
+-- Faculty Policies
+CREATE POLICY "Admin Insert Faculty" ON faculty FOR INSERT TO authenticated WITH CHECK (true);
+CREATE POLICY "Admin Update Faculty" ON faculty FOR UPDATE TO authenticated USING (true) WITH CHECK (true);
+CREATE POLICY "Admin Delete Faculty" ON faculty FOR DELETE TO authenticated USING (true);
+
+-- Promo Slides Policies
+CREATE POLICY "Admin Insert Promo Slides" ON promo_slides FOR INSERT TO authenticated WITH CHECK (true);
+CREATE POLICY "Admin Update Promo Slides" ON promo_slides FOR UPDATE TO authenticated USING (true) WITH CHECK (true);
+CREATE POLICY "Admin Delete Promo Slides" ON promo_slides FOR DELETE TO authenticated USING (true);
+
+-- Institution Info Policies
+CREATE POLICY "Admin Insert Institution Info" ON institution_info FOR INSERT TO authenticated WITH CHECK (true);
+CREATE POLICY "Admin Update Institution Info" ON institution_info FOR UPDATE TO authenticated USING (true) WITH CHECK (true);
+CREATE POLICY "Admin Delete Institution Info" ON institution_info FOR DELETE TO authenticated USING (true);
+
+-- Developers Hub Policies
+CREATE POLICY "Admin Insert Developers Hub" ON developers_hub FOR INSERT TO authenticated WITH CHECK (true);
+CREATE POLICY "Admin Update Developers Hub" ON developers_hub FOR UPDATE TO authenticated USING (true) WITH CHECK (true);
+CREATE POLICY "Admin Delete Developers Hub" ON developers_hub FOR DELETE TO authenticated USING (true);
