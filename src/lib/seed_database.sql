@@ -84,6 +84,21 @@ VALUES
   ARRAY['Recognized Bachelor''s degree in any discipline', 'Minimum 2 years post-qualification managerial/professional experience'],
   true,
   '/images/prog_mba_mis.png'
+),
+(
+  'bsc-ai',
+  'BSc AI',
+  'BSc Artificial Intelligence',
+  'Undergraduate',
+  '4 Years',
+  'Empowering intelligent autonomous systems and neural networks.',
+  'Cutting-edge programme focusing on computer vision, natural language processing, deep learning architectures, and ethical AI development.',
+  ARRAY['Deep Learning', 'Neural Networks', 'Python & PyTorch', 'Computer Vision', 'NLP'],
+  ARRAY['AI Engineer', 'Machine Learning Scientist', 'Robotics Specialist', 'NLP Researcher'],
+  ARRAY['Neural Networks & Deep Learning', 'Natural Language Processing', 'Computer Vision & Robotics', 'Ethics in Artificial Intelligence'],
+  ARRAY['WASSCE/SSSCE with strong background in Mathematics', 'Diploma in Computer Science or IT'],
+  true,
+  '/images/prog_bsc_ds.png'
 )
 ON CONFLICT (id) DO UPDATE SET
   code = EXCLUDED.code,

@@ -14,7 +14,8 @@ export const AcademicsSection: React.FC<AcademicsSectionProps> = ({ programmes, 
 
   const filteredProgrammes = programmes.filter((p) => {
     if (selectedLevel === 'All') return true;
-    return p.level === selectedLevel;
+    if (!p.level) return false;
+    return p.level.trim().toLowerCase() === selectedLevel.trim().toLowerCase();
   });
 
   return (

@@ -10,6 +10,10 @@ interface ProgrammeDetailModalProps {
 export const ProgrammeDetailModal: React.FC<ProgrammeDetailModalProps> = ({ programme, onClose }) => {
   if (!programme) return null;
 
+  const coreModules = programme.coreModules || [];
+  const careerOutcomes = programme.careerOutcomes || [];
+  const entryRequirements = programme.entryRequirements || [];
+
   return (
     <Modal
       isOpen={!!programme}
@@ -32,65 +36,73 @@ export const ProgrammeDetailModal: React.FC<ProgrammeDetailModalProps> = ({ prog
         )}
 
         {/* Tagline */}
-        <div className="p-4 rounded-xl bg-[#F5F7FA] border border-slate-300 text-[#003366] italic font-bold text-xs sm:text-sm">
-          "{programme.tagline}"
-        </div>
+        {programme.tagline && (
+          <div className="p-4 rounded-xl bg-[#F5F7FA] border border-slate-300 text-[#003366] italic font-bold text-xs sm:text-sm">
+            "{programme.tagline}"
+          </div>
+        )}
 
         {/* Overview */}
         <div>
           <h4 className="font-extrabold text-[#1A1A1A] text-base mb-1.5">Programme Overview</h4>
-          <p className="body-text text-sm text-[#555555] leading-relaxed">{programme.description}</p>
+          <p className="body-text text-sm text-[#555555] leading-relaxed">{programme.description || 'No detailed description provided.'}</p>
         </div>
 
         {/* Core Curriculum Modules */}
-        <div>
-          <h4 className="font-extrabold text-[#003366] text-xs uppercase tracking-wider mb-3">
-            Core Curriculum & Key Course Modules
-          </h4>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-            {programme.coreModules.map((module, idx) => (
-              <div
-                key={idx}
-                className="flex items-start gap-2 p-3 rounded-xl bg-[#F5F7FA] border border-slate-300 text-[#1A1A1A] font-semibold text-xs"
-              >
-                <span className="w-1.5 h-1.5 rounded-full bg-[#003366] mt-1.5 shrink-0" />
-                <span>{module}</span>
-              </div>
-            ))}
+        {coreModules.length > 0 && (
+          <div>
+            <h4 className="font-extrabold text-[#003366] text-xs uppercase tracking-wider mb-3">
+              Core Curriculum & Key Course Modules
+            </h4>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              {coreModules.map((module, idx) => (
+                <div
+                  key={idx}
+                  className="flex items-start gap-2 p-3 rounded-xl bg-[#F5F7FA] border border-slate-300 text-[#1A1A1A] font-semibold text-xs"
+                >
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#003366] mt-1.5 shrink-0" />
+                  <span>{module}</span>
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Career Outcomes */}
-        <div>
-          <h4 className="font-extrabold text-[#003366] text-xs uppercase tracking-wider mb-2">
-            Target Career Pathways & Roles
-          </h4>
-          <div className="flex flex-wrap gap-2">
-            {programme.careerOutcomes.map((career, idx) => (
-              <span
-                key={idx}
-                className="px-3.5 py-1.5 rounded-lg bg-blue-50 border border-blue-200 text-[#003366] font-extrabold text-xs"
-              >
-                {career}
-              </span>
-            ))}
+        {careerOutcomes.length > 0 && (
+          <div>
+            <h4 className="font-extrabold text-[#003366] text-xs uppercase tracking-wider mb-2">
+              Target Career Pathways & Roles
+            </h4>
+            <div className="flex flex-wrap gap-2">
+              {careerOutcomes.map((career, idx) => (
+                <span
+                  key={idx}
+                  className="px-3.5 py-1.5 rounded-lg bg-blue-50 border border-blue-200 text-[#003366] font-extrabold text-xs"
+                >
+                  {career}
+                </span>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Admission Requirements */}
-        <div>
-          <h4 className="font-extrabold text-[#003366] text-xs uppercase tracking-wider mb-2">
-            Entry & Admission Requirements
-          </h4>
-          <ul className="space-y-2 text-[#555555] text-xs font-medium">
-            {programme.entryRequirements.map((req, idx) => (
-              <li key={idx} className="flex items-start gap-2">
-                <span className="text-[#003366] font-bold shrink-0">•</span>
-                <span>{req}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
+        {entryRequirements.length > 0 && (
+          <div>
+            <h4 className="font-extrabold text-[#003366] text-xs uppercase tracking-wider mb-2">
+              Entry & Admission Requirements
+            </h4>
+            <ul className="space-y-2 text-[#555555] text-xs font-medium">
+              {entryRequirements.map((req, idx) => (
+                <li key={idx} className="flex items-start gap-2">
+                  <span className="text-[#003366] font-bold shrink-0">•</span>
+                  <span>{req}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
 
         {/* Footer Actions */}
         <div className="pt-4 border-t border-slate-200 flex items-center justify-between">

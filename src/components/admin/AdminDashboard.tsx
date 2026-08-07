@@ -121,7 +121,12 @@ export const AdminDashboard: React.FC<{ onNavigateHome: () => void }> = ({ onNav
         duration: editingProg.duration || '4 Years',
         tagline: editingProg.tagline || '',
         description: editingProg.description || '',
-        image_url: editingProg.imageUrl || ''
+        image_url: editingProg.imageUrl || '',
+        skills_developed: editingProg.skillsDeveloped || [],
+        career_outcomes: editingProg.careerOutcomes || [],
+        core_modules: editingProg.coreModules || [],
+        entry_requirements: editingProg.entryRequirements || [],
+        is_new: editingProg.isNew || false
       };
 
       const { data, error } = await supabase.from('programmes').upsert(payload);
