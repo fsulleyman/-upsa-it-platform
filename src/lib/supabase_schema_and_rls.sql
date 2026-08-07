@@ -1,30 +1,22 @@
 -- ============================================================================
 -- UPSA DEPARTMENT OF INFORMATION TECHNOLOGY STUDIES
--- SUPABASE DATABASE SCHEMA & ZERO-TRUST RLS SECURITY POLICIES
+-- SUPABASE COMPLETE IDEMPOTENT SCHEMA MIGRATION & RLS SECURITY POLICIES
 -- ============================================================================
+-- Copy and paste this ENTIRE file into the Supabase SQL Editor and click RUN.
+-- It is 100% idempotent: safe to run on new or existing databases.
 
--- 0. ADMIN USERS REGISTRY TABLE
--- Stores specific authorized admin user IDs. Client-side access is ZERO-TRUST.
+-- ----------------------------------------------------------------------------
+-- PART 1: CREATE ALL TABLES FIRST
+-- ----------------------------------------------------------------------------
+
+-- 1. Admin Users Registry Table (Zero-Trust Client Access)
 CREATE TABLE IF NOT EXISTS admin_users (
   user_id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
   email TEXT NOT NULL UNIQUE,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Enable RLS on admin_users table
-ALTER TABLE admin_users ENABLE ROW LEVEL SECURITY;
-
--- LOCKDOWN POLICIES FOR admin_users TABLE:
--- 1. NO INSERT policy for public/authenticated clients (Client INSERT is DENIED BY DEFAULT under RLS).
--- 2. NO UPDATE policy for public/authenticated clients (Client UPDATE is DENIED BY DEFAULT under RLS).
--- 3. NO DELETE policy for public/authenticated clients (Client DELETE is DENIED BY DEFAULT under RLS).
--- 4. NO SELECT policy for public/authenticated clients (Client SELECT is DENIED BY DEFAULT under RLS).
--- Result: admin_users is 100% inaccessible to all client queries, and can ONLY be populated
--- directly in the Supabase SQL Editor / Dashboard by the database owner.
--- The Postgres RLS engine evaluates membership internally via SECURITY DEFINER logic during content write attempts.
-
-
--- 1. PROGRAMMES TABLE
+-- 2. Academic Qualifications & Programmes Table
 CREATE TABLE IF NOT EXISTS programmes (
   id TEXT PRIMARY KEY,
   code TEXT NOT NULL,
@@ -43,7 +35,7 @@ CREATE TABLE IF NOT EXISTS programmes (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 2. PROJECTS TABLE (Innovation Showcase)
+-- 3. Innovation Showcase Student Projects Table
 CREATE TABLE IF NOT EXISTS projects (
   id TEXT PRIMARY KEY,
   title TEXT NOT NULL,
@@ -69,7 +61,7 @@ CREATE TABLE IF NOT EXISTS projects (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 3. FACULTY TABLE (Leadership Directory)
+-- 4. Faculty & Leadership Directory Table
 CREATE TABLE IF NOT EXISTS faculty (
   id TEXT PRIMARY KEY,
   name TEXT NOT NULL,
@@ -86,7 +78,7 @@ CREATE TABLE IF NOT EXISTS faculty (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 4. PROMO SLIDES TABLE (Announcement Banner)
+-- 5. Promotional Announcement Banners Table
 CREATE TABLE IF NOT EXISTS promo_slides (
   id TEXT PRIMARY KEY,
   badge_text TEXT,
@@ -99,7 +91,7 @@ CREATE TABLE IF NOT EXISTS promo_slides (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 5. INSTITUTION INFO TABLE (Secretariat & Site Details)
+-- 6. Secretariat & Institution Info Table
 CREATE TABLE IF NOT EXISTS institution_info (
   id TEXT PRIMARY KEY DEFAULT 'primary',
   university_name TEXT NOT NULL,
@@ -124,7 +116,7 @@ CREATE TABLE IF NOT EXISTS institution_info (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 6. DEVELOPERS HUB TABLE (Flagship Details)
+-- 7. Developers Hub Details & Milestones Table
 CREATE TABLE IF NOT EXISTS developers_hub (
   id TEXT PRIMARY KEY DEFAULT 'primary',
   nature TEXT,
@@ -142,11 +134,10 @@ CREATE TABLE IF NOT EXISTS developers_hub (
 );
 
 
--- ============================================================================
--- ROW LEVEL SECURITY (RLS) POLICIES — EXPLICIT ADMIN ROLE CHECK
--- ============================================================================
-
--- Enable RLS on all data tables
+-- ----------------------------------------------------------------------------
+-- PART 2: ENABLE ROW LEVEL SECURITY (RLS) ON ALL TABLES
+-- ----------------------------------------------------------------------------
+ALTER TABLE admin_users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE programmes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE projects ENABLE ROW LEVEL SECURITY;
 ALTER TABLE faculty ENABLE ROW LEVEL SECURITY;
@@ -154,8 +145,27 @@ ALTER TABLE promo_slides ENABLE ROW LEVEL SECURITY;
 ALTER TABLE institution_info ENABLE ROW LEVEL SECURITY;
 ALTER TABLE developers_hub ENABLE ROW LEVEL SECURITY;
 
+
 -- ----------------------------------------------------------------------------
--- Public Anonymous Read Policies (SELECT allowed for all site visitors)
+-- PART 3: CLEANUP EXISTING POLICIES FOR IDEMPOTENT RUNS
+-- ----------------------------------------------------------------------------
+DROP POLICY IF EXISTS "Public Read Programmes" ON programmes;
+DROP POLICY IF EXISTS "Public Read Projects" ON projects;
+DROP POLICY IF EXISTS "Public Read Faculty" ON faculty;
+DROP POLICY IF EXISTS "Public Read Promo Slides" ON promo_slides;
+DROP POLICY IF EXISTS "Public Read Institution Info" ON institution_info;
+DROP POLICY IF EXISTS "Public Read Developers Hub" ON developers_hub;
+
+DROP POLICY IF EXISTS "Admin Write Programmes" ON programmes;
+DROP POLICY IF EXISTS "Admin Write Projects" ON projects;
+DROP POLICY IF EXISTS "Admin Write Faculty" ON faculty;
+DROP POLICY IF EXISTS "Admin Write Promo Slides" ON promo_slides;
+DROP POLICY IF EXISTS "Admin Write Institution Info" ON institution_info;
+DROP POLICY IF EXISTS "Admin Write Developers Hub" ON developers_hub;
+
+
+-- ----------------------------------------------------------------------------
+-- PART 4: APPLY PUBLIC READ POLICIES (SELECT Allowed for All Visitors)
 -- ----------------------------------------------------------------------------
 CREATE POLICY "Public Read Programmes" ON programmes FOR SELECT USING (true);
 CREATE POLICY "Public Read Projects" ON projects FOR SELECT USING (true);
@@ -164,9 +174,13 @@ CREATE POLICY "Public Read Promo Slides" ON promo_slides FOR SELECT USING (true)
 CREATE POLICY "Public Read Institution Info" ON institution_info FOR SELECT USING (true);
 CREATE POLICY "Public Read Developers Hub" ON developers_hub FOR SELECT USING (true);
 
+
 -- ----------------------------------------------------------------------------
--- Strict Admin Write Policies (INSERT/UPDATE/DELETE restricted strictly to user_ids in admin_users)
+-- PART 5: APPLY ADMIN WRITE POLICIES (INSERT/UPDATE/DELETE Restricted to admin_users)
 -- ----------------------------------------------------------------------------
+-- Note: admin_users table itself has NO client policies (denied by default).
+-- Writes to content tables are strictly authorized only if the user's UUID is in admin_users.
+
 CREATE POLICY "Admin Write Programmes" ON programmes FOR ALL TO authenticated
   USING (auth.uid() IN (SELECT user_id FROM admin_users))
   WITH CHECK (auth.uid() IN (SELECT user_id FROM admin_users));
