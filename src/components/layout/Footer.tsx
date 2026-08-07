@@ -1,7 +1,7 @@
 import React from 'react';
 import { INSTITUTION_INFO } from '../../data/groundTruth';
 import type { NavSectionId } from '../../types';
-import { GraduationCap, MapPin, Phone, Mail, Globe, ArrowUpRight } from 'lucide-react';
+import { GraduationCap, MapPin, Phone, Mail, Globe, ArrowUpRight, ShieldCheck } from 'lucide-react';
 
 interface FooterProps {
   onNavigate: (section: NavSectionId) => void;
@@ -9,9 +9,9 @@ interface FooterProps {
 
 export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
   return (
-    <footer className="w-full bg-[#003366] text-white border-t-4 border-[#F2B705]">
+    <footer className="w-full bg-[#003366] text-white border-t-4 border-[#F2B705] dark-section">
       
-      {/* Top Main Footer Section (60% UPSA Blue #003366) */}
+      {/* Top Main Footer Section (UPSA Blue #003366) */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10">
           
@@ -31,11 +31,11 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
               </div>
             </div>
 
-            <p className="body-text text-sm text-slate-200 leading-relaxed max-w-sm">
+            <p className="body-text text-sm text-[#F1F5F9] leading-relaxed max-w-sm font-medium">
               The Department of Information Technology Studies sits inside the Faculty of Information Technology and Communication Studies (FITCS) at the University of Professional Studies, Accra.
             </p>
 
-            <div className="pt-2 space-y-2 text-xs text-slate-300">
+            <div className="pt-2 space-y-2 text-xs text-slate-200">
               <div className="flex items-center gap-2">
                 <MapPin className="w-4 h-4 text-[#F2B705] shrink-0" />
                 <span>Ghana Digital Address: <strong className="text-white font-mono">{INSTITUTION_INFO.digitalAddress}</strong></span>
@@ -52,7 +52,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
             <h4 className="text-sm font-extrabold uppercase tracking-wider text-[#F2B705] border-b border-[#002244] pb-2">
               ACADEMICS & HUB
             </h4>
-            <ul className="space-y-2.5 text-xs text-slate-200 font-semibold">
+            <ul className="space-y-2.5 text-xs text-slate-100 font-semibold">
               <li>
                 <button onClick={() => onNavigate('academics')} className="hover:text-[#F2B705] transition-colors">
                   Academic Programmes
@@ -82,7 +82,7 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
             <h4 className="text-sm font-extrabold uppercase tracking-wider text-[#F2B705] border-b border-[#002244] pb-2">
               ADMISSIONS & FACULTY
             </h4>
-            <ul className="space-y-2.5 text-xs text-slate-200 font-semibold">
+            <ul className="space-y-2.5 text-xs text-slate-100 font-semibold">
               <li>
                 <button onClick={() => onNavigate('about')} className="hover:text-[#F2B705] transition-colors">
                   About FITCS Faculty
@@ -112,20 +112,20 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
             <h4 className="text-sm font-extrabold uppercase tracking-wider text-[#F2B705] border-b border-[#002244] pb-2">
               TELEPHONE CONTACTS
             </h4>
-            <div className="space-y-2 text-xs text-slate-200">
+            <div className="space-y-2 text-xs text-slate-100">
               <div className="flex items-start gap-2">
                 <Phone className="w-4 h-4 text-[#F2B705] shrink-0 mt-0.5" />
                 <div>
-                  <span className="text-[11px] text-slate-400 block">Admissions & Secretariat Tel:</span>
+                  <span className="text-[11px] text-slate-200 block font-semibold">Admissions & Secretariat Tel:</span>
                   <span className="block font-mono font-bold text-white text-xs">{INSTITUTION_INFO.facultyPhone}</span>
-                  <span className="block font-mono text-slate-300 text-[11px]">Switchboard: {INSTITUTION_INFO.switchboard}</span>
+                  <span className="block font-mono text-slate-200 text-[11px]">Switchboard: {INSTITUTION_INFO.switchboard}</span>
                 </div>
               </div>
 
               <div className="flex items-start gap-2 pt-2">
                 <Mail className="w-4 h-4 text-[#00AEEF] shrink-0 mt-0.5" />
                 <div>
-                  <span className="text-[11px] text-slate-400 block">Official Email:</span>
+                  <span className="text-[11px] text-slate-200 block font-semibold">Official Email:</span>
                   <span className="font-mono font-bold text-white text-[11px]">
                     {INSTITUTION_INFO.email}
                   </span>
@@ -137,16 +137,25 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
         </div>
       </div>
 
-      {/* Bottom Copyright Bar (#002244 Deep Navy) */}
-      <div className="w-full bg-[#002244] text-slate-300 text-xs py-4 px-4 sm:px-6 lg:px-8 border-t border-blue-900/60">
+      {/* Bottom Copyright & Admin Gateway Bar (#002244 Deep Navy) */}
+      <div className="w-full bg-[#002244] text-slate-200 text-xs py-4 px-4 sm:px-6 lg:px-8 border-t border-blue-900/60">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left">
           <div>
             © {new Date().getFullYear()} Department of Information Technology Studies — Faculty of Information Technology and Communication Studies, UPSA.
           </div>
-          <div className="flex items-center gap-4 text-xs font-semibold text-slate-400">
-            <a href="https://upsa.edu.gh" target="_blank" rel="noreferrer" className="hover:text-[#F2B705]">UPSA Portal</a>
-            <span>•</span>
-            <span className="text-[#00AEEF] font-mono">P.O. Box LG 149, Accra</span>
+          <div className="flex items-center gap-3 text-xs font-semibold">
+            <a href="https://upsa.edu.gh" target="_blank" rel="noreferrer" className="hover:text-[#F2B705] text-slate-300">UPSA Portal</a>
+            <span className="text-slate-500">•</span>
+            
+            {/* Functional Admin Portal Trigger Button */}
+            <button
+              onClick={() => onNavigate('admin')}
+              className="px-2.5 py-1 rounded bg-slate-800 hover:bg-[#003366] text-[#F2B705] border border-[#F2B705]/50 font-bold hover:underline transition-colors flex items-center gap-1 shadow-sm"
+              title="Access Department Admin Control Center"
+            >
+              <ShieldCheck className="w-3.5 h-3.5 text-[#F2B705]" />
+              <span>Admin Portal</span>
+            </button>
           </div>
         </div>
       </div>

@@ -109,10 +109,14 @@
   color: #003366;
 }
 
-/* Explicit Dark Background Typography Overrides (for Developers Hub, Footer, etc.) */
+/* Comprehensive Root-Level Dark Background Typography Overrides (Developers Hub, Footer, Modals) */
 .dark-section .hero-heading,
 .dark-section .section-heading,
 .dark-section .subheading,
+.dark-section h1,
+.dark-section h2,
+.dark-section h3,
+.dark-section h4,
 .dark-card .subheading,
 .dark-card h2,
 .dark-card h3,
@@ -120,11 +124,17 @@
   color: #FFFFFF !important;
 }
 
+.dark-section,
+.dark-section p,
+.dark-section label,
+.dark-section span,
+.dark-section li,
 .dark-section .body-text,
 .dark-section .small-text,
+.dark-card p,
 .dark-card .body-text,
 .dark-card .small-text {
-  color: #E2E8F0 !important;
+  color: #F1F5F9 !important;
 }
 
 /* UPSA Color System Utility Classes */
