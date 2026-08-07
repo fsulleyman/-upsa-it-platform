@@ -25,7 +25,7 @@ export function parseHash(hash: string): HashState {
   const path = parts[0] || 'home';
   const queryParams = new URLSearchParams(parts[1] || '');
 
-  const validSections: NavSectionId[] = ['home', 'about', 'academics', 'hub', 'innovation', 'community', 'contact'];
+  const validSections: NavSectionId[] = ['home', 'about', 'academics', 'hub', 'innovation', 'community', 'contact', 'admin'];
   const section: NavSectionId = validSections.includes(path as NavSectionId) ? (path as NavSectionId) : 'home';
 
   return {
