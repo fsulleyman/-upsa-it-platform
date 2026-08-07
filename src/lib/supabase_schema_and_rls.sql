@@ -2,21 +2,15 @@
 -- UPSA DEPARTMENT OF INFORMATION TECHNOLOGY STUDIES
 -- SUPABASE COMPLETE IDEMPOTENT SCHEMA MIGRATION & RLS SECURITY POLICIES
 -- ============================================================================
--- Copy and paste this ENTIRE file into the Supabase SQL Editor and click RUN.
--- It is 100% idempotent: safe to run on new or existing databases.
+-- Public sign-up is disabled in Supabase Auth Dashboard.
+-- Only the single authorized admin account (10310342@upsamail.edu.gh) exists.
+-- RLS policies grant write access exclusively to authenticated users.
 
 -- ----------------------------------------------------------------------------
 -- PART 1: CREATE ALL TABLES FIRST
 -- ----------------------------------------------------------------------------
 
--- 1. Admin Users Registry Table (Zero-Trust Client Access)
-CREATE TABLE IF NOT EXISTS admin_users (
-  user_id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
-  email TEXT NOT NULL UNIQUE,
-  created_at TIMESTAMPTZ DEFAULT NOW()
-);
-
--- 2. Academic Qualifications & Programmes Table
+-- 1. Academic Qualifications & Programmes Table
 CREATE TABLE IF NOT EXISTS programmes (
   id TEXT PRIMARY KEY,
   code TEXT NOT NULL,
@@ -35,7 +29,7 @@ CREATE TABLE IF NOT EXISTS programmes (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 3. Innovation Showcase Student Projects Table
+-- 2. Innovation Showcase Student Projects Table
 CREATE TABLE IF NOT EXISTS projects (
   id TEXT PRIMARY KEY,
   title TEXT NOT NULL,
@@ -61,7 +55,7 @@ CREATE TABLE IF NOT EXISTS projects (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 4. Faculty & Leadership Directory Table
+-- 3. Faculty & Leadership Directory Table
 CREATE TABLE IF NOT EXISTS faculty (
   id TEXT PRIMARY KEY,
   name TEXT NOT NULL,
@@ -78,7 +72,7 @@ CREATE TABLE IF NOT EXISTS faculty (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 5. Promotional Announcement Banners Table
+-- 4. Promotional Announcement Banners Table
 CREATE TABLE IF NOT EXISTS promo_slides (
   id TEXT PRIMARY KEY,
   badge_text TEXT,
@@ -91,7 +85,7 @@ CREATE TABLE IF NOT EXISTS promo_slides (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 6. Secretariat & Institution Info Table
+-- 5. Secretariat & Institution Info Table
 CREATE TABLE IF NOT EXISTS institution_info (
   id TEXT PRIMARY KEY DEFAULT 'primary',
   university_name TEXT NOT NULL,
@@ -116,7 +110,7 @@ CREATE TABLE IF NOT EXISTS institution_info (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 7. Developers Hub Details & Milestones Table
+-- 6. Developers Hub Details & Milestones Table
 CREATE TABLE IF NOT EXISTS developers_hub (
   id TEXT PRIMARY KEY DEFAULT 'primary',
   nature TEXT,
@@ -137,7 +131,6 @@ CREATE TABLE IF NOT EXISTS developers_hub (
 -- ----------------------------------------------------------------------------
 -- PART 2: ENABLE ROW LEVEL SECURITY (RLS) ON ALL TABLES
 -- ----------------------------------------------------------------------------
-ALTER TABLE admin_users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE programmes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE projects ENABLE ROW LEVEL SECURITY;
 ALTER TABLE faculty ENABLE ROW LEVEL SECURITY;
@@ -176,31 +169,11 @@ CREATE POLICY "Public Read Developers Hub" ON developers_hub FOR SELECT USING (t
 
 
 -- ----------------------------------------------------------------------------
--- PART 5: APPLY ADMIN WRITE POLICIES (INSERT/UPDATE/DELETE Restricted to admin_users)
+-- PART 5: APPLY ADMIN WRITE POLICIES (INSERT/UPDATE/DELETE Restricted to Authenticated Admin)
 -- ----------------------------------------------------------------------------
--- Note: admin_users table itself has NO client policies (denied by default).
--- Writes to content tables are strictly authorized only if the user's UUID is in admin_users.
-
-CREATE POLICY "Admin Write Programmes" ON programmes FOR ALL TO authenticated
-  USING (auth.uid() IN (SELECT user_id FROM admin_users))
-  WITH CHECK (auth.uid() IN (SELECT user_id FROM admin_users));
-
-CREATE POLICY "Admin Write Projects" ON projects FOR ALL TO authenticated
-  USING (auth.uid() IN (SELECT user_id FROM admin_users))
-  WITH CHECK (auth.uid() IN (SELECT user_id FROM admin_users));
-
-CREATE POLICY "Admin Write Faculty" ON faculty FOR ALL TO authenticated
-  USING (auth.uid() IN (SELECT user_id FROM admin_users))
-  WITH CHECK (auth.uid() IN (SELECT user_id FROM admin_users));
-
-CREATE POLICY "Admin Write Promo Slides" ON promo_slides FOR ALL TO authenticated
-  USING (auth.uid() IN (SELECT user_id FROM admin_users))
-  WITH CHECK (auth.uid() IN (SELECT user_id FROM admin_users));
-
-CREATE POLICY "Admin Write Institution Info" ON institution_info FOR ALL TO authenticated
-  USING (auth.uid() IN (SELECT user_id FROM admin_users))
-  WITH CHECK (auth.uid() IN (SELECT user_id FROM admin_users));
-
-CREATE POLICY "Admin Write Developers Hub" ON developers_hub FOR ALL TO authenticated
-  USING (auth.uid() IN (SELECT user_id FROM admin_users))
-  WITH CHECK (auth.uid() IN (SELECT user_id FROM admin_users));
+CREATE POLICY "Admin Write Programmes" ON programmes FOR ALL TO authenticated USING (true) WITH CHECK (true);
+CREATE POLICY "Admin Write Projects" ON projects FOR ALL TO authenticated USING (true) WITH CHECK (true);
+CREATE POLICY "Admin Write Faculty" ON faculty FOR ALL TO authenticated USING (true) WITH CHECK (true);
+CREATE POLICY "Admin Write Promo Slides" ON promo_slides FOR ALL TO authenticated USING (true) WITH CHECK (true);
+CREATE POLICY "Admin Write Institution Info" ON institution_info FOR ALL TO authenticated USING (true) WITH CHECK (true);
+CREATE POLICY "Admin Write Developers Hub" ON developers_hub FOR ALL TO authenticated USING (true) WITH CHECK (true);
