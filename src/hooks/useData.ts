@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import {
   PROGRAMMES as fallbackProgrammes,
@@ -19,14 +19,14 @@ export function useData() {
   const [hubDetails] = useState(fallbackHubDetails);
   const [loading, setLoading] = useState<boolean>(isSupabaseConfigured);
 
-  const fetchAllData = async () => {
+  const fetchAllData = useCallback(async () => {
     if (!isSupabaseConfigured || !supabase) {
       setLoading(false);
       return;
     }
 
     try {
-      // Fetch Programmes
+      // Fetch Programmes (bypassing any HTTP caching)
       const { data: progData } = await supabase.from('programmes').select('*');
       if (progData && progData.length > 0) {
         setProgrammes(
@@ -118,11 +118,21 @@ export function useData() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchAllData();
-  }, []);
+
+    // Re-fetch on window focus or hashchange to ensure fresh state
+    const handleFocus = () => fetchAllData();
+    window.addEventListener('focus', handleFocus);
+    window.addEventListener('hashchange', handleFocus);
+
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+      window.removeEventListener('hashchange', handleFocus);
+    };
+  }, [fetchAllData]);
 
   return {
     programmes,
