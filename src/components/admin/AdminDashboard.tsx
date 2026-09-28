@@ -2,41 +2,8 @@ import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { supabase, isSupabaseConfigured } from '../../lib/supabase';
 import { useData } from '../../hooks/useData';
-import {
-  LogOut,
-  ExternalLink,
-  Plus,
-  Trash2,
-  Edit,
-  ShieldAlert,
-  CheckCircle,
-  LayoutDashboard,
-  Compass,
-  Megaphone,
-  GraduationCap,
-  FolderGit2,
-  Users,
-  LayoutList,
-  Share2,
-  Settings,
-  BookOpen,
-  Microscope
-} from 'lucide-react';
-import type {
-  AcademicProgramme,
-  StudentProject,
-  FacultyMember,
-  PromoSlide,
-  HeroContent,
-  NavItem,
-  FooterContent,
-  FooterLink,
-  SocialLink,
-  SiteSettings,
-  Course,
-  ResearchProject,
-  FacultyPublication
-} from '../../types';
+import { LogOut, ExternalLink, Plus, Trash2, Edit, ShieldAlert, CheckCircle, LayoutDashboard, Compass, Megaphone, GraduationCap, FolderGit2, Users, LayoutList, Share2, Settings } from 'lucide-react';
+import type { AcademicProgramme, StudentProject, FacultyMember, PromoSlide, HeroContent, NavItem, FooterContent, FooterLink, SocialLink, SiteSettings, NavSectionId } from '../../types';
 
 export const AdminDashboard: React.FC<{ onNavigateHome: () => void }> = ({ onNavigateHome }) => {
   const { logout, isAdminLoggedIn } = useAuth();
@@ -44,9 +11,6 @@ export const AdminDashboard: React.FC<{ onNavigateHome: () => void }> = ({ onNav
     programmes,
     projects,
     faculty,
-    courses,
-    researchProjects,
-    facultyPublications,
     promoSlides,
     heroContent,
     navItems,
@@ -60,30 +24,15 @@ export const AdminDashboard: React.FC<{ onNavigateHome: () => void }> = ({ onNav
   const [emailInput, setEmailInput] = useState('');
   const [passwordInput, setPasswordInput] = useState('');
   const [loginError, setLoginError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<
-    | 'overview'
-    | 'hero'
-    | 'navigation'
-    | 'programmes'
-    | 'courses'
-    | 'projects'
-    | 'faculty'
-    | 'research'
-    | 'footer'
-    | 'social'
-    | 'settings'
-  >('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'hero' | 'navigation' | 'programmes' | 'projects' | 'faculty' | 'footer' | 'social' | 'settings'>('overview');
   const [notice, setNotice] = useState<string | null>(null);
 
   const { login } = useAuth();
 
   // Form Editing States for all CMS Modules
   const [editingProg, setEditingProg] = useState<Partial<AcademicProgramme> | null>(null);
-  const [editingCourse, setEditingCourse] = useState<Partial<Course> | null>(null);
   const [editingProj, setEditingProj] = useState<Partial<StudentProject> | null>(null);
   const [editingFaculty, setEditingFaculty] = useState<Partial<FacultyMember> | null>(null);
-  const [editingResearch, setEditingResearch] = useState<Partial<ResearchProject> | null>(null);
-  const [editingPub, setEditingPub] = useState<Partial<FacultyPublication> | null>(null);
   const [editingSlide, setEditingSlide] = useState<Partial<PromoSlide> | null>(null);
   const [editingHero, setEditingHero] = useState<Partial<HeroContent> | null>(null);
   const [editingNavItem, setEditingNavItem] = useState<Partial<NavItem> | null>(null);
@@ -220,55 +169,7 @@ export const AdminDashboard: React.FC<{ onNavigateHome: () => void }> = ({ onNav
   };
 
   // ==========================================
-  // 2. SAVE & DELETE: COURSES
-  // ==========================================
-  const handleSaveCourse = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!editingCourse?.code || !editingCourse?.name) {
-      alert('Course Code and Name are required.');
-      return;
-    }
-
-    if (isSupabaseConfigured && supabase) {
-      const payload = {
-        id: editingCourse.id || editingCourse.code.toLowerCase().trim().replace(/\s+/g, '-'),
-        code: editingCourse.code.trim(),
-        name: editingCourse.name.trim(),
-        level: editingCourse.level || '100',
-        credits: Number(editingCourse.credits) || 3,
-        category: editingCourse.category || 'Core',
-        description: editingCourse.description || '',
-        syllabus: editingCourse.syllabus || [],
-        prerequisites: editingCourse.prerequisites || [],
-        learning_outcomes: editingCourse.learningOutcomes || []
-      };
-
-      const { error } = await supabase.from('courses').upsert(payload);
-      if (error) {
-        alert(`Supabase Save Error: ${error.message}`);
-        return;
-      }
-    }
-    refreshData();
-    setEditingCourse(null);
-    showNotification('Course saved successfully!');
-  };
-
-  const handleDeleteCourse = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this course?')) return;
-    if (isSupabaseConfigured && supabase) {
-      const { error } = await supabase.from('courses').delete().eq('id', id);
-      if (error) {
-        alert(`Supabase Delete Error: ${error.message}`);
-        return;
-      }
-    }
-    refreshData();
-    showNotification('Course deleted.');
-  };
-
-  // ==========================================
-  // 3. SAVE & DELETE: STUDENT PROJECTS
+  // 2. SAVE & DELETE: STUDENT PROJECTS
   // ==========================================
   const handleSaveProject = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -326,7 +227,7 @@ export const AdminDashboard: React.FC<{ onNavigateHome: () => void }> = ({ onNav
   };
 
   // ==========================================
-  // 4. SAVE & DELETE: FACULTY DIRECTORY
+  // 3. SAVE & DELETE: FACULTY DIRECTORY
   // ==========================================
   const handleSaveFaculty = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -338,20 +239,13 @@ export const AdminDashboard: React.FC<{ onNavigateHome: () => void }> = ({ onNav
     if (isSupabaseConfigured && supabase) {
       const payload = {
         id: editingFaculty.id || editingFaculty.name.toLowerCase().trim().replace(/\s+/g, '-'),
-        slug: editingFaculty.slug || editingFaculty.name.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-'),
         name: editingFaculty.name.trim(),
         title: editingFaculty.title.trim(),
         academic_degree: editingFaculty.academicDegree || '',
         office_location: editingFaculty.officeLocation || '',
         role: editingFaculty.role || 'Lecturer',
         bio: editingFaculty.bio || '',
-        biography: editingFaculty.biography || editingFaculty.bio || '',
         specialization: editingFaculty.specialization || [],
-        qualifications: editingFaculty.qualifications || [],
-        research_interests: editingFaculty.researchInterests || [],
-        teaching_areas: editingFaculty.teachingAreas || [],
-        google_scholar_url: editingFaculty.googleScholarUrl || '',
-        orcid_id: editingFaculty.orcidId || '',
         avatar_url: editingFaculty.avatarUrl || '',
         is_hod: editingFaculty.isHOD || false,
         is_unconfirmed_hod: editingFaculty.isUnconfirmedHOD || false
@@ -382,98 +276,7 @@ export const AdminDashboard: React.FC<{ onNavigateHome: () => void }> = ({ onNav
   };
 
   // ==========================================
-  // 5. SAVE & DELETE: RESEARCH PROJECTS & PUBS
-  // ==========================================
-  const handleSaveResearch = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!editingResearch?.title || !editingResearch?.leadResearcher) {
-      alert('Title and Lead Researcher are required.');
-      return;
-    }
-
-    if (isSupabaseConfigured && supabase) {
-      const payload = {
-        id: editingResearch.id || editingResearch.title.toLowerCase().trim().replace(/\s+/g, '-'),
-        title: editingResearch.title.trim(),
-        lead_researcher: editingResearch.leadResearcher.trim(),
-        department: editingResearch.department || 'Department of Information Technology',
-        abstract: editingResearch.abstract || '',
-        status: editingResearch.status || 'Active',
-        category: editingResearch.category || 'Artificial Intelligence',
-        tags: editingResearch.tags || [],
-        publication_year: editingResearch.publicationYear || '2026',
-        paper_url: editingResearch.paperUrl || ''
-      };
-
-      const { error } = await supabase.from('research_projects').upsert(payload);
-      if (error) {
-        alert(`Supabase Save Error: ${error.message}`);
-        return;
-      }
-    }
-    refreshData();
-    setEditingResearch(null);
-    showNotification('Research Project saved successfully!');
-  };
-
-  const handleDeleteResearch = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this research project?')) return;
-    if (isSupabaseConfigured && supabase) {
-      const { error } = await supabase.from('research_projects').delete().eq('id', id);
-      if (error) {
-        alert(`Supabase Delete Error: ${error.message}`);
-        return;
-      }
-    }
-    refreshData();
-    showNotification('Research Project deleted.');
-  };
-
-  const handleSavePub = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!editingPub?.title || !editingPub?.authors) {
-      alert('Title and Authors are required.');
-      return;
-    }
-
-    if (isSupabaseConfigured && supabase) {
-      const payload = {
-        id: editingPub.id || editingPub.title.toLowerCase().trim().replace(/\s+/g, '-'),
-        title: editingPub.title.trim(),
-        authors: editingPub.authors || [],
-        journal: editingPub.journal || '',
-        publication_year: editingPub.publicationYear || '2026',
-        doi: editingPub.doi || '',
-        paper_url: editingPub.paperUrl || '',
-        citation_count: Number(editingPub.citationCount) || 0
-      };
-
-      const { error } = await supabase.from('faculty_publications').upsert(payload);
-      if (error) {
-        alert(`Supabase Save Error: ${error.message}`);
-        return;
-      }
-    }
-    refreshData();
-    setEditingPub(null);
-    showNotification('Faculty Publication saved successfully!');
-  };
-
-  const handleDeletePub = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this publication?')) return;
-    if (isSupabaseConfigured && supabase) {
-      const { error } = await supabase.from('faculty_publications').delete().eq('id', id);
-      if (error) {
-        alert(`Supabase Delete Error: ${error.message}`);
-        return;
-      }
-    }
-    refreshData();
-    showNotification('Publication deleted.');
-  };
-
-  // ==========================================
-  // 6. SAVE & DELETE: ANNOUNCEMENT SLIDER
+  // 4. SAVE & DELETE: ANNOUNCEMENT SLIDER
   // ==========================================
   const handleSaveSlide = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -518,7 +321,7 @@ export const AdminDashboard: React.FC<{ onNavigateHome: () => void }> = ({ onNav
   };
 
   // ==========================================
-  // 7. SAVE: HERO & BANNER CONTENT
+  // 5. SAVE: HERO & BANNER CONTENT
   // ==========================================
   const handleSaveHero = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -547,7 +350,7 @@ export const AdminDashboard: React.FC<{ onNavigateHome: () => void }> = ({ onNav
   };
 
   // ==========================================
-  // 8. SAVE & DELETE: NAVIGATION ITEMS
+  // 6. SAVE & DELETE: NAVIGATION ITEMS
   // ==========================================
   const handleSaveNavItem = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -590,7 +393,7 @@ export const AdminDashboard: React.FC<{ onNavigateHome: () => void }> = ({ onNav
   };
 
   // ==========================================
-  // 9. SAVE: FOOTER CONTENT & LINKS
+  // 7. SAVE: FOOTER CONTENT & LINKS
   // ==========================================
   const handleSaveFooterContent = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -663,7 +466,7 @@ export const AdminDashboard: React.FC<{ onNavigateHome: () => void }> = ({ onNav
   };
 
   // ==========================================
-  // 10. SAVE & DELETE: SOCIAL LINKS
+  // 8. SAVE & DELETE: SOCIAL LINKS
   // ==========================================
   const handleSaveSocialLink = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -707,7 +510,7 @@ export const AdminDashboard: React.FC<{ onNavigateHome: () => void }> = ({ onNav
   };
 
   // ==========================================
-  // 11. SAVE: SITE SETTINGS & SEO
+  // 9. SAVE: SITE SETTINGS & SEO
   // ==========================================
   const handleSaveSiteSettings = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -806,15 +609,6 @@ export const AdminDashboard: React.FC<{ onNavigateHome: () => void }> = ({ onNav
           <span>Programmes ({programmes.length})</span>
         </button>
         <button
-          onClick={() => setActiveTab('courses')}
-          className={`px-4 py-2.5 rounded-t-lg font-bold text-xs flex items-center gap-1.5 transition-colors ${
-            activeTab === 'courses' ? 'bg-slate-800 text-[#F2B705] border-t-2 border-[#F2B705]' : 'text-slate-400 hover:text-white'
-          }`}
-        >
-          <BookOpen className="w-4 h-4" />
-          <span>Courses ({courses.length})</span>
-        </button>
-        <button
           onClick={() => setActiveTab('projects')}
           className={`px-4 py-2.5 rounded-t-lg font-bold text-xs flex items-center gap-1.5 transition-colors ${
             activeTab === 'projects' ? 'bg-slate-800 text-[#F2B705] border-t-2 border-[#F2B705]' : 'text-slate-400 hover:text-white'
@@ -831,15 +625,6 @@ export const AdminDashboard: React.FC<{ onNavigateHome: () => void }> = ({ onNav
         >
           <Users className="w-4 h-4" />
           <span>Faculty ({faculty.length})</span>
-        </button>
-        <button
-          onClick={() => setActiveTab('research')}
-          className={`px-4 py-2.5 rounded-t-lg font-bold text-xs flex items-center gap-1.5 transition-colors ${
-            activeTab === 'research' ? 'bg-slate-800 text-[#F2B705] border-t-2 border-[#F2B705]' : 'text-slate-400 hover:text-white'
-          }`}
-        >
-          <Microscope className="w-4 h-4" />
-          <span>Research ({researchProjects.length})</span>
         </button>
         <button
           onClick={() => setActiveTab('footer')}
@@ -872,6 +657,7 @@ export const AdminDashboard: React.FC<{ onNavigateHome: () => void }> = ({ onNav
 
       {/* Main Content Area */}
       <div className="p-6 max-w-7xl mx-auto">
+        
         {/* TAB 1: OVERVIEW & DASHBOARD METRICS */}
         {activeTab === 'overview' && (
           <div className="space-y-6">
@@ -884,38 +670,38 @@ export const AdminDashboard: React.FC<{ onNavigateHome: () => void }> = ({ onNav
               </div>
 
               <div className="p-5 rounded-xl bg-slate-800 border border-slate-700 space-y-2">
-                <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block">Department Courses</span>
-                <span className="text-3xl font-black text-emerald-400">{courses.length}</span>
-                <p className="text-[11px] text-slate-400">Undergraduate & Diploma courses</p>
-              </div>
-
-              <div className="p-5 rounded-xl bg-slate-800 border border-slate-700 space-y-2">
                 <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block">Student Projects</span>
                 <span className="text-3xl font-black text-[#00AEEF]">{projects.length}</span>
                 <p className="text-[11px] text-slate-400">Verified & sample projects</p>
               </div>
 
               <div className="p-5 rounded-xl bg-slate-800 border border-slate-700 space-y-2">
-                <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block">Faculty & Staff</span>
-                <span className="text-3xl font-black text-purple-400">{faculty.length}</span>
+                <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block">Faculty Directory</span>
+                <span className="text-3xl font-black text-emerald-400">{faculty.length}</span>
                 <p className="text-[11px] text-slate-400">Department lecturers & HOD</p>
+              </div>
+
+              <div className="p-5 rounded-xl bg-slate-800 border border-slate-700 space-y-2">
+                <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block">Promo Banners</span>
+                <span className="text-3xl font-black text-purple-400">{promoSlides.length}</span>
+                <p className="text-[11px] text-slate-400">Homepage slider banners</p>
               </div>
             </div>
 
             <div className="p-6 rounded-xl bg-slate-800 border border-slate-700 space-y-4">
-              <h3 className="text-sm font-extrabold text-[#F2B705]">Academic & CMS Content Health Status</h3>
+              <h3 className="text-sm font-extrabold text-[#F2B705]">CMS Content Health Status</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-                <div className="p-4 rounded-lg bg-slate-900 border border-slate-700 flex justify-between items-center">
-                  <span>Research Projects Published:</span>
-                  <span className="font-bold font-mono text-[#00AEEF]">{researchProjects.length} active</span>
-                </div>
-                <div className="p-4 rounded-lg bg-slate-900 border border-slate-700 flex justify-between items-center">
-                  <span>Faculty Peer-Reviewed Publications:</span>
-                  <span className="font-bold font-mono text-[#00AEEF]">{facultyPublications.length} papers</span>
-                </div>
                 <div className="p-4 rounded-lg bg-slate-900 border border-slate-700 flex justify-between items-center">
                   <span>Navigation Menu Links:</span>
                   <span className="font-bold font-mono text-[#00AEEF]">{navItems.length} active items</span>
+                </div>
+                <div className="p-4 rounded-lg bg-slate-900 border border-slate-700 flex justify-between items-center">
+                  <span>Footer Quick Links:</span>
+                  <span className="font-bold font-mono text-[#00AEEF]">{footerLinks.length} active links</span>
+                </div>
+                <div className="p-4 rounded-lg bg-slate-900 border border-slate-700 flex justify-between items-center">
+                  <span>Social Links Configured:</span>
+                  <span className="font-bold font-mono text-[#00AEEF]">{socialLinks.length} platforms</span>
                 </div>
                 <div className="p-4 rounded-lg bg-slate-900 border border-slate-700 flex justify-between items-center">
                   <span>Site Title:</span>
@@ -929,6 +715,7 @@ export const AdminDashboard: React.FC<{ onNavigateHome: () => void }> = ({ onNav
         {/* TAB 2: HERO & BANNERS */}
         {activeTab === 'hero' && (
           <div className="space-y-8">
+            {/* Hero Main Content Form */}
             <div className="p-6 rounded-xl bg-slate-800 border border-slate-700 space-y-4">
               <div className="flex justify-between items-center">
                 <h3 className="text-sm font-extrabold text-[#F2B705]">Homepage Hero Section Settings</h3>
@@ -941,7 +728,7 @@ export const AdminDashboard: React.FC<{ onNavigateHome: () => void }> = ({ onNav
                 </button>
               </div>
 
-              {editingHero && (
+              {editingHero ? (
                 <form onSubmit={handleSaveHero} className="space-y-4 text-xs">
                   <div>
                     <label className="block font-bold text-slate-300 mb-1">Top Institutional Line</label>
@@ -963,41 +750,68 @@ export const AdminDashboard: React.FC<{ onNavigateHome: () => void }> = ({ onNav
                     />
                   </div>
                   <div>
-                    <label className="block font-bold text-slate-300 mb-1">Subtext Description</label>
+                    <label className="block font-bold text-slate-300 mb-1">Subtext / Description</label>
                     <textarea
-                      rows={2}
+                      rows={3}
                       value={editingHero.subtext ?? heroContent.subtext}
                       onChange={(e) => setEditingHero({ ...editingHero, subtext: e.target.value })}
                       className="w-full p-2.5 rounded bg-slate-900 border border-slate-700 text-white"
                     />
                   </div>
-                  <div className="flex gap-2">
-                    <button type="submit" className="px-4 py-2 rounded bg-emerald-600 font-bold">Save Hero Settings</button>
-                    <button type="button" onClick={() => setEditingHero(null)} className="px-4 py-2 rounded bg-slate-700 font-bold">Cancel</button>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block font-bold text-slate-300 mb-1">Primary CTA Label</label>
+                      <input
+                        type="text"
+                        value={editingHero.primaryCtaText ?? heroContent.primaryCtaText}
+                        onChange={(e) => setEditingHero({ ...editingHero, primaryCtaText: e.target.value })}
+                        className="w-full p-2.5 rounded bg-slate-900 border border-slate-700 text-white"
+                      />
+                    </div>
+                    <div>
+                      <label className="block font-bold text-slate-300 mb-1">Primary CTA Destination</label>
+                      <input
+                        type="text"
+                        value={editingHero.primaryCtaLink ?? heroContent.primaryCtaLink}
+                        onChange={(e) => setEditingHero({ ...editingHero, primaryCtaLink: e.target.value })}
+                        className="w-full p-2.5 rounded bg-slate-900 border border-slate-700 text-white font-mono"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex gap-2 pt-2">
+                    <button type="submit" className="px-4 py-2 rounded bg-emerald-600 font-bold text-xs">Save Hero</button>
+                    <button type="button" onClick={() => setEditingHero(null)} className="px-4 py-2 rounded bg-slate-700 font-bold text-xs">Cancel</button>
                   </div>
                 </form>
+              ) : (
+                <div className="space-y-2 text-xs text-slate-300">
+                  <p><strong className="text-slate-400">Top Line:</strong> {heroContent.topLine}</p>
+                  <p><strong className="text-slate-400">Headline:</strong> <span className="font-extrabold text-white">{heroContent.headline}</span></p>
+                  <p><strong className="text-slate-400">Subtext:</strong> {heroContent.subtext}</p>
+                  <p><strong className="text-slate-400">Primary CTA:</strong> {heroContent.primaryCtaText} ({heroContent.primaryCtaLink})</p>
+                </div>
               )}
             </div>
 
-            {/* Announcement Slides */}
+            {/* Promo Banners Table */}
             <div className="space-y-4">
               <div className="flex justify-between items-center">
-                <h3 className="text-sm font-extrabold text-[#F2B705]">Announcement Banner Slider</h3>
+                <h3 className="text-sm font-extrabold text-white">Homepage Promotional Banners ({promoSlides.length})</h3>
                 <button
                   onClick={() => setEditingSlide({ title: '', imageUrl: '', ctaText: 'Learn More', ctaLink: 'academics' })}
                   className="px-3.5 py-2 rounded-lg bg-[#003366] hover:bg-blue-900 text-white text-xs font-bold flex items-center gap-1.5"
                 >
                   <Plus className="w-4 h-4" />
-                  <span>Add Slide</span>
+                  <span>Add Banner Slide</span>
                 </button>
               </div>
 
               {editingSlide && (
-                <form onSubmit={handleSaveSlide} className="p-5 rounded-xl bg-slate-800 border border-slate-700 space-y-4 text-xs">
-                  <h4 className="font-bold text-[#F2B705]">{editingSlide.id ? 'Edit Slide' : 'New Slide Entry'}</h4>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <form onSubmit={handleSaveSlide} className="p-5 rounded-xl bg-slate-800 border border-slate-700 space-y-4">
+                  <h4 className="text-xs font-bold text-[#F2B705]">{editingSlide.id ? 'Edit Banner Slide' : 'New Banner Entry'}</h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
                     <div>
-                      <label className="block font-bold text-slate-300 mb-1">Slide Title *</label>
+                      <label className="block font-bold text-slate-300 mb-1">Banner Title *</label>
                       <input
                         type="text"
                         required
@@ -1009,7 +823,7 @@ export const AdminDashboard: React.FC<{ onNavigateHome: () => void }> = ({ onNav
                     <div>
                       <label className="block font-bold text-slate-300 mb-1">Image URL *</label>
                       <input
-                        type="text"
+                        type="url"
                         required
                         value={editingSlide.imageUrl || ''}
                         onChange={(e) => setEditingSlide({ ...editingSlide, imageUrl: e.target.value })}
@@ -1018,8 +832,8 @@ export const AdminDashboard: React.FC<{ onNavigateHome: () => void }> = ({ onNav
                     </div>
                   </div>
                   <div className="flex gap-2">
-                    <button type="submit" className="px-4 py-2 rounded bg-emerald-600 font-bold">Save Slide</button>
-                    <button type="button" onClick={() => setEditingSlide(null)} className="px-4 py-2 rounded bg-slate-700 font-bold">Cancel</button>
+                    <button type="submit" className="px-4 py-2 rounded bg-emerald-600 font-bold text-xs">Save Banner</button>
+                    <button type="button" onClick={() => setEditingSlide(null)} className="px-4 py-2 rounded bg-slate-700 font-bold text-xs">Cancel</button>
                   </div>
                 </form>
               )}
@@ -1030,6 +844,7 @@ export const AdminDashboard: React.FC<{ onNavigateHome: () => void }> = ({ onNav
                     <tr>
                       <th className="p-3">Title</th>
                       <th className="p-3">Badge</th>
+                      <th className="p-3">CTA Link</th>
                       <th className="p-3 text-right">Actions</th>
                     </tr>
                   </thead>
@@ -1037,7 +852,8 @@ export const AdminDashboard: React.FC<{ onNavigateHome: () => void }> = ({ onNav
                     {promoSlides.map((slide) => (
                       <tr key={slide.id} className="hover:bg-slate-800/50">
                         <td className="p-3 font-bold text-white">{slide.title}</td>
-                        <td className="p-3 font-mono">{slide.badgeText}</td>
+                        <td className="p-3">{slide.badgeText || '—'}</td>
+                        <td className="p-3 font-mono">{slide.ctaLink}</td>
                         <td className="p-3 text-right space-x-2">
                           <button onClick={() => setEditingSlide(slide)} className="p-1.5 rounded bg-slate-700 hover:bg-slate-600 text-white"><Edit className="w-3.5 h-3.5" /></button>
                           <button onClick={() => handleDeleteSlide(slide.id)} className="p-1.5 rounded bg-red-600/80 hover:bg-red-600 text-white"><Trash2 className="w-3.5 h-3.5" /></button>
@@ -1055,9 +871,9 @@ export const AdminDashboard: React.FC<{ onNavigateHome: () => void }> = ({ onNav
         {activeTab === 'navigation' && (
           <div className="space-y-6">
             <div className="flex justify-between items-center">
-              <h2 className="text-base font-extrabold text-white">Header Navigation Menu Items</h2>
+              <h2 className="text-base font-extrabold text-white">Navbar Menu Configuration</h2>
               <button
-                onClick={() => setEditingNavItem({ label: '', sectionId: 'home', displayOrder: navItems.length + 1 })}
+                onClick={() => setEditingNavItem({ label: '', sectionId: 'home', displayOrder: navItems.length + 1, isActive: true })}
                 className="px-3.5 py-2 rounded-lg bg-[#003366] hover:bg-blue-900 text-white text-xs font-bold flex items-center gap-1.5"
               >
                 <Plus className="w-4 h-4" />
@@ -1067,8 +883,8 @@ export const AdminDashboard: React.FC<{ onNavigateHome: () => void }> = ({ onNav
 
             {editingNavItem && (
               <form onSubmit={handleSaveNavItem} className="p-5 rounded-xl bg-slate-800 border border-slate-700 space-y-4 text-xs">
-                <h3 className="font-bold text-[#F2B705]">{editingNavItem.id ? 'Edit Nav Item' : 'New Nav Item'}</h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <h3 className="font-bold text-[#F2B705]">{editingNavItem.id ? 'Edit Nav Item' : 'New Nav Item Entry'}</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div>
                     <label className="block font-bold text-slate-300 mb-1">Label *</label>
                     <input
@@ -1076,16 +892,31 @@ export const AdminDashboard: React.FC<{ onNavigateHome: () => void }> = ({ onNav
                       required
                       value={editingNavItem.label || ''}
                       onChange={(e) => setEditingNavItem({ ...editingNavItem, label: e.target.value })}
-                      className="w-full p-2 rounded bg-slate-900 border border-slate-700 text-white font-bold"
+                      className="w-full p-2 rounded bg-slate-900 border border-slate-700 text-white"
                     />
                   </div>
                   <div>
-                    <label className="block font-bold text-slate-300 mb-1">Target Section ID *</label>
+                    <label className="block font-bold text-slate-300 mb-1">Section ID *</label>
+                    <select
+                      value={editingNavItem.sectionId || 'home'}
+                      onChange={(e) => setEditingNavItem({ ...editingNavItem, sectionId: e.target.value as NavSectionId })}
+                      className="w-full p-2 rounded bg-slate-900 border border-slate-700 text-white font-mono"
+                    >
+                      <option value="home">home</option>
+                      <option value="about">about</option>
+                      <option value="academics">academics</option>
+                      <option value="hub">hub</option>
+                      <option value="innovation">innovation</option>
+                      <option value="community">community</option>
+                      <option value="contact">contact</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block font-bold text-slate-300 mb-1">Display Order</label>
                     <input
-                      type="text"
-                      required
-                      value={editingNavItem.sectionId || ''}
-                      onChange={(e) => setEditingNavItem({ ...editingNavItem, sectionId: e.target.value as any })}
+                      type="number"
+                      value={editingNavItem.displayOrder ?? 0}
+                      onChange={(e) => setEditingNavItem({ ...editingNavItem, displayOrder: parseInt(e.target.value) || 0 })}
                       className="w-full p-2 rounded bg-slate-900 border border-slate-700 text-white font-mono"
                     />
                   </div>
@@ -1110,9 +941,9 @@ export const AdminDashboard: React.FC<{ onNavigateHome: () => void }> = ({ onNav
                 <tbody className="divide-y divide-slate-800">
                   {navItems.map((item) => (
                     <tr key={item.id} className="hover:bg-slate-800/50">
-                      <td className="p-3 font-mono font-bold text-[#F2B705]">{item.displayOrder}</td>
+                      <td className="p-3 font-mono text-[#F2B705] font-bold">{item.displayOrder}</td>
                       <td className="p-3 font-bold text-white">{item.label}</td>
-                      <td className="p-3 font-mono text-[#00AEEF]">{item.sectionId}</td>
+                      <td className="p-3 font-mono">{item.sectionId}</td>
                       <td className="p-3 text-right space-x-2">
                         <button onClick={() => setEditingNavItem(item)} className="p-1.5 rounded bg-slate-700 hover:bg-slate-600 text-white"><Edit className="w-3.5 h-3.5" /></button>
                         <button onClick={() => handleDeleteNavItem(item.id)} className="p-1.5 rounded bg-red-600/80 hover:bg-red-600 text-white"><Trash2 className="w-3.5 h-3.5" /></button>
@@ -1125,132 +956,7 @@ export const AdminDashboard: React.FC<{ onNavigateHome: () => void }> = ({ onNav
           </div>
         )}
 
-        {/* TAB 4: COURSES DIRECTORY */}
-        {activeTab === 'courses' && (
-          <div className="space-y-6">
-            <div className="flex justify-between items-center">
-              <h2 className="text-base font-extrabold text-white">Course Directory & Syllabi</h2>
-              <button
-                onClick={() => setEditingCourse({ code: '', name: '', level: '100', credits: 3, category: 'Core' })}
-                className="px-3.5 py-2 rounded-lg bg-[#003366] hover:bg-blue-900 text-white text-xs font-bold flex items-center gap-1.5"
-              >
-                <Plus className="w-4 h-4" />
-                <span>Add Course</span>
-              </button>
-            </div>
-
-            {editingCourse && (
-              <form onSubmit={handleSaveCourse} className="p-5 rounded-xl bg-slate-800 border border-slate-700 space-y-4 text-xs">
-                <h3 className="font-bold text-[#F2B705]">{editingCourse.id ? 'Edit Course' : 'New Course Entry'}</h3>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  <div>
-                    <label className="block font-bold text-slate-300 mb-1">Course Code *</label>
-                    <input
-                      type="text"
-                      required
-                      placeholder="e.g. BIT 101"
-                      value={editingCourse.code || ''}
-                      onChange={(e) => setEditingCourse({ ...editingCourse, code: e.target.value })}
-                      className="w-full p-2 rounded bg-slate-900 border border-slate-700 text-white font-mono"
-                    />
-                  </div>
-                  <div>
-                    <label className="block font-bold text-slate-300 mb-1">Course Name *</label>
-                    <input
-                      type="text"
-                      required
-                      placeholder="e.g. Introduction to Programming"
-                      value={editingCourse.name || ''}
-                      onChange={(e) => setEditingCourse({ ...editingCourse, name: e.target.value })}
-                      className="w-full p-2 rounded bg-slate-900 border border-slate-700 text-white"
-                    />
-                  </div>
-                  <div>
-                    <label className="block font-bold text-slate-300 mb-1">Credits</label>
-                    <input
-                      type="number"
-                      value={editingCourse.credits ?? 3}
-                      onChange={(e) => setEditingCourse({ ...editingCourse, credits: parseInt(e.target.value) || 3 })}
-                      className="w-full p-2 rounded bg-slate-900 border border-slate-700 text-white font-mono"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block font-bold text-slate-300 mb-1">Level</label>
-                    <select
-                      value={editingCourse.level || '100'}
-                      onChange={(e) => setEditingCourse({ ...editingCourse, level: e.target.value })}
-                      className="w-full p-2 rounded bg-slate-900 border border-slate-700 text-white font-mono"
-                    >
-                      <option value="100">Level 100</option>
-                      <option value="200">Level 200</option>
-                      <option value="300">Level 300</option>
-                      <option value="400">Level 400</option>
-                      <option value="Diploma">Diploma</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block font-bold text-slate-300 mb-1">Category</label>
-                    <input
-                      type="text"
-                      placeholder="Core / Elective"
-                      value={editingCourse.category || 'Core'}
-                      onChange={(e) => setEditingCourse({ ...editingCourse, category: e.target.value })}
-                      className="w-full p-2 rounded bg-slate-900 border border-slate-700 text-white"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block font-bold text-slate-300 mb-1">Description</label>
-                  <textarea
-                    rows={2}
-                    value={editingCourse.description || ''}
-                    onChange={(e) => setEditingCourse({ ...editingCourse, description: e.target.value })}
-                    className="w-full p-2 rounded bg-slate-900 border border-slate-700 text-white"
-                  />
-                </div>
-
-                <div className="flex gap-2">
-                  <button type="submit" className="px-4 py-2 rounded bg-emerald-600 font-bold">Save Course</button>
-                  <button type="button" onClick={() => setEditingCourse(null)} className="px-4 py-2 rounded bg-slate-700 font-bold">Cancel</button>
-                </div>
-              </form>
-            )}
-
-            <div className="overflow-x-auto rounded-xl border border-slate-800">
-              <table className="w-full text-left text-xs text-slate-300">
-                <thead className="bg-slate-800 text-slate-400 font-bold uppercase border-b border-slate-700">
-                  <tr>
-                    <th className="p-3">Code</th>
-                    <th className="p-3">Course Title</th>
-                    <th className="p-3">Level</th>
-                    <th className="p-3">Credits</th>
-                    <th className="p-3 text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-800">
-                  {courses.map((c) => (
-                    <tr key={c.id} className="hover:bg-slate-800/50">
-                      <td className="p-3 font-mono font-bold text-[#F2B705]">{c.code}</td>
-                      <td className="p-3 font-bold text-white">{c.name}</td>
-                      <td className="p-3 font-mono">{c.level}</td>
-                      <td className="p-3 font-mono">{c.credits}</td>
-                      <td className="p-3 text-right space-x-2">
-                        <button onClick={() => setEditingCourse(c)} className="p-1.5 rounded bg-slate-700 hover:bg-slate-600 text-white"><Edit className="w-3.5 h-3.5" /></button>
-                        <button onClick={() => handleDeleteCourse(c.id)} className="p-1.5 rounded bg-red-600/80 hover:bg-red-600 text-white"><Trash2 className="w-3.5 h-3.5" /></button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
-
-        {/* TAB 4: PROGRAMMES */}
+        {/* TAB 4: ACADEMIC PROGRAMMES */}
         {activeTab === 'programmes' && (
           <div className="space-y-6">
             <div className="flex justify-between items-center">
@@ -1402,22 +1108,22 @@ export const AdminDashboard: React.FC<{ onNavigateHome: () => void }> = ({ onNav
         {activeTab === 'faculty' && (
           <div className="space-y-6">
             <div className="flex justify-between items-center">
-              <h2 className="text-base font-extrabold text-white">Faculty & Academic Profiles</h2>
+              <h2 className="text-base font-extrabold text-white">Faculty & Leadership Directory</h2>
               <button
-                onClick={() => setEditingFaculty({ name: '', title: '', role: 'Lecturer' })}
+                onClick={() => setEditingFaculty({ name: '', title: '' })}
                 className="px-3.5 py-2 rounded-lg bg-[#003366] hover:bg-blue-900 text-white text-xs font-bold flex items-center gap-1.5"
               >
                 <Plus className="w-4 h-4" />
-                <span>Add Lecturer / Staff</span>
+                <span>Add Faculty Member</span>
               </button>
             </div>
 
             {editingFaculty && (
               <form onSubmit={handleSaveFaculty} className="p-5 rounded-xl bg-slate-800 border border-slate-700 space-y-4 text-xs">
-                <h3 className="font-bold text-[#F2B705]">{editingFaculty.id ? 'Edit Lecturer Profile' : 'New Lecturer Entry'}</h3>
+                <h3 className="font-bold text-[#F2B705]">{editingFaculty.id ? 'Edit Faculty' : 'New Faculty Entry'}</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block font-bold text-slate-300 mb-1">Full Name *</label>
+                    <label className="block font-bold text-slate-300 mb-1">Name *</label>
                     <input
                       type="text"
                       required
@@ -1427,53 +1133,18 @@ export const AdminDashboard: React.FC<{ onNavigateHome: () => void }> = ({ onNav
                     />
                   </div>
                   <div>
-                    <label className="block font-bold text-slate-300 mb-1">Academic Title / Designation *</label>
+                    <label className="block font-bold text-slate-300 mb-1">Title *</label>
                     <input
                       type="text"
                       required
-                      placeholder="e.g. Senior Lecturer / Head of Department"
                       value={editingFaculty.title || ''}
                       onChange={(e) => setEditingFaculty({ ...editingFaculty, title: e.target.value })}
                       className="w-full p-2 rounded bg-slate-900 border border-slate-700 text-white"
                     />
                   </div>
                 </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block font-bold text-slate-300 mb-1">Highest Degree</label>
-                    <input
-                      type="text"
-                      placeholder="e.g. Ph.D. in Computer Science"
-                      value={editingFaculty.academicDegree || ''}
-                      onChange={(e) => setEditingFaculty({ ...editingFaculty, academicDegree: e.target.value })}
-                      className="w-full p-2 rounded bg-slate-900 border border-slate-700 text-white"
-                    />
-                  </div>
-                  <div>
-                    <label className="block font-bold text-slate-300 mb-1">Office Location</label>
-                    <input
-                      type="text"
-                      placeholder="e.g. IT Block Office #204"
-                      value={editingFaculty.officeLocation || ''}
-                      onChange={(e) => setEditingFaculty({ ...editingFaculty, officeLocation: e.target.value })}
-                      className="w-full p-2 rounded bg-slate-900 border border-slate-700 text-white"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block font-bold text-slate-300 mb-1">Biography & Background</label>
-                  <textarea
-                    rows={3}
-                    value={editingFaculty.biography || editingFaculty.bio || ''}
-                    onChange={(e) => setEditingFaculty({ ...editingFaculty, biography: e.target.value, bio: e.target.value })}
-                    className="w-full p-2 rounded bg-slate-900 border border-slate-700 text-white"
-                  />
-                </div>
-
                 <div className="flex gap-2">
-                  <button type="submit" className="px-4 py-2 rounded bg-emerald-600 font-bold">Save Faculty Profile</button>
+                  <button type="submit" className="px-4 py-2 rounded bg-emerald-600 font-bold">Save Faculty</button>
                   <button type="button" onClick={() => setEditingFaculty(null)} className="px-4 py-2 rounded bg-slate-700 font-bold">Cancel</button>
                 </div>
               </form>
@@ -1507,146 +1178,10 @@ export const AdminDashboard: React.FC<{ onNavigateHome: () => void }> = ({ onNav
           </div>
         )}
 
-        {/* TAB 7: RESEARCH & PUBLICATIONS */}
-        {activeTab === 'research' && (
-          <div className="space-y-8">
-            {/* Research Projects */}
-            <div className="space-y-4">
-              <div className="flex justify-between items-center">
-                <h3 className="text-sm font-extrabold text-[#F2B705]">Department Research Projects</h3>
-                <button
-                  onClick={() => setEditingResearch({ title: '', leadResearcher: '', status: 'Active', category: 'Artificial Intelligence' })}
-                  className="px-3.5 py-2 rounded-lg bg-[#003366] hover:bg-blue-900 text-white text-xs font-bold flex items-center gap-1.5"
-                >
-                  <Plus className="w-4 h-4" />
-                  <span>Add Research Project</span>
-                </button>
-              </div>
-
-              {editingResearch && (
-                <form onSubmit={handleSaveResearch} className="p-5 rounded-xl bg-slate-800 border border-slate-700 space-y-4 text-xs">
-                  <h4 className="font-bold text-[#F2B705]">{editingResearch.id ? 'Edit Research Project' : 'New Research Project'}</h4>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block font-bold text-slate-300 mb-1">Project Title *</label>
-                      <input
-                        type="text"
-                        required
-                        value={editingResearch.title || ''}
-                        onChange={(e) => setEditingResearch({ ...editingResearch, title: e.target.value })}
-                        className="w-full p-2 rounded bg-slate-900 border border-slate-700 text-white"
-                      />
-                    </div>
-                    <div>
-                      <label className="block font-bold text-slate-300 mb-1">Lead Researcher *</label>
-                      <input
-                        type="text"
-                        required
-                        value={editingResearch.leadResearcher || ''}
-                        onChange={(e) => setEditingResearch({ ...editingResearch, leadResearcher: e.target.value })}
-                        className="w-full p-2 rounded bg-slate-900 border border-slate-700 text-white"
-                      />
-                    </div>
-                  </div>
-                  <div className="flex gap-2">
-                    <button type="submit" className="px-4 py-2 rounded bg-emerald-600 font-bold">Save Research</button>
-                    <button type="button" onClick={() => setEditingResearch(null)} className="px-4 py-2 rounded bg-slate-700 font-bold">Cancel</button>
-                  </div>
-                </form>
-              )}
-
-              <div className="overflow-x-auto rounded-xl border border-slate-800">
-                <table className="w-full text-left text-xs text-slate-300">
-                  <thead className="bg-slate-800 text-slate-400 font-bold uppercase border-b border-slate-700">
-                    <tr>
-                      <th className="p-3">Title</th>
-                      <th className="p-3">Lead Researcher</th>
-                      <th className="p-3">Category</th>
-                      <th className="p-3 text-right">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-800">
-                    {researchProjects.map((rp) => (
-                      <tr key={rp.id} className="hover:bg-slate-800/50">
-                        <td className="p-3 font-bold text-white">{rp.title}</td>
-                        <td className="p-3">{rp.leadResearcher}</td>
-                        <td className="p-3 font-mono">{rp.category}</td>
-                        <td className="p-3 text-right space-x-2">
-                          <button onClick={() => setEditingResearch(rp)} className="p-1.5 rounded bg-slate-700 hover:bg-slate-600 text-white"><Edit className="w-3.5 h-3.5" /></button>
-                          <button onClick={() => handleDeleteResearch(rp.id)} className="p-1.5 rounded bg-red-600/80 hover:bg-red-600 text-white"><Trash2 className="w-3.5 h-3.5" /></button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            {/* Faculty Publications */}
-            <div className="space-y-4">
-              <div className="flex justify-between items-center">
-                <h3 className="text-sm font-extrabold text-[#F2B705]">Faculty Publications & Papers</h3>
-                <button
-                  onClick={() => setEditingPub({ title: '', authors: ['Dr. Joshua Ofoeda'], journal: '', publicationYear: '2026' })}
-                  className="px-3.5 py-2 rounded-lg bg-[#003366] hover:bg-blue-900 text-white text-xs font-bold flex items-center gap-1.5"
-                >
-                  <Plus className="w-4 h-4" />
-                  <span>Add Publication</span>
-                </button>
-              </div>
-
-              {editingPub && (
-                <form onSubmit={handleSavePub} className="p-5 rounded-xl bg-slate-800 border border-slate-700 space-y-4 text-xs">
-                  <h4 className="font-bold text-[#F2B705]">{editingPub.id ? 'Edit Publication' : 'New Publication Entry'}</h4>
-                  <div>
-                    <label className="block font-bold text-slate-300 mb-1">Paper Title *</label>
-                    <input
-                      type="text"
-                      required
-                      value={editingPub.title || ''}
-                      onChange={(e) => setEditingPub({ ...editingPub, title: e.target.value })}
-                      className="w-full p-2 rounded bg-slate-900 border border-slate-700 text-white font-bold"
-                    />
-                  </div>
-                  <div className="flex gap-2">
-                    <button type="submit" className="px-4 py-2 rounded bg-emerald-600 font-bold">Save Publication</button>
-                    <button type="button" onClick={() => setEditingPub(null)} className="px-4 py-2 rounded bg-slate-700 font-bold">Cancel</button>
-                  </div>
-                </form>
-              )}
-
-              <div className="overflow-x-auto rounded-xl border border-slate-800">
-                <table className="w-full text-left text-xs text-slate-300">
-                  <thead className="bg-slate-800 text-slate-400 font-bold uppercase border-b border-slate-700">
-                    <tr>
-                      <th className="p-3">Paper Title</th>
-                      <th className="p-3">Journal</th>
-                      <th className="p-3">Year</th>
-                      <th className="p-3 text-right">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-800">
-                    {facultyPublications.map((pub) => (
-                      <tr key={pub.id} className="hover:bg-slate-800/50">
-                        <td className="p-3 font-bold text-white">{pub.title}</td>
-                        <td className="p-3">{pub.journal}</td>
-                        <td className="p-3 font-mono">{pub.publicationYear}</td>
-                        <td className="p-3 text-right space-x-2">
-                          <button onClick={() => setEditingPub(pub)} className="p-1.5 rounded bg-slate-700 hover:bg-slate-600 text-white"><Edit className="w-3.5 h-3.5" /></button>
-                          <button onClick={() => handleDeletePub(pub.id)} className="p-1.5 rounded bg-red-600/80 hover:bg-red-600 text-white"><Trash2 className="w-3.5 h-3.5" /></button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* TAB 8: FOOTER & LINKS */}
+        {/* TAB 7: FOOTER & LINKS */}
         {activeTab === 'footer' && (
           <div className="space-y-8">
+            {/* Footer Branding Form */}
             <div className="p-6 rounded-xl bg-slate-800 border border-slate-700 space-y-4 text-xs">
               <div className="flex justify-between items-center">
                 <h3 className="text-sm font-extrabold text-[#F2B705]">Footer Branding & Contact Settings</h3>
@@ -1659,7 +1194,7 @@ export const AdminDashboard: React.FC<{ onNavigateHome: () => void }> = ({ onNav
                 </button>
               </div>
 
-              {editingFooterContent && (
+              {editingFooterContent ? (
                 <form onSubmit={handleSaveFooterContent} className="space-y-4">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
@@ -1681,29 +1216,76 @@ export const AdminDashboard: React.FC<{ onNavigateHome: () => void }> = ({ onNav
                       />
                     </div>
                   </div>
-                  <div className="flex gap-2">
+
+                  <div>
+                    <label className="block font-bold text-slate-300 mb-1">Description Paragraph</label>
+                    <textarea
+                      rows={2}
+                      value={editingFooterContent.description ?? footerContent.description}
+                      onChange={(e) => setEditingFooterContent({ ...editingFooterContent, description: e.target.value })}
+                      className="w-full p-2.5 rounded bg-slate-900 border border-slate-700 text-white"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div>
+                      <label className="block font-bold text-slate-300 mb-1">Digital Address</label>
+                      <input
+                        type="text"
+                        value={editingFooterContent.digitalAddress ?? footerContent.digitalAddress}
+                        onChange={(e) => setEditingFooterContent({ ...editingFooterContent, digitalAddress: e.target.value })}
+                        className="w-full p-2.5 rounded bg-slate-900 border border-slate-700 text-white font-mono"
+                      />
+                    </div>
+                    <div>
+                      <label className="block font-bold text-slate-300 mb-1">Admissions Phone</label>
+                      <input
+                        type="text"
+                        value={editingFooterContent.phoneAdmissions ?? footerContent.phoneAdmissions}
+                        onChange={(e) => setEditingFooterContent({ ...editingFooterContent, phoneAdmissions: e.target.value })}
+                        className="w-full p-2.5 rounded bg-slate-900 border border-slate-700 text-white font-mono"
+                      />
+                    </div>
+                    <div>
+                      <label className="block font-bold text-slate-300 mb-1">Official Email</label>
+                      <input
+                        type="email"
+                        value={editingFooterContent.email ?? footerContent.email}
+                        onChange={(e) => setEditingFooterContent({ ...editingFooterContent, email: e.target.value })}
+                        className="w-full p-2.5 rounded bg-slate-900 border border-slate-700 text-white font-mono"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex gap-2 pt-2">
                     <button type="submit" className="px-4 py-2 rounded bg-emerald-600 font-bold">Save Footer</button>
                     <button type="button" onClick={() => setEditingFooterContent(null)} className="px-4 py-2 rounded bg-slate-700 font-bold">Cancel</button>
                   </div>
                 </form>
+              ) : (
+                <div className="space-y-1 text-slate-300">
+                  <p><strong className="text-slate-400">Logo:</strong> {footerContent.logoText} | <strong className="text-slate-400">Motto:</strong> {footerContent.mottoText}</p>
+                  <p><strong className="text-slate-400">Digital Address:</strong> {footerContent.digitalAddress} | <strong className="text-slate-400">Email:</strong> {footerContent.email}</p>
+                </div>
               )}
             </div>
 
-            {/* Footer Quick Links Table */}
+            {/* Footer Links Table */}
             <div className="space-y-4">
               <div className="flex justify-between items-center">
-                <h3 className="text-sm font-extrabold text-[#F2B705]">Footer Quick Links</h3>
+                <h3 className="text-sm font-extrabold text-white">Footer Quick Links ({footerLinks.length})</h3>
                 <button
-                  onClick={() => setEditingFooterLink({ columnTitle: 'QUICK LINKS', label: '', url: '' })}
-                  className="px-3 py-1.5 rounded bg-[#003366] text-white font-bold text-xs flex items-center gap-1"
+                  onClick={() => setEditingFooterLink({ columnTitle: 'ACADEMICS & HUB', label: '', url: 'academics', isExternal: false, displayOrder: footerLinks.length + 1 })}
+                  className="px-3.5 py-2 rounded-lg bg-[#003366] hover:bg-blue-900 text-white text-xs font-bold flex items-center gap-1.5"
                 >
-                  <Plus className="w-3.5 h-3.5" />
+                  <Plus className="w-4 h-4" />
                   <span>Add Footer Link</span>
                 </button>
               </div>
 
               {editingFooterLink && (
                 <form onSubmit={handleSaveFooterLink} className="p-5 rounded-xl bg-slate-800 border border-slate-700 space-y-4 text-xs">
+                  <h4 className="font-bold text-[#F2B705]">{editingFooterLink.id ? 'Edit Footer Link' : 'New Footer Link Entry'}</h4>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <div>
                       <label className="block font-bold text-slate-300 mb-1">Column Title *</label>
@@ -1726,7 +1308,7 @@ export const AdminDashboard: React.FC<{ onNavigateHome: () => void }> = ({ onNav
                       />
                     </div>
                     <div>
-                      <label className="block font-bold text-slate-300 mb-1">URL *</label>
+                      <label className="block font-bold text-slate-300 mb-1">URL / Section ID *</label>
                       <input
                         type="text"
                         required
@@ -1754,14 +1336,14 @@ export const AdminDashboard: React.FC<{ onNavigateHome: () => void }> = ({ onNav
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-800">
-                    {footerLinks.map((fl) => (
-                      <tr key={fl.id} className="hover:bg-slate-800/50">
-                        <td className="p-3 font-mono text-[#F2B705]">{fl.columnTitle}</td>
-                        <td className="p-3 font-bold text-white">{fl.label}</td>
-                        <td className="p-3 font-mono">{fl.url}</td>
+                    {footerLinks.map((link) => (
+                      <tr key={link.id} className="hover:bg-slate-800/50">
+                        <td className="p-3 font-bold text-[#F2B705]">{link.columnTitle}</td>
+                        <td className="p-3 font-bold text-white">{link.label}</td>
+                        <td className="p-3 font-mono">{link.url}</td>
                         <td className="p-3 text-right space-x-2">
-                          <button onClick={() => setEditingFooterLink(fl)} className="p-1.5 rounded bg-slate-700 hover:bg-slate-600 text-white"><Edit className="w-3.5 h-3.5" /></button>
-                          <button onClick={() => handleDeleteFooterLink(fl.id)} className="p-1.5 rounded bg-red-600/80 hover:bg-red-600 text-white"><Trash2 className="w-3.5 h-3.5" /></button>
+                          <button onClick={() => setEditingFooterLink(link)} className="p-1.5 rounded bg-slate-700 hover:bg-slate-600 text-white"><Edit className="w-3.5 h-3.5" /></button>
+                          <button onClick={() => handleDeleteFooterLink(link.id)} className="p-1.5 rounded bg-red-600/80 hover:bg-red-600 text-white"><Trash2 className="w-3.5 h-3.5" /></button>
                         </td>
                       </tr>
                     ))}
@@ -1772,25 +1354,26 @@ export const AdminDashboard: React.FC<{ onNavigateHome: () => void }> = ({ onNav
           </div>
         )}
 
-        {/* TAB 9: SOCIAL */}
+        {/* TAB 8: SOCIAL LINKS */}
         {activeTab === 'social' && (
           <div className="space-y-6">
             <div className="flex justify-between items-center">
-              <h2 className="text-base font-extrabold text-white">Social Media Links</h2>
+              <h2 className="text-base font-extrabold text-white">Social Media Platforms</h2>
               <button
-                onClick={() => setEditingSocialLink({ platform: '', url: '', iconName: 'Globe' })}
+                onClick={() => setEditingSocialLink({ platform: 'Facebook', url: 'https://', displayOrder: socialLinks.length + 1 })}
                 className="px-3.5 py-2 rounded-lg bg-[#003366] hover:bg-blue-900 text-white text-xs font-bold flex items-center gap-1.5"
               >
                 <Plus className="w-4 h-4" />
-                <span>Add Social Link</span>
+                <span>Add Social Platform</span>
               </button>
             </div>
 
             {editingSocialLink && (
               <form onSubmit={handleSaveSocialLink} className="p-5 rounded-xl bg-slate-800 border border-slate-700 space-y-4 text-xs">
+                <h3 className="font-bold text-[#F2B705]">{editingSocialLink.id ? 'Edit Social Link' : 'New Social Entry'}</h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block font-bold text-slate-300 mb-1">Platform *</label>
+                    <label className="block font-bold text-slate-300 mb-1">Platform Name *</label>
                     <input
                       type="text"
                       required
@@ -1802,7 +1385,7 @@ export const AdminDashboard: React.FC<{ onNavigateHome: () => void }> = ({ onNav
                   <div>
                     <label className="block font-bold text-slate-300 mb-1">URL *</label>
                     <input
-                      type="text"
+                      type="url"
                       required
                       value={editingSocialLink.url || ''}
                       onChange={(e) => setEditingSocialLink({ ...editingSocialLink, url: e.target.value })}
@@ -1811,7 +1394,7 @@ export const AdminDashboard: React.FC<{ onNavigateHome: () => void }> = ({ onNav
                   </div>
                 </div>
                 <div className="flex gap-2">
-                  <button type="submit" className="px-4 py-2 rounded bg-emerald-600 font-bold">Save Link</button>
+                  <button type="submit" className="px-4 py-2 rounded bg-emerald-600 font-bold">Save Social Link</button>
                   <button type="button" onClick={() => setEditingSocialLink(null)} className="px-4 py-2 rounded bg-slate-700 font-bold">Cancel</button>
                 </div>
               </form>
@@ -1830,7 +1413,7 @@ export const AdminDashboard: React.FC<{ onNavigateHome: () => void }> = ({ onNav
                   {socialLinks.map((s) => (
                     <tr key={s.id} className="hover:bg-slate-800/50">
                       <td className="p-3 font-bold text-white">{s.platform}</td>
-                      <td className="p-3 font-mono">{s.url}</td>
+                      <td className="p-3 font-mono text-[#00AEEF]">{s.url}</td>
                       <td className="p-3 text-right space-x-2">
                         <button onClick={() => setEditingSocialLink(s)} className="p-1.5 rounded bg-slate-700 hover:bg-slate-600 text-white"><Edit className="w-3.5 h-3.5" /></button>
                         <button onClick={() => handleDeleteSocialLink(s.id)} className="p-1.5 rounded bg-red-600/80 hover:bg-red-600 text-white"><Trash2 className="w-3.5 h-3.5" /></button>
@@ -1843,35 +1426,63 @@ export const AdminDashboard: React.FC<{ onNavigateHome: () => void }> = ({ onNav
           </div>
         )}
 
-        {/* TAB 10: SETTINGS */}
+        {/* TAB 9: SITE SETTINGS & SEO */}
         {activeTab === 'settings' && (
-          <div className="p-6 rounded-xl bg-slate-800 border border-slate-700 space-y-4 text-xs">
-            <h3 className="text-sm font-extrabold text-[#F2B705]">Global Site SEO & Branding Metadata</h3>
-            <form onSubmit={handleSaveSiteSettings} className="space-y-4">
+          <div className="space-y-6">
+            <h2 className="text-base font-extrabold text-white">Site Configuration & SEO Metadata</h2>
+
+            <form onSubmit={handleSaveSiteSettings} className="p-6 rounded-xl bg-slate-800 border border-slate-700 space-y-4 text-xs">
               <div>
-                <label className="block font-bold text-slate-300 mb-1">Site Title Tag</label>
+                <label className="block font-bold text-slate-300 mb-1">Web Portal Title *</label>
                 <input
                   type="text"
+                  required
                   value={editingSiteSettings?.siteTitle ?? siteSettings.siteTitle}
                   onChange={(e) => setEditingSiteSettings({ ...editingSiteSettings, siteTitle: e.target.value })}
                   className="w-full p-2.5 rounded bg-slate-900 border border-slate-700 text-white font-bold"
                 />
               </div>
+
               <div>
                 <label className="block font-bold text-slate-300 mb-1">Meta Description</label>
                 <textarea
-                  rows={2}
+                  rows={3}
                   value={editingSiteSettings?.metaDescription ?? siteSettings.metaDescription}
                   onChange={(e) => setEditingSiteSettings({ ...editingSiteSettings, metaDescription: e.target.value })}
                   className="w-full p-2.5 rounded bg-slate-900 border border-slate-700 text-white"
                 />
               </div>
-              <div className="flex gap-2">
-                <button type="submit" className="px-4 py-2 rounded bg-emerald-600 font-bold">Save Site Settings</button>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block font-bold text-slate-300 mb-1">Organization Name</label>
+                  <input
+                    type="text"
+                    value={editingSiteSettings?.organizationName ?? siteSettings.organizationName}
+                    onChange={(e) => setEditingSiteSettings({ ...editingSiteSettings, organizationName: e.target.value })}
+                    className="w-full p-2.5 rounded bg-slate-900 border border-slate-700 text-white"
+                  />
+                </div>
+                <div>
+                  <label className="block font-bold text-slate-300 mb-1">Canonical URL</label>
+                  <input
+                    type="url"
+                    value={editingSiteSettings?.canonicalUrl ?? siteSettings.canonicalUrl}
+                    onChange={(e) => setEditingSiteSettings({ ...editingSiteSettings, canonicalUrl: e.target.value })}
+                    className="w-full p-2.5 rounded bg-slate-900 border border-slate-700 text-white font-mono"
+                  />
+                </div>
+              </div>
+
+              <div className="pt-2">
+                <button type="submit" className="px-5 py-2.5 rounded bg-emerald-600 font-extrabold text-white text-xs tracking-wider uppercase">
+                  Save Site Settings
+                </button>
               </div>
             </form>
           </div>
         )}
+
       </div>
     </div>
   );

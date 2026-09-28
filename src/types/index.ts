@@ -1,20 +1,4 @@
-export type NavSectionId =
-  | 'home'
-  | 'about'
-  | 'academics'
-  | 'academics/programmes'
-  | 'academics/courses'
-  | 'it-department'
-  | 'it-department/faculty'
-  | 'faculty'
-  | 'research'
-  | 'hub'
-  | 'developers-hub'
-  | 'innovation'
-  | 'community'
-  | 'contact'
-  | 'admin'
-  | 'not-found';
+export type NavSectionId = 'home' | 'about' | 'academics' | 'hub' | 'innovation' | 'community' | 'contact' | 'admin';
 
 export type DegreeLevel = 'Undergraduate' | 'Postgraduate' | 'Diploma';
 
@@ -32,28 +16,6 @@ export interface AcademicProgramme {
   entryRequirements: string[];
   isNew?: boolean;
   imageUrl?: string;
-}
-
-export interface Course {
-  id: string;
-  courseCode: string;
-  code?: string;
-  title: string;
-  name?: string;
-  description: string;
-  level: DegreeLevel | string;
-  semester: string;
-  creditHours: number;
-  credits?: number;
-  category?: string;
-  syllabus?: string[];
-  prerequisites?: string[];
-  learningOutcomes?: string[];
-  courseOutlineUrl?: string;
-  displayOrder: number;
-  isActive: boolean;
-  programmeIds?: string[];
-  lecturerIds?: string[];
 }
 
 export interface PromoSlide {
@@ -105,77 +67,10 @@ export interface FacultyMember {
   officeLocation?: string;
   role: string;
   bio: string;
-  biography?: string;
-  slug?: string;
   specialization: string[];
   isHOD?: boolean;
   isUnconfirmedHOD?: boolean;
   avatarUrl?: string;
-  email?: string;
-  phone?: string;
-  qualifications?: string[];
-  researchInterests?: string[];
-  teachingAreas?: string[];
-  linkedinUrl?: string;
-  googleScholarUrl?: string;
-  orcidUrl?: string;
-  orcidId?: string;
-  profileSlug?: string;
-  displayOrder?: number;
-  isActive?: boolean;
-}
-
-export interface FacultyCourse {
-  id: string;
-  facultyId: string;
-  courseId: string;
-}
-
-export interface CourseProgramme {
-  id: string;
-  courseId: string;
-  programmeId: string;
-}
-
-export interface ResearchProject {
-  id: string;
-  title: string;
-  description: string;
-  leadFacultyId?: string;
-  leadFacultyName?: string;
-  leadResearcher?: string;
-  department?: string;
-  abstract?: string;
-  researchArea: string;
-  category?: string;
-  status: 'Active' | 'Completed' | 'Upcoming' | string;
-  startDate?: string;
-  endDate?: string;
-  publicationYear?: string;
-  paperUrl?: string;
-  imageUrl?: string;
-  externalUrl?: string;
-  tags?: string[];
-  displayOrder: number;
-  isActive: boolean;
-}
-
-export interface FacultyPublication {
-  id: string;
-  facultyId: string;
-  facultyName?: string;
-  title: string;
-  publicationType: string;
-  journalOrVenue: string;
-  journal?: string;
-  publicationYear: number | string;
-  authors: string[];
-  url?: string;
-  paperUrl?: string;
-  doi?: string;
-  citationCount?: number;
-  displayOrder: number;
-  isActive: boolean;
 }
 
 export interface HubMilestone {
@@ -258,3 +153,4 @@ export interface SocialLink {
   displayOrder: number;
   isActive: boolean;
 }
+
