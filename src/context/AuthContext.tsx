@@ -40,15 +40,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const login = async (email: string, pass: string): Promise<{ error: string | null }> => {
-    if (isSupabaseConfigured && supabase) {
+    if (!isSupabaseConfigured || !supabase) {
+      return { error: 'Authentication service not configured. Please verify VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY on Vercel.' };
+    }
+
+    try {
       const { error } = await supabase.auth.signInWithPassword({
         email,
         password: pass,
       });
-      if (error) return { error: error.message };
+
+      if (error) {
+        if (error.message.toLowerCase().includes('failed to fetch')) {
+          return { error: 'Unable to connect to Supabase authentication service. Please check network connectivity or environment keys.' };
+        }
+        if (error.message.toLowerCase().includes('invalid login credentials')) {
+          return { error: 'Invalid email address or password.' };
+        }
+        return { error: error.message };
+      }
+
       return { error: null };
+    } catch (err: any) {
+      return { error: err?.message || 'An unexpected error occurred during authentication.' };
     }
-    return { error: 'Authentication service not configured. Please set VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY on Vercel.' };
   };
 
   const logout = async () => {
