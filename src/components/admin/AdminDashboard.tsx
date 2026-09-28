@@ -913,6 +913,7 @@ export const AdminDashboard: React.FC<{ onNavigateHome: () => void }> = ({ onNav
                       <option value="home">home</option>
                       <option value="about">about</option>
                       <option value="academics">academics</option>
+                      <option value="faculty">faculty</option>
                       <option value="hub">hub</option>
                       <option value="innovation">innovation</option>
                       <option value="community">community</option>

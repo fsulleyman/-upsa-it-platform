@@ -28,12 +28,26 @@ export const Navbar: React.FC<NavbarProps> = ({
     { id: 'contact', label: 'CONTACT' }
   ];
 
-  const displayNavItems = dynamicNavItems && dynamicNavItems.length > 0
+  let displayNavItems = dynamicNavItems && dynamicNavItems.length > 0
     ? dynamicNavItems
         .filter((n) => n.isActive)
         .sort((a, b) => a.displayOrder - b.displayOrder)
         .map((n) => ({ id: n.sectionId, label: n.label }))
     : defaultNavItems;
+
+  if (!displayNavItems.some((item) => item.id === 'faculty')) {
+    const academicsIndex = displayNavItems.findIndex((item) => item.id === 'academics');
+    const facultyItem = { id: 'faculty' as NavSectionId, label: 'FACULTY' };
+    if (academicsIndex !== -1) {
+      displayNavItems = [
+        ...displayNavItems.slice(0, academicsIndex + 1),
+        facultyItem,
+        ...displayNavItems.slice(academicsIndex + 1)
+      ];
+    } else {
+      displayNavItems.push(facultyItem);
+    }
+  }
 
 
   const handleNavClick = (id: NavSectionId) => {

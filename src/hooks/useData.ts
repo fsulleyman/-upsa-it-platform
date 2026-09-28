@@ -36,10 +36,11 @@ const defaultNavItems: NavItem[] = [
   { id: 'nav-home', sectionId: 'home', label: 'HOME', displayOrder: 1, isActive: true },
   { id: 'nav-about', sectionId: 'about', label: 'ABOUT', displayOrder: 2, isActive: true },
   { id: 'nav-academics', sectionId: 'academics', label: 'ACADEMICS', displayOrder: 3, isActive: true },
-  { id: 'nav-hub', sectionId: 'hub', label: 'DEVELOPERS HUB', displayOrder: 4, isActive: true },
-  { id: 'nav-innovation', sectionId: 'innovation', label: 'INNOVATION', displayOrder: 5, isActive: true },
-  { id: 'nav-community', sectionId: 'community', label: 'COMMUNITY', displayOrder: 6, isActive: true },
-  { id: 'nav-contact', sectionId: 'contact', label: 'CONTACT', displayOrder: 7, isActive: true }
+  { id: 'nav-faculty', sectionId: 'faculty', label: 'FACULTY', displayOrder: 4, isActive: true },
+  { id: 'nav-hub', sectionId: 'hub', label: 'DEVELOPERS HUB', displayOrder: 5, isActive: true },
+  { id: 'nav-innovation', sectionId: 'innovation', label: 'INNOVATION', displayOrder: 6, isActive: true },
+  { id: 'nav-community', sectionId: 'community', label: 'COMMUNITY', displayOrder: 7, isActive: true },
+  { id: 'nav-contact', sectionId: 'contact', label: 'CONTACT', displayOrder: 8, isActive: true }
 ];
 
 const defaultFooterContent: FooterContent = {
@@ -259,15 +260,26 @@ export function useData() {
       // Fetch Navigation Items
       const { data: navData, error: navErr } = await supabase.from('nav_items').select('*').order('display_order', { ascending: true });
       if (!navErr && navData && navData.length > 0) {
-        setNavItems(
-          navData.map((n) => ({
-            id: n.id,
-            sectionId: n.section_id,
-            label: n.label,
-            displayOrder: n.display_order,
-            isActive: n.is_active
-          }))
-        );
+        const fetchedItems: NavItem[] = navData.map((n) => ({
+          id: n.id,
+          sectionId: n.section_id,
+          label: n.label,
+          displayOrder: n.display_order,
+          isActive: n.is_active
+        }));
+
+        if (!fetchedItems.some((n) => n.sectionId === 'faculty')) {
+          fetchedItems.push({
+            id: 'nav-faculty',
+            sectionId: 'faculty',
+            label: 'FACULTY',
+            displayOrder: 4,
+            isActive: true
+          });
+          fetchedItems.sort((a, b) => a.displayOrder - b.displayOrder);
+        }
+
+        setNavItems(fetchedItems);
       }
 
       // Fetch Footer Content
