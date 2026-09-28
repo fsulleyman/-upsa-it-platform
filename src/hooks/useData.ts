@@ -26,9 +26,9 @@ export function useData() {
     }
 
     try {
-      // Fetch Programmes (bypassing any HTTP caching)
-      const { data: progData } = await supabase.from('programmes').select('*');
-      if (progData && progData.length > 0) {
+      // Fetch Programmes
+      const { data: progData, error: progErr } = await supabase.from('programmes').select('*');
+      if (!progErr && progData) {
         setProgrammes(
           progData.map((p) => ({
             id: p.id,
@@ -49,8 +49,8 @@ export function useData() {
       }
 
       // Fetch Projects
-      const { data: projData } = await supabase.from('projects').select('*');
-      if (projData && projData.length > 0) {
+      const { data: projData, error: projErr } = await supabase.from('projects').select('*');
+      if (!projErr && projData) {
         setProjects(
           projData.map((p) => ({
             id: p.id,
@@ -78,8 +78,8 @@ export function useData() {
       }
 
       // Fetch Faculty
-      const { data: facData } = await supabase.from('faculty').select('*');
-      if (facData && facData.length > 0) {
+      const { data: facData, error: facErr } = await supabase.from('faculty').select('*');
+      if (!facErr && facData) {
         setFaculty(
           facData.map((f) => ({
             id: f.id,
@@ -98,8 +98,8 @@ export function useData() {
       }
 
       // Fetch Promo Slides
-      const { data: slideData } = await supabase.from('promo_slides').select('*');
-      if (slideData && slideData.length > 0) {
+      const { data: slideData, error: slideErr } = await supabase.from('promo_slides').select('*');
+      if (!slideErr && slideData) {
         setPromoSlides(
           slideData.map((s) => ({
             id: s.id,
