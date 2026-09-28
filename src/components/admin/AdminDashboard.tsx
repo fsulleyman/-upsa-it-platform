@@ -4,6 +4,7 @@ import { supabase, isSupabaseConfigured } from '../../lib/supabase';
 import { useData } from '../../hooks/useData';
 import { LogOut, ExternalLink, Plus, Trash2, Edit, ShieldAlert, CheckCircle, LayoutDashboard, Compass, Megaphone, GraduationCap, FolderGit2, Users, LayoutList, Share2, Settings } from 'lucide-react';
 import type { AcademicProgramme, StudentProject, FacultyMember, PromoSlide, HeroContent, NavItem, FooterContent, FooterLink, SocialLink, SiteSettings, NavSectionId } from '../../types';
+import { ImageUploader } from './ImageUploader';
 
 export const AdminDashboard: React.FC<{ onNavigateHome: () => void }> = ({ onNavigateHome }) => {
   const { logout, isAdminLoggedIn } = useAuth();
@@ -786,6 +787,15 @@ export const AdminDashboard: React.FC<{ onNavigateHome: () => void }> = ({ onNav
                       />
                     </div>
                   </div>
+                  <div>
+                    <ImageUploader
+                      label="Homepage Hero Image / Banner Illustration"
+                      folder="hero"
+                      value={editingHero.imageUrl ?? heroContent.imageUrl ?? ''}
+                      onChange={(url) => setEditingHero({ ...editingHero, imageUrl: url })}
+                      aspectHint="High resolution hero image"
+                    />
+                  </div>
                   <div className="flex gap-2 pt-2">
                     <button type="submit" className="px-4 py-2 rounded bg-emerald-600 font-bold text-xs">Save Hero</button>
                     <button type="button" onClick={() => setEditingHero(null)} className="px-4 py-2 rounded bg-slate-700 font-bold text-xs">Cancel</button>
@@ -828,14 +838,13 @@ export const AdminDashboard: React.FC<{ onNavigateHome: () => void }> = ({ onNav
                         className="w-full p-2 rounded bg-slate-900 border border-slate-700 text-white"
                       />
                     </div>
-                    <div>
-                      <label className="block font-bold text-slate-300 mb-1">Image URL *</label>
-                      <input
-                        type="url"
-                        required
+                    <div className="sm:col-span-2">
+                      <ImageUploader
+                        label="Promotional Banner Image"
+                        folder="promo-slides"
                         value={editingSlide.imageUrl || ''}
-                        onChange={(e) => setEditingSlide({ ...editingSlide, imageUrl: e.target.value })}
-                        className="w-full p-2 rounded bg-slate-900 border border-slate-700 text-white font-mono"
+                        onChange={(url) => setEditingSlide({ ...editingSlide, imageUrl: url })}
+                        aspectHint="Wide banner image"
                       />
                     </div>
                   </div>
@@ -1003,6 +1012,15 @@ export const AdminDashboard: React.FC<{ onNavigateHome: () => void }> = ({ onNav
                       className="w-full p-2 rounded bg-slate-900 border border-slate-700 text-white"
                     />
                   </div>
+                  <div className="sm:col-span-2">
+                    <ImageUploader
+                      label="Programme Illustration / Banner Image"
+                      folder="programmes"
+                      value={editingProg.imageUrl || ''}
+                      onChange={(url) => setEditingProg({ ...editingProg, imageUrl: url })}
+                      aspectHint="Card cover or illustration"
+                    />
+                  </div>
                 </div>
                 <div className="flex gap-2">
                   <button type="submit" className="px-4 py-2 rounded bg-emerald-600 font-bold">Save Programme</button>
@@ -1075,6 +1093,15 @@ export const AdminDashboard: React.FC<{ onNavigateHome: () => void }> = ({ onNav
                       value={editingProj.studentName || ''}
                       onChange={(e) => setEditingProj({ ...editingProj, studentName: e.target.value })}
                       className="w-full p-2 rounded bg-slate-900 border border-slate-700 text-white"
+                    />
+                  </div>
+                  <div className="sm:col-span-2">
+                    <ImageUploader
+                      label="Project Cover / Screenshot Image"
+                      folder="projects"
+                      value={editingProj.imageUrl || ''}
+                      onChange={(url) => setEditingProj({ ...editingProj, imageUrl: url })}
+                      aspectHint="16:9 thumbnail or screenshot"
                     />
                   </div>
                 </div>
@@ -1229,15 +1256,14 @@ export const AdminDashboard: React.FC<{ onNavigateHome: () => void }> = ({ onNav
                   </div>
                 </div>
 
-                {/* Avatar Photo URL */}
+                {/* Avatar Photo Uploader */}
                 <div>
-                  <label className="block font-bold text-slate-300 mb-1">Profile Photo URL</label>
-                  <input
-                    type="text"
-                    placeholder="https://images.unsplash.com/..."
+                  <ImageUploader
+                    label="Faculty Profile Photo"
+                    folder="faculty"
                     value={editingFaculty.avatarUrl || ''}
-                    onChange={(e) => setEditingFaculty({ ...editingFaculty, avatarUrl: e.target.value })}
-                    className="w-full p-2 rounded bg-slate-900 border border-slate-700 text-white font-mono"
+                    onChange={(url) => setEditingFaculty({ ...editingFaculty, avatarUrl: url })}
+                    aspectHint="Square photo recommended"
                   />
                 </div>
 
@@ -1658,6 +1684,16 @@ export const AdminDashboard: React.FC<{ onNavigateHome: () => void }> = ({ onNav
                     className="w-full p-2.5 rounded bg-slate-900 border border-slate-700 text-white font-mono"
                   />
                 </div>
+              </div>
+
+              <div>
+                <ImageUploader
+                  label="OpenGraph Share Image (Social Cards)"
+                  folder="general"
+                  value={editingSiteSettings?.shareImageUrl ?? siteSettings.shareImageUrl ?? ''}
+                  onChange={(url) => setEditingSiteSettings({ ...editingSiteSettings, shareImageUrl: url })}
+                  aspectHint="1200x630px social banner image"
+                />
               </div>
 
               <div className="pt-2">
