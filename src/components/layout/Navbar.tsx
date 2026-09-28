@@ -28,22 +28,29 @@ export const Navbar: React.FC<NavbarProps> = ({
     { id: 'contact', label: 'CONTACT' }
   ];
 
-  let displayNavItems = dynamicNavItems && dynamicNavItems.length > 0
+  const rawNavItems = dynamicNavItems && dynamicNavItems.length > 0
     ? dynamicNavItems
         .filter((n) => n.isActive)
         .sort((a, b) => a.displayOrder - b.displayOrder)
         .map((n) => ({ id: n.sectionId, label: n.label }))
     : defaultNavItems;
 
-  if (!displayNavItems.some((item) => item.id === 'faculty')) {
+  // Deduplicate items by section ID
+  const seenSections = new Set<NavSectionId>();
+  let displayNavItems: { id: NavSectionId; label: string }[] = [];
+  for (const item of rawNavItems) {
+    if (!seenSections.has(item.id)) {
+      seenSections.add(item.id);
+      displayNavItems.push(item);
+    }
+  }
+
+  // Guarantee FACULTY is present in displayNavItems right after ACADEMICS if omitted from CMS nav items
+  if (!seenSections.has('faculty')) {
     const academicsIndex = displayNavItems.findIndex((item) => item.id === 'academics');
     const facultyItem = { id: 'faculty' as NavSectionId, label: 'FACULTY' };
     if (academicsIndex !== -1) {
-      displayNavItems = [
-        ...displayNavItems.slice(0, academicsIndex + 1),
-        facultyItem,
-        ...displayNavItems.slice(academicsIndex + 1)
-      ];
+      displayNavItems.splice(academicsIndex + 1, 0, facultyItem);
     } else {
       displayNavItems.push(facultyItem);
     }
