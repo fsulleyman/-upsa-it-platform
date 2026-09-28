@@ -1,8 +1,26 @@
 import React, { useState } from 'react';
 import { INSTITUTION_INFO } from '../../data/groundTruth';
+import type { FooterContent } from '../../types';
 
-export const ContactSection: React.FC = () => {
+interface ContactSectionProps {
+  institutionInfo?: {
+    facultyLocation?: string;
+    address?: string;
+    email?: string;
+    facultyPhone?: string;
+    switchboard?: string;
+  };
+  footerContent?: FooterContent;
+}
+
+export const ContactSection: React.FC<ContactSectionProps> = ({ institutionInfo, footerContent }) => {
   const [submitted, setSubmitted] = useState(false);
+  const locationText = institutionInfo?.facultyLocation || INSTITUTION_INFO.facultyLocation;
+  const addressText = institutionInfo?.address || footerContent?.address || INSTITUTION_INFO.address;
+  const emailText = institutionInfo?.email || footerContent?.email || INSTITUTION_INFO.email;
+  const phoneText = institutionInfo?.facultyPhone || footerContent?.phoneAdmissions || INSTITUTION_INFO.facultyPhone;
+  const switchboardText = institutionInfo?.switchboard || footerContent?.phoneSwitchboard || INSTITUTION_INFO.switchboard;
+
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -43,20 +61,20 @@ export const ContactSection: React.FC = () => {
               <div className="space-y-4">
                 <div>
                   <span className="text-[#003366] block font-extrabold text-xs uppercase tracking-wider mb-0.5">Physical Location</span>
-                  <p className="body-text text-sm text-[#555555] leading-relaxed">{INSTITUTION_INFO.facultyLocation}</p>
+                  <p className="body-text text-sm text-[#555555] leading-relaxed">{locationText}</p>
                 </div>
 
                 <div className="pt-2 border-t border-slate-200">
                   <span className="text-[#003366] block font-extrabold text-xs uppercase tracking-wider mb-0.5">Postal Address & Email</span>
-                  <p className="body-text text-sm text-[#555555]">{INSTITUTION_INFO.address}</p>
-                  <a href={`mailto:${INSTITUTION_INFO.email}`} className="text-[#003366] font-bold text-sm hover:underline block mt-0.5">{INSTITUTION_INFO.email}</a>
+                  <p className="body-text text-sm text-[#555555]">{addressText}</p>
+                  <a href={`mailto:${emailText}`} className="text-[#003366] font-bold text-sm hover:underline block mt-0.5">{emailText}</a>
                 </div>
 
                 <div className="pt-2 border-t border-slate-200">
                   <span className="text-[#003366] block font-extrabold text-xs uppercase tracking-wider mb-0.5">Telephone Contacts</span>
-                  <span className="font-extrabold text-[#003366] text-sm block">{INSTITUTION_INFO.facultyPhone}</span>
+                  <span className="font-extrabold text-[#003366] text-sm block">{phoneText}</span>
                   <span className="text-xs text-slate-500 block mt-0.5">
-                    Switchboard: {INSTITUTION_INFO.switchboard}
+                    Switchboard: {switchboardText}
                   </span>
                 </div>
               </div>

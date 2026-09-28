@@ -1,21 +1,23 @@
 import React, { useState } from 'react';
-import type { NavSectionId } from '../../types';
+import type { NavSectionId, NavItem } from '../../types';
 import { Search, Menu, X, GraduationCap } from 'lucide-react';
 
 interface NavbarProps {
   activeSection: NavSectionId;
   onNavigate: (section: NavSectionId) => void;
+  navItems?: NavItem[];
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
   activeSection,
-  onNavigate
+  onNavigate,
+  navItems: dynamicNavItems
 }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
-  const navItems: { id: NavSectionId; label: string }[] = [
+  const defaultNavItems: { id: NavSectionId; label: string }[] = [
     { id: 'home', label: 'HOME' },
     { id: 'about', label: 'ABOUT' },
     { id: 'academics', label: 'ACADEMICS' },
@@ -24,6 +26,14 @@ export const Navbar: React.FC<NavbarProps> = ({
     { id: 'community', label: 'COMMUNITY' },
     { id: 'contact', label: 'CONTACT' }
   ];
+
+  const displayNavItems = dynamicNavItems && dynamicNavItems.length > 0
+    ? dynamicNavItems
+        .filter((n) => n.isActive)
+        .sort((a, b) => a.displayOrder - b.displayOrder)
+        .map((n) => ({ id: n.sectionId, label: n.label }))
+    : defaultNavItems;
+
 
   const handleNavClick = (id: NavSectionId) => {
     onNavigate(id);
@@ -88,7 +98,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
             {/* Desktop Navigation Links */}
             <nav className="hidden lg:flex items-center gap-1 xl:gap-2">
-              {navItems.map((item) => {
+              {displayNavItems.map((item) => {
                 const isActive = activeSection === item.id;
                 return (
                   <button
@@ -161,7 +171,7 @@ export const Navbar: React.FC<NavbarProps> = ({
       {/* Mobile Drawer Menu */}
       {mobileMenuOpen && (
         <div className="lg:hidden bg-slate-900 border-b border-slate-800 px-4 pt-2 pb-6 space-y-2 animate-in slide-in-from-top duration-200">
-          {navItems.map((item) => {
+          {displayNavItems.map((item) => {
             const isActive = activeSection === item.id;
             return (
               <button

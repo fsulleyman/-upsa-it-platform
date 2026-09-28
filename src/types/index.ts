@@ -91,3 +91,66 @@ export interface ConfirmedFact {
   isConfirmed: boolean;
   note?: string;
 }
+
+export interface SiteSettings {
+  id: string;
+  siteTitle: string;
+  metaDescription: string;
+  organizationName: string;
+  canonicalUrl: string;
+  shareImageUrl?: string;
+}
+
+export interface HeroContent {
+  id: string;
+  topLine: string;
+  headline: string;
+  subtext: string;
+  primaryCtaText: string;
+  primaryCtaLink: NavSectionId | string;
+  secondaryCtaText: string;
+  secondaryCtaLink: NavSectionId | string;
+  imageUrl?: string;
+}
+
+export interface NavItem {
+  id: string;
+  sectionId: NavSectionId;
+  label: string;
+  displayOrder: number;
+  isActive: boolean;
+}
+
+export interface FooterContent {
+  id: string;
+  logoText: string;
+  mottoText: string;
+  description: string;
+  digitalAddress: string;
+  address: string;
+  phoneAdmissions: string;
+  phoneSwitchboard: string;
+  email: string;
+  copyrightText: string;
+  portalUrl: string;
+}
+
+export interface FooterLink {
+  id: string;
+  columnTitle: string;
+  label: string;
+  url: string;
+  isExternal: boolean;
+  displayOrder: number;
+  isActive: boolean;
+}
+
+export interface SocialLink {
+  id: string;
+  platform: string;
+  url: string;
+  iconName?: string;
+  displayOrder: number;
+  isActive: boolean;
+}
+

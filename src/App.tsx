@@ -25,7 +25,19 @@ import { SpeedInsights } from '@vercel/speed-insights/react';
 
 function AppContent() {
   const [hashState, updateHash] = useHashLocation();
-  const { programmes, projects, faculty, promoSlides, hubDetails } = useData();
+  const {
+    programmes,
+    projects,
+    faculty,
+    promoSlides,
+    hubDetails,
+    heroContent,
+    navItems,
+    footerContent,
+    footerLinks,
+    socialLinks,
+    institutionInfo
+  } = useData();
 
   // Route to Admin Control Center if hash is #admin
   const isAdminRoute = hashState.section === 'admin';
@@ -84,13 +96,14 @@ function AppContent() {
       <Navbar
         activeSection={hashState.section}
         onNavigate={handleNavigateSection}
+        navItems={navItems}
       />
 
       {/* Main Content Sections (pt-28 sits flush right below 112px fixed navbar) */}
       <main className="relative pt-28">
         <div id="home">
           <PromoSlider slides={promoSlides} onNavigate={handleNavigateSection} />
-          <HeroSection onNavigate={handleNavigateSection} />
+          <HeroSection onNavigate={handleNavigateSection} heroContent={heroContent} />
         </div>
 
         <AboutSection faculty={faculty} />
@@ -111,11 +124,16 @@ function AppContent() {
 
         <CommunitySection />
 
-        <ContactSection />
+        <ContactSection institutionInfo={institutionInfo} footerContent={footerContent} />
       </main>
 
       {/* Footer */}
-      <Footer onNavigate={handleNavigateSection} />
+      <Footer
+        onNavigate={handleNavigateSection}
+        footerContent={footerContent}
+        footerLinks={footerLinks}
+        socialLinks={socialLinks}
+      />
 
       {/* Interactive Detail Modals */}
       <ProgrammeDetailModal

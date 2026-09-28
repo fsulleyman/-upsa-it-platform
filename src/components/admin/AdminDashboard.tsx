@@ -2,26 +2,44 @@ import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { supabase, isSupabaseConfigured } from '../../lib/supabase';
 import { useData } from '../../hooks/useData';
-import { LogOut, ExternalLink, Plus, Trash2, Edit, Save, ShieldAlert, CheckCircle } from 'lucide-react';
-import type { AcademicProgramme, DegreeLevel, StudentProject, FacultyMember, PromoSlide } from '../../types';
+import { LogOut, ExternalLink, Plus, Trash2, Edit, ShieldAlert, CheckCircle, LayoutDashboard, Compass, Megaphone, GraduationCap, FolderGit2, Users, LayoutList, Share2, Settings } from 'lucide-react';
+import type { AcademicProgramme, StudentProject, FacultyMember, PromoSlide, HeroContent, NavItem, FooterContent, FooterLink, SocialLink, SiteSettings, NavSectionId } from '../../types';
 
 export const AdminDashboard: React.FC<{ onNavigateHome: () => void }> = ({ onNavigateHome }) => {
   const { logout, isAdminLoggedIn } = useAuth();
-  const { programmes, projects, faculty, promoSlides, refreshData } = useData();
+  const {
+    programmes,
+    projects,
+    faculty,
+    promoSlides,
+    heroContent,
+    navItems,
+    footerContent,
+    footerLinks,
+    socialLinks,
+    siteSettings,
+    refreshData
+  } = useData();
 
   const [emailInput, setEmailInput] = useState('');
   const [passwordInput, setPasswordInput] = useState('');
   const [loginError, setLoginError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'programmes' | 'projects' | 'faculty' | 'slides'>('programmes');
+  const [activeTab, setActiveTab] = useState<'overview' | 'hero' | 'navigation' | 'programmes' | 'projects' | 'faculty' | 'footer' | 'social' | 'settings'>('overview');
   const [notice, setNotice] = useState<string | null>(null);
 
   const { login } = useAuth();
 
-  // Form Editing States for all 4 Modules
+  // Form Editing States for all CMS Modules
   const [editingProg, setEditingProg] = useState<Partial<AcademicProgramme> | null>(null);
   const [editingProj, setEditingProj] = useState<Partial<StudentProject> | null>(null);
   const [editingFaculty, setEditingFaculty] = useState<Partial<FacultyMember> | null>(null);
   const [editingSlide, setEditingSlide] = useState<Partial<PromoSlide> | null>(null);
+  const [editingHero, setEditingHero] = useState<Partial<HeroContent> | null>(null);
+  const [editingNavItem, setEditingNavItem] = useState<Partial<NavItem> | null>(null);
+  const [editingFooterContent, setEditingFooterContent] = useState<Partial<FooterContent> | null>(null);
+  const [editingFooterLink, setEditingFooterLink] = useState<Partial<FooterLink> | null>(null);
+  const [editingSocialLink, setEditingSocialLink] = useState<Partial<SocialLink> | null>(null);
+  const [editingSiteSettings, setEditingSiteSettings] = useState<Partial<SiteSettings> | null>(null);
 
   const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -128,7 +146,7 @@ export const AdminDashboard: React.FC<{ onNavigateHome: () => void }> = ({ onNav
 
       const { error } = await supabase.from('programmes').upsert(payload);
       if (error) {
-        alert(`Supabase RLS/Save Error: ${error.message}`);
+        alert(`Supabase Save Error: ${error.message}`);
         return;
       }
     }
@@ -302,13 +320,228 @@ export const AdminDashboard: React.FC<{ onNavigateHome: () => void }> = ({ onNav
     showNotification('Announcement slide deleted.');
   };
 
+  // ==========================================
+  // 5. SAVE: HERO & BANNER CONTENT
+  // ==========================================
+  const handleSaveHero = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (isSupabaseConfigured && supabase) {
+      const payload = {
+        id: 'primary',
+        top_line: editingHero?.topLine || heroContent.topLine,
+        headline: editingHero?.headline || heroContent.headline,
+        subtext: editingHero?.subtext || heroContent.subtext,
+        primary_cta_text: editingHero?.primaryCtaText || heroContent.primaryCtaText,
+        primary_cta_link: editingHero?.primaryCtaLink || heroContent.primaryCtaLink,
+        secondary_cta_text: editingHero?.secondaryCtaText || heroContent.secondaryCtaText,
+        secondary_cta_link: editingHero?.secondaryCtaLink || heroContent.secondaryCtaLink,
+        image_url: editingHero?.imageUrl || heroContent.imageUrl || ''
+      };
+
+      const { error } = await supabase.from('hero_section').upsert(payload);
+      if (error) {
+        alert(`Supabase Save Error: ${error.message}`);
+        return;
+      }
+    }
+    refreshData();
+    setEditingHero(null);
+    showNotification('Hero Section content saved successfully!');
+  };
+
+  // ==========================================
+  // 6. SAVE & DELETE: NAVIGATION ITEMS
+  // ==========================================
+  const handleSaveNavItem = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingNavItem?.label || !editingNavItem?.sectionId) {
+      alert('Label and Section ID are required.');
+      return;
+    }
+
+    if (isSupabaseConfigured && supabase) {
+      const payload = {
+        id: editingNavItem.id || `nav-${editingNavItem.sectionId}`,
+        section_id: editingNavItem.sectionId,
+        label: editingNavItem.label.trim().toUpperCase(),
+        display_order: Number(editingNavItem.displayOrder) || 0,
+        is_active: editingNavItem.isActive ?? true
+      };
+
+      const { error } = await supabase.from('nav_items').upsert(payload);
+      if (error) {
+        alert(`Supabase Save Error: ${error.message}`);
+        return;
+      }
+    }
+    refreshData();
+    setEditingNavItem(null);
+    showNotification('Navigation Item saved successfully!');
+  };
+
+  const handleDeleteNavItem = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this navigation item?')) return;
+    if (isSupabaseConfigured && supabase) {
+      const { error } = await supabase.from('nav_items').delete().eq('id', id);
+      if (error) {
+        alert(`Supabase Delete Error: ${error.message}`);
+        return;
+      }
+    }
+    refreshData();
+    showNotification('Navigation item deleted.');
+  };
+
+  // ==========================================
+  // 7. SAVE: FOOTER CONTENT & LINKS
+  // ==========================================
+  const handleSaveFooterContent = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (isSupabaseConfigured && supabase) {
+      const payload = {
+        id: 'primary',
+        logo_text: editingFooterContent?.logoText || footerContent.logoText,
+        motto_text: editingFooterContent?.mottoText || footerContent.mottoText,
+        description: editingFooterContent?.description || footerContent.description,
+        digital_address: editingFooterContent?.digitalAddress || footerContent.digitalAddress,
+        address: editingFooterContent?.address || footerContent.address,
+        phone_admissions: editingFooterContent?.phoneAdmissions || footerContent.phoneAdmissions,
+        phone_switchboard: editingFooterContent?.phoneSwitchboard || footerContent.phoneSwitchboard,
+        email: editingFooterContent?.email || footerContent.email,
+        copyright_text: editingFooterContent?.copyrightText || footerContent.copyrightText,
+        portal_url: editingFooterContent?.portalUrl || footerContent.portalUrl
+      };
+
+      const { error } = await supabase.from('footer_content').upsert(payload);
+      if (error) {
+        alert(`Supabase Save Error: ${error.message}`);
+        return;
+      }
+    }
+    refreshData();
+    setEditingFooterContent(null);
+    showNotification('Footer Branding & Secretariat Info saved successfully!');
+  };
+
+  const handleSaveFooterLink = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingFooterLink?.label || !editingFooterLink?.url || !editingFooterLink?.columnTitle) {
+      alert('Column Title, Label, and URL are required.');
+      return;
+    }
+
+    if (isSupabaseConfigured && supabase) {
+      const payload = {
+        id: editingFooterLink.id || `fl-${Date.now()}`,
+        column_title: editingFooterLink.columnTitle.trim().toUpperCase(),
+        label: editingFooterLink.label.trim(),
+        url: editingFooterLink.url.trim(),
+        is_external: editingFooterLink.isExternal || false,
+        display_order: Number(editingFooterLink.displayOrder) || 0,
+        is_active: editingFooterLink.isActive ?? true
+      };
+
+      const { error } = await supabase.from('footer_links').upsert(payload);
+      if (error) {
+        alert(`Supabase Save Error: ${error.message}`);
+        return;
+      }
+    }
+    refreshData();
+    setEditingFooterLink(null);
+    showNotification('Footer Link saved successfully!');
+  };
+
+  const handleDeleteFooterLink = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this footer link?')) return;
+    if (isSupabaseConfigured && supabase) {
+      const { error } = await supabase.from('footer_links').delete().eq('id', id);
+      if (error) {
+        alert(`Supabase Delete Error: ${error.message}`);
+        return;
+      }
+    }
+    refreshData();
+    showNotification('Footer link deleted.');
+  };
+
+  // ==========================================
+  // 8. SAVE & DELETE: SOCIAL LINKS
+  // ==========================================
+  const handleSaveSocialLink = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingSocialLink?.platform || !editingSocialLink?.url) {
+      alert('Platform Name and URL are required.');
+      return;
+    }
+
+    if (isSupabaseConfigured && supabase) {
+      const payload = {
+        id: editingSocialLink.id || `soc-${Date.now()}`,
+        platform: editingSocialLink.platform.trim(),
+        url: editingSocialLink.url.trim(),
+        icon_name: editingSocialLink.iconName || 'Globe',
+        display_order: Number(editingSocialLink.displayOrder) || 0,
+        is_active: editingSocialLink.isActive ?? true
+      };
+
+      const { error } = await supabase.from('social_links').upsert(payload);
+      if (error) {
+        alert(`Supabase Save Error: ${error.message}`);
+        return;
+      }
+    }
+    refreshData();
+    setEditingSocialLink(null);
+    showNotification('Social Link saved successfully!');
+  };
+
+  const handleDeleteSocialLink = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this social link?')) return;
+    if (isSupabaseConfigured && supabase) {
+      const { error } = await supabase.from('social_links').delete().eq('id', id);
+      if (error) {
+        alert(`Supabase Delete Error: ${error.message}`);
+        return;
+      }
+    }
+    refreshData();
+    showNotification('Social link deleted.');
+  };
+
+  // ==========================================
+  // 9. SAVE: SITE SETTINGS & SEO
+  // ==========================================
+  const handleSaveSiteSettings = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (isSupabaseConfigured && supabase) {
+      const payload = {
+        id: 'primary',
+        site_title: editingSiteSettings?.siteTitle || siteSettings.siteTitle,
+        meta_description: editingSiteSettings?.metaDescription || siteSettings.metaDescription,
+        organization_name: editingSiteSettings?.organizationName || siteSettings.organizationName,
+        canonical_url: editingSiteSettings?.canonicalUrl || siteSettings.canonicalUrl,
+        share_image_url: editingSiteSettings?.shareImageUrl || siteSettings.shareImageUrl || ''
+      };
+
+      const { error } = await supabase.from('site_settings').upsert(payload);
+      if (error) {
+        alert(`Supabase Save Error: ${error.message}`);
+        return;
+      }
+    }
+    refreshData();
+    setEditingSiteSettings(null);
+    showNotification('Site Settings & SEO metadata saved successfully!');
+  };
+
   return (
     <div className="min-h-screen bg-slate-900 text-white font-sans">
       {/* Top Header Bar */}
       <header className="bg-slate-800 border-b border-slate-700 px-6 py-4 flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <span className="w-3 h-3 rounded-full bg-[#F2B705] animate-pulse" />
-          <h1 className="text-lg font-extrabold text-white">UPSA IT Studies — Administrative Control Center</h1>
+          <h1 className="text-lg font-extrabold text-white">UPSA IT Studies — Central CMS Control Center</h1>
         </div>
 
         <div className="flex items-center gap-3">
@@ -337,48 +570,393 @@ export const AdminDashboard: React.FC<{ onNavigateHome: () => void }> = ({ onNav
         </div>
       )}
 
-      {/* Navigation Tabs */}
+      {/* Navigation Tabs (CMS Modules) */}
       <div className="px-6 pt-6 flex gap-2 border-b border-slate-800 overflow-x-auto">
         <button
-          onClick={() => setActiveTab('programmes')}
-          className={`px-4 py-2.5 rounded-t-lg font-bold text-xs transition-colors ${
-            activeTab === 'programmes' ? 'bg-slate-800 text-white border-t-2 border-[#F2B705]' : 'text-slate-400 hover:text-white'
+          onClick={() => setActiveTab('overview')}
+          className={`px-4 py-2.5 rounded-t-lg font-bold text-xs flex items-center gap-1.5 transition-colors ${
+            activeTab === 'overview' ? 'bg-slate-800 text-[#F2B705] border-t-2 border-[#F2B705]' : 'text-slate-400 hover:text-white'
           }`}
         >
-          Academic Programmes ({programmes.length})
+          <LayoutDashboard className="w-4 h-4" />
+          <span>Overview</span>
+        </button>
+        <button
+          onClick={() => setActiveTab('hero')}
+          className={`px-4 py-2.5 rounded-t-lg font-bold text-xs flex items-center gap-1.5 transition-colors ${
+            activeTab === 'hero' ? 'bg-slate-800 text-[#F2B705] border-t-2 border-[#F2B705]' : 'text-slate-400 hover:text-white'
+          }`}
+        >
+          <Megaphone className="w-4 h-4" />
+          <span>Hero & Banners ({promoSlides.length})</span>
+        </button>
+        <button
+          onClick={() => setActiveTab('navigation')}
+          className={`px-4 py-2.5 rounded-t-lg font-bold text-xs flex items-center gap-1.5 transition-colors ${
+            activeTab === 'navigation' ? 'bg-slate-800 text-[#F2B705] border-t-2 border-[#F2B705]' : 'text-slate-400 hover:text-white'
+          }`}
+        >
+          <Compass className="w-4 h-4" />
+          <span>Navigation ({navItems.length})</span>
+        </button>
+        <button
+          onClick={() => setActiveTab('programmes')}
+          className={`px-4 py-2.5 rounded-t-lg font-bold text-xs flex items-center gap-1.5 transition-colors ${
+            activeTab === 'programmes' ? 'bg-slate-800 text-[#F2B705] border-t-2 border-[#F2B705]' : 'text-slate-400 hover:text-white'
+          }`}
+        >
+          <GraduationCap className="w-4 h-4" />
+          <span>Programmes ({programmes.length})</span>
         </button>
         <button
           onClick={() => setActiveTab('projects')}
-          className={`px-4 py-2.5 rounded-t-lg font-bold text-xs transition-colors ${
-            activeTab === 'projects' ? 'bg-slate-800 text-white border-t-2 border-[#F2B705]' : 'text-slate-400 hover:text-white'
+          className={`px-4 py-2.5 rounded-t-lg font-bold text-xs flex items-center gap-1.5 transition-colors ${
+            activeTab === 'projects' ? 'bg-slate-800 text-[#F2B705] border-t-2 border-[#F2B705]' : 'text-slate-400 hover:text-white'
           }`}
         >
-          Student Innovation Projects ({projects.length})
+          <FolderGit2 className="w-4 h-4" />
+          <span>Projects ({projects.length})</span>
         </button>
         <button
           onClick={() => setActiveTab('faculty')}
-          className={`px-4 py-2.5 rounded-t-lg font-bold text-xs transition-colors ${
-            activeTab === 'faculty' ? 'bg-slate-800 text-white border-t-2 border-[#F2B705]' : 'text-slate-400 hover:text-white'
+          className={`px-4 py-2.5 rounded-t-lg font-bold text-xs flex items-center gap-1.5 transition-colors ${
+            activeTab === 'faculty' ? 'bg-slate-800 text-[#F2B705] border-t-2 border-[#F2B705]' : 'text-slate-400 hover:text-white'
           }`}
         >
-          Faculty Directory ({faculty.length})
+          <Users className="w-4 h-4" />
+          <span>Faculty ({faculty.length})</span>
         </button>
         <button
-          onClick={() => setActiveTab('slides')}
-          className={`px-4 py-2.5 rounded-t-lg font-bold text-xs transition-colors ${
-            activeTab === 'slides' ? 'bg-slate-800 text-white border-t-2 border-[#F2B705]' : 'text-slate-400 hover:text-white'
+          onClick={() => setActiveTab('footer')}
+          className={`px-4 py-2.5 rounded-t-lg font-bold text-xs flex items-center gap-1.5 transition-colors ${
+            activeTab === 'footer' ? 'bg-slate-800 text-[#F2B705] border-t-2 border-[#F2B705]' : 'text-slate-400 hover:text-white'
           }`}
         >
-          Announcement Slider ({promoSlides.length})
+          <LayoutList className="w-4 h-4" />
+          <span>Footer ({footerLinks.length})</span>
+        </button>
+        <button
+          onClick={() => setActiveTab('social')}
+          className={`px-4 py-2.5 rounded-t-lg font-bold text-xs flex items-center gap-1.5 transition-colors ${
+            activeTab === 'social' ? 'bg-slate-800 text-[#F2B705] border-t-2 border-[#F2B705]' : 'text-slate-400 hover:text-white'
+          }`}
+        >
+          <Share2 className="w-4 h-4" />
+          <span>Social ({socialLinks.length})</span>
+        </button>
+        <button
+          onClick={() => setActiveTab('settings')}
+          className={`px-4 py-2.5 rounded-t-lg font-bold text-xs flex items-center gap-1.5 transition-colors ${
+            activeTab === 'settings' ? 'bg-slate-800 text-[#F2B705] border-t-2 border-[#F2B705]' : 'text-slate-400 hover:text-white'
+          }`}
+        >
+          <Settings className="w-4 h-4" />
+          <span>Site SEO</span>
         </button>
       </div>
 
       {/* Main Content Area */}
       <div className="p-6 max-w-7xl mx-auto">
         
-        {/* ==========================================
-            TAB 1: ACADEMIC PROGRAMMES
-           ========================================== */}
+        {/* TAB 1: OVERVIEW & DASHBOARD METRICS */}
+        {activeTab === 'overview' && (
+          <div className="space-y-6">
+            <h2 className="text-base font-extrabold text-white">CMS Platform System Overview</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+              <div className="p-5 rounded-xl bg-slate-800 border border-slate-700 space-y-2">
+                <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block">Academic Programmes</span>
+                <span className="text-3xl font-black text-[#F2B705]">{programmes.length}</span>
+                <p className="text-[11px] text-slate-400">Live degrees in Supabase</p>
+              </div>
+
+              <div className="p-5 rounded-xl bg-slate-800 border border-slate-700 space-y-2">
+                <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block">Student Projects</span>
+                <span className="text-3xl font-black text-[#00AEEF]">{projects.length}</span>
+                <p className="text-[11px] text-slate-400">Verified & sample projects</p>
+              </div>
+
+              <div className="p-5 rounded-xl bg-slate-800 border border-slate-700 space-y-2">
+                <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block">Faculty Directory</span>
+                <span className="text-3xl font-black text-emerald-400">{faculty.length}</span>
+                <p className="text-[11px] text-slate-400">Department lecturers & HOD</p>
+              </div>
+
+              <div className="p-5 rounded-xl bg-slate-800 border border-slate-700 space-y-2">
+                <span className="text-xs font-bold text-slate-400 uppercase tracking-wider block">Promo Banners</span>
+                <span className="text-3xl font-black text-purple-400">{promoSlides.length}</span>
+                <p className="text-[11px] text-slate-400">Homepage slider banners</p>
+              </div>
+            </div>
+
+            <div className="p-6 rounded-xl bg-slate-800 border border-slate-700 space-y-4">
+              <h3 className="text-sm font-extrabold text-[#F2B705]">CMS Content Health Status</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                <div className="p-4 rounded-lg bg-slate-900 border border-slate-700 flex justify-between items-center">
+                  <span>Navigation Menu Links:</span>
+                  <span className="font-bold font-mono text-[#00AEEF]">{navItems.length} active items</span>
+                </div>
+                <div className="p-4 rounded-lg bg-slate-900 border border-slate-700 flex justify-between items-center">
+                  <span>Footer Quick Links:</span>
+                  <span className="font-bold font-mono text-[#00AEEF]">{footerLinks.length} active links</span>
+                </div>
+                <div className="p-4 rounded-lg bg-slate-900 border border-slate-700 flex justify-between items-center">
+                  <span>Social Links Configured:</span>
+                  <span className="font-bold font-mono text-[#00AEEF]">{socialLinks.length} platforms</span>
+                </div>
+                <div className="p-4 rounded-lg bg-slate-900 border border-slate-700 flex justify-between items-center">
+                  <span>Site Title:</span>
+                  <span className="font-bold text-white truncate max-w-[200px]">{siteSettings.siteTitle}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* TAB 2: HERO & BANNERS */}
+        {activeTab === 'hero' && (
+          <div className="space-y-8">
+            {/* Hero Main Content Form */}
+            <div className="p-6 rounded-xl bg-slate-800 border border-slate-700 space-y-4">
+              <div className="flex justify-between items-center">
+                <h3 className="text-sm font-extrabold text-[#F2B705]">Homepage Hero Section Settings</h3>
+                <button
+                  type="button"
+                  onClick={() => setEditingHero(heroContent)}
+                  className="px-3 py-1.5 rounded bg-[#003366] text-white text-xs font-bold"
+                >
+                  Edit Hero Content
+                </button>
+              </div>
+
+              {editingHero ? (
+                <form onSubmit={handleSaveHero} className="space-y-4 text-xs">
+                  <div>
+                    <label className="block font-bold text-slate-300 mb-1">Top Institutional Line</label>
+                    <input
+                      type="text"
+                      value={editingHero.topLine ?? heroContent.topLine}
+                      onChange={(e) => setEditingHero({ ...editingHero, topLine: e.target.value })}
+                      className="w-full p-2.5 rounded bg-slate-900 border border-slate-700 text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-bold text-slate-300 mb-1">Main Headline *</label>
+                    <input
+                      type="text"
+                      required
+                      value={editingHero.headline ?? heroContent.headline}
+                      onChange={(e) => setEditingHero({ ...editingHero, headline: e.target.value })}
+                      className="w-full p-2.5 rounded bg-slate-900 border border-slate-700 text-white font-bold"
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-bold text-slate-300 mb-1">Subtext / Description</label>
+                    <textarea
+                      rows={3}
+                      value={editingHero.subtext ?? heroContent.subtext}
+                      onChange={(e) => setEditingHero({ ...editingHero, subtext: e.target.value })}
+                      className="w-full p-2.5 rounded bg-slate-900 border border-slate-700 text-white"
+                    />
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block font-bold text-slate-300 mb-1">Primary CTA Label</label>
+                      <input
+                        type="text"
+                        value={editingHero.primaryCtaText ?? heroContent.primaryCtaText}
+                        onChange={(e) => setEditingHero({ ...editingHero, primaryCtaText: e.target.value })}
+                        className="w-full p-2.5 rounded bg-slate-900 border border-slate-700 text-white"
+                      />
+                    </div>
+                    <div>
+                      <label className="block font-bold text-slate-300 mb-1">Primary CTA Destination</label>
+                      <input
+                        type="text"
+                        value={editingHero.primaryCtaLink ?? heroContent.primaryCtaLink}
+                        onChange={(e) => setEditingHero({ ...editingHero, primaryCtaLink: e.target.value })}
+                        className="w-full p-2.5 rounded bg-slate-900 border border-slate-700 text-white font-mono"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex gap-2 pt-2">
+                    <button type="submit" className="px-4 py-2 rounded bg-emerald-600 font-bold text-xs">Save Hero</button>
+                    <button type="button" onClick={() => setEditingHero(null)} className="px-4 py-2 rounded bg-slate-700 font-bold text-xs">Cancel</button>
+                  </div>
+                </form>
+              ) : (
+                <div className="space-y-2 text-xs text-slate-300">
+                  <p><strong className="text-slate-400">Top Line:</strong> {heroContent.topLine}</p>
+                  <p><strong className="text-slate-400">Headline:</strong> <span className="font-extrabold text-white">{heroContent.headline}</span></p>
+                  <p><strong className="text-slate-400">Subtext:</strong> {heroContent.subtext}</p>
+                  <p><strong className="text-slate-400">Primary CTA:</strong> {heroContent.primaryCtaText} ({heroContent.primaryCtaLink})</p>
+                </div>
+              )}
+            </div>
+
+            {/* Promo Banners Table */}
+            <div className="space-y-4">
+              <div className="flex justify-between items-center">
+                <h3 className="text-sm font-extrabold text-white">Homepage Promotional Banners ({promoSlides.length})</h3>
+                <button
+                  onClick={() => setEditingSlide({ title: '', imageUrl: '', ctaText: 'Learn More', ctaLink: 'academics' })}
+                  className="px-3.5 py-2 rounded-lg bg-[#003366] hover:bg-blue-900 text-white text-xs font-bold flex items-center gap-1.5"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>Add Banner Slide</span>
+                </button>
+              </div>
+
+              {editingSlide && (
+                <form onSubmit={handleSaveSlide} className="p-5 rounded-xl bg-slate-800 border border-slate-700 space-y-4">
+                  <h4 className="text-xs font-bold text-[#F2B705]">{editingSlide.id ? 'Edit Banner Slide' : 'New Banner Entry'}</h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                    <div>
+                      <label className="block font-bold text-slate-300 mb-1">Banner Title *</label>
+                      <input
+                        type="text"
+                        required
+                        value={editingSlide.title || ''}
+                        onChange={(e) => setEditingSlide({ ...editingSlide, title: e.target.value })}
+                        className="w-full p-2 rounded bg-slate-900 border border-slate-700 text-white"
+                      />
+                    </div>
+                    <div>
+                      <label className="block font-bold text-slate-300 mb-1">Image URL *</label>
+                      <input
+                        type="url"
+                        required
+                        value={editingSlide.imageUrl || ''}
+                        onChange={(e) => setEditingSlide({ ...editingSlide, imageUrl: e.target.value })}
+                        className="w-full p-2 rounded bg-slate-900 border border-slate-700 text-white font-mono"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <button type="submit" className="px-4 py-2 rounded bg-emerald-600 font-bold text-xs">Save Banner</button>
+                    <button type="button" onClick={() => setEditingSlide(null)} className="px-4 py-2 rounded bg-slate-700 font-bold text-xs">Cancel</button>
+                  </div>
+                </form>
+              )}
+
+              <div className="overflow-x-auto rounded-xl border border-slate-800">
+                <table className="w-full text-left text-xs text-slate-300">
+                  <thead className="bg-slate-800 text-slate-400 font-bold uppercase border-b border-slate-700">
+                    <tr>
+                      <th className="p-3">Title</th>
+                      <th className="p-3">Badge</th>
+                      <th className="p-3">CTA Link</th>
+                      <th className="p-3 text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-800">
+                    {promoSlides.map((slide) => (
+                      <tr key={slide.id} className="hover:bg-slate-800/50">
+                        <td className="p-3 font-bold text-white">{slide.title}</td>
+                        <td className="p-3">{slide.badgeText || '—'}</td>
+                        <td className="p-3 font-mono">{slide.ctaLink}</td>
+                        <td className="p-3 text-right space-x-2">
+                          <button onClick={() => setEditingSlide(slide)} className="p-1.5 rounded bg-slate-700 hover:bg-slate-600 text-white"><Edit className="w-3.5 h-3.5" /></button>
+                          <button onClick={() => handleDeleteSlide(slide.id)} className="p-1.5 rounded bg-red-600/80 hover:bg-red-600 text-white"><Trash2 className="w-3.5 h-3.5" /></button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* TAB 3: NAVIGATION */}
+        {activeTab === 'navigation' && (
+          <div className="space-y-6">
+            <div className="flex justify-between items-center">
+              <h2 className="text-base font-extrabold text-white">Navbar Menu Configuration</h2>
+              <button
+                onClick={() => setEditingNavItem({ label: '', sectionId: 'home', displayOrder: navItems.length + 1, isActive: true })}
+                className="px-3.5 py-2 rounded-lg bg-[#003366] hover:bg-blue-900 text-white text-xs font-bold flex items-center gap-1.5"
+              >
+                <Plus className="w-4 h-4" />
+                <span>Add Nav Item</span>
+              </button>
+            </div>
+
+            {editingNavItem && (
+              <form onSubmit={handleSaveNavItem} className="p-5 rounded-xl bg-slate-800 border border-slate-700 space-y-4 text-xs">
+                <h3 className="font-bold text-[#F2B705]">{editingNavItem.id ? 'Edit Nav Item' : 'New Nav Item Entry'}</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block font-bold text-slate-300 mb-1">Label *</label>
+                    <input
+                      type="text"
+                      required
+                      value={editingNavItem.label || ''}
+                      onChange={(e) => setEditingNavItem({ ...editingNavItem, label: e.target.value })}
+                      className="w-full p-2 rounded bg-slate-900 border border-slate-700 text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-bold text-slate-300 mb-1">Section ID *</label>
+                    <select
+                      value={editingNavItem.sectionId || 'home'}
+                      onChange={(e) => setEditingNavItem({ ...editingNavItem, sectionId: e.target.value as NavSectionId })}
+                      className="w-full p-2 rounded bg-slate-900 border border-slate-700 text-white font-mono"
+                    >
+                      <option value="home">home</option>
+                      <option value="about">about</option>
+                      <option value="academics">academics</option>
+                      <option value="hub">hub</option>
+                      <option value="innovation">innovation</option>
+                      <option value="community">community</option>
+                      <option value="contact">contact</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block font-bold text-slate-300 mb-1">Display Order</label>
+                    <input
+                      type="number"
+                      value={editingNavItem.displayOrder ?? 0}
+                      onChange={(e) => setEditingNavItem({ ...editingNavItem, displayOrder: parseInt(e.target.value) || 0 })}
+                      className="w-full p-2 rounded bg-slate-900 border border-slate-700 text-white font-mono"
+                    />
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <button type="submit" className="px-4 py-2 rounded bg-emerald-600 font-bold">Save Nav Item</button>
+                  <button type="button" onClick={() => setEditingNavItem(null)} className="px-4 py-2 rounded bg-slate-700 font-bold">Cancel</button>
+                </div>
+              </form>
+            )}
+
+            <div className="overflow-x-auto rounded-xl border border-slate-800">
+              <table className="w-full text-left text-xs text-slate-300">
+                <thead className="bg-slate-800 text-slate-400 font-bold uppercase border-b border-slate-700">
+                  <tr>
+                    <th className="p-3">Order</th>
+                    <th className="p-3">Label</th>
+                    <th className="p-3">Section ID</th>
+                    <th className="p-3 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-800">
+                  {navItems.map((item) => (
+                    <tr key={item.id} className="hover:bg-slate-800/50">
+                      <td className="p-3 font-mono text-[#F2B705] font-bold">{item.displayOrder}</td>
+                      <td className="p-3 font-bold text-white">{item.label}</td>
+                      <td className="p-3 font-mono">{item.sectionId}</td>
+                      <td className="p-3 text-right space-x-2">
+                        <button onClick={() => setEditingNavItem(item)} className="p-1.5 rounded bg-slate-700 hover:bg-slate-600 text-white"><Edit className="w-3.5 h-3.5" /></button>
+                        <button onClick={() => handleDeleteNavItem(item.id)} className="p-1.5 rounded bg-red-600/80 hover:bg-red-600 text-white"><Trash2 className="w-3.5 h-3.5" /></button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {/* TAB 4: ACADEMIC PROGRAMMES */}
         {activeTab === 'programmes' && (
           <div className="space-y-6">
             <div className="flex justify-between items-center">
@@ -393,116 +971,56 @@ export const AdminDashboard: React.FC<{ onNavigateHome: () => void }> = ({ onNav
             </div>
 
             {editingProg && (
-              <form onSubmit={handleSaveProgramme} className="p-5 rounded-xl bg-slate-800 border border-slate-700 space-y-4">
-                <h3 className="text-sm font-bold text-[#F2B705]">
-                  {editingProg.id ? 'Edit Programme' : 'New Programme Entry'}
-                </h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+              <form onSubmit={handleSaveProgramme} className="p-5 rounded-xl bg-slate-800 border border-slate-700 space-y-4 text-xs">
+                <h3 className="font-bold text-[#F2B705]">{editingProg.id ? 'Edit Programme' : 'New Programme Entry'}</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-slate-300 font-bold mb-1">Programme Code *</label>
+                    <label className="block font-bold text-slate-300 mb-1">Code *</label>
                     <input
                       type="text"
                       required
                       value={editingProg.code || ''}
                       onChange={(e) => setEditingProg({ ...editingProg, code: e.target.value })}
-                      placeholder="e.g. BSc ITM"
-                      className="w-full p-2.5 rounded bg-slate-900 border border-slate-700 text-white"
+                      className="w-full p-2 rounded bg-slate-900 border border-slate-700 text-white font-mono"
                     />
                   </div>
                   <div>
-                    <label className="block text-slate-300 font-bold mb-1">Full Name *</label>
+                    <label className="block font-bold text-slate-300 mb-1">Name *</label>
                     <input
                       type="text"
                       required
                       value={editingProg.name || ''}
                       onChange={(e) => setEditingProg({ ...editingProg, name: e.target.value })}
-                      placeholder="e.g. BSc Information Technology Management"
-                      className="w-full p-2.5 rounded bg-slate-900 border border-slate-700 text-white"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-slate-300 font-bold mb-1">Academic Level</label>
-                    <select
-                      value={editingProg.level || 'Undergraduate'}
-                      onChange={(e) => setEditingProg({ ...editingProg, level: e.target.value as DegreeLevel })}
-                      className="w-full p-2.5 rounded bg-slate-900 border border-slate-700 text-white"
-                    >
-                      <option value="Undergraduate">Undergraduate</option>
-                      <option value="Postgraduate">Postgraduate</option>
-                      <option value="Diploma">Diploma</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-slate-300 font-bold mb-1">Duration</label>
-                    <input
-                      type="text"
-                      value={editingProg.duration || ''}
-                      onChange={(e) => setEditingProg({ ...editingProg, duration: e.target.value })}
-                      placeholder="e.g. 4 Years"
-                      className="w-full p-2.5 rounded bg-slate-900 border border-slate-700 text-white"
+                      className="w-full p-2 rounded bg-slate-900 border border-slate-700 text-white"
                     />
                   </div>
                 </div>
-                <div>
-                  <label className="block text-xs text-slate-300 font-bold mb-1">Tagline</label>
-                  <input
-                    type="text"
-                    value={editingProg.tagline || ''}
-                    onChange={(e) => setEditingProg({ ...editingProg, tagline: e.target.value })}
-                    placeholder="Short summary tagline..."
-                    className="w-full p-2.5 rounded bg-slate-900 border border-slate-700 text-white text-xs"
-                  />
-                </div>
-                <div className="flex justify-end gap-2 pt-2">
-                  <button
-                    type="button"
-                    onClick={() => setEditingProg(null)}
-                    className="px-4 py-2 rounded bg-slate-700 text-xs font-bold text-slate-300"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="px-4 py-2 rounded bg-[#003366] text-xs font-bold text-white flex items-center gap-1.5"
-                  >
-                    <Save className="w-3.5 h-3.5" />
-                    <span>Save Changes Live</span>
-                  </button>
+                <div className="flex gap-2">
+                  <button type="submit" className="px-4 py-2 rounded bg-emerald-600 font-bold">Save Programme</button>
+                  <button type="button" onClick={() => setEditingProg(null)} className="px-4 py-2 rounded bg-slate-700 font-bold">Cancel</button>
                 </div>
               </form>
             )}
 
-            <div className="overflow-x-auto rounded-xl border border-slate-800 bg-slate-800/60">
+            <div className="overflow-x-auto rounded-xl border border-slate-800">
               <table className="w-full text-left text-xs text-slate-300">
-                <thead className="bg-slate-800 text-slate-400 font-mono uppercase text-[11px] border-b border-slate-700">
+                <thead className="bg-slate-800 text-slate-400 font-bold uppercase border-b border-slate-700">
                   <tr>
                     <th className="p-3">Code</th>
                     <th className="p-3">Programme Name</th>
                     <th className="p-3">Level</th>
-                    <th className="p-3">Duration</th>
                     <th className="p-3 text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-800">
                   {programmes.map((p) => (
-                    <tr key={p.id} className="hover:bg-slate-800/40">
+                    <tr key={p.id} className="hover:bg-slate-800/50">
                       <td className="p-3 font-mono font-bold text-[#F2B705]">{p.code}</td>
                       <td className="p-3 font-bold text-white">{p.name}</td>
                       <td className="p-3">{p.level}</td>
-                      <td className="p-3">{p.duration}</td>
-                      <td className="p-3 text-right flex justify-end gap-2">
-                        <button
-                          onClick={() => setEditingProg(p)}
-                          className="p-1.5 rounded bg-slate-700 hover:bg-slate-600 text-white"
-                        >
-                          <Edit className="w-3.5 h-3.5" />
-                        </button>
-                        <button
-                          onClick={() => handleDeleteProgramme(p.id)}
-                          className="p-1.5 rounded bg-red-600/30 hover:bg-red-600 text-red-200"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
+                      <td className="p-3 text-right space-x-2">
+                        <button onClick={() => setEditingProg(p)} className="p-1.5 rounded bg-slate-700 hover:bg-slate-600 text-white"><Edit className="w-3.5 h-3.5" /></button>
+                        <button onClick={() => handleDeleteProgramme(p.id)} className="p-1.5 rounded bg-red-600/80 hover:bg-red-600 text-white"><Trash2 className="w-3.5 h-3.5" /></button>
                       </td>
                     </tr>
                   ))}
@@ -512,15 +1030,13 @@ export const AdminDashboard: React.FC<{ onNavigateHome: () => void }> = ({ onNav
           </div>
         )}
 
-        {/* ==========================================
-            TAB 2: STUDENT INNOVATION PROJECTS
-           ========================================== */}
+        {/* TAB 5: STUDENT PROJECTS */}
         {activeTab === 'projects' && (
           <div className="space-y-6">
             <div className="flex justify-between items-center">
               <h2 className="text-base font-extrabold text-white">Student Innovation Projects</h2>
               <button
-                onClick={() => setEditingProj({ title: '', studentName: '', category: 'Web Development', isVerifiedReal: true })}
+                onClick={() => setEditingProj({ title: '', studentName: '', category: 'Web Development' })}
                 className="px-3.5 py-2 rounded-lg bg-[#003366] hover:bg-blue-900 text-white text-xs font-bold flex items-center gap-1.5"
               >
                 <Plus className="w-4 h-4" />
@@ -529,117 +1045,56 @@ export const AdminDashboard: React.FC<{ onNavigateHome: () => void }> = ({ onNav
             </div>
 
             {editingProj && (
-              <form onSubmit={handleSaveProject} className="p-5 rounded-xl bg-slate-800 border border-slate-700 space-y-4">
-                <h3 className="text-sm font-bold text-[#F2B705]">
-                  {editingProj.id ? 'Edit Project' : 'New Project Entry'}
-                </h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+              <form onSubmit={handleSaveProject} className="p-5 rounded-xl bg-slate-800 border border-slate-700 space-y-4 text-xs">
+                <h3 className="font-bold text-[#F2B705]">{editingProj.id ? 'Edit Project' : 'New Project Entry'}</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-slate-300 font-bold mb-1">Project Title *</label>
+                    <label className="block font-bold text-slate-300 mb-1">Title *</label>
                     <input
                       type="text"
                       required
                       value={editingProj.title || ''}
                       onChange={(e) => setEditingProj({ ...editingProj, title: e.target.value })}
-                      placeholder="e.g. BloodVault"
-                      className="w-full p-2.5 rounded bg-slate-900 border border-slate-700 text-white"
+                      className="w-full p-2 rounded bg-slate-900 border border-slate-700 text-white"
                     />
                   </div>
                   <div>
-                    <label className="block text-slate-300 font-bold mb-1">Student Lead / Team *</label>
+                    <label className="block font-bold text-slate-300 mb-1">Student Name *</label>
                     <input
                       type="text"
                       required
                       value={editingProj.studentName || ''}
                       onChange={(e) => setEditingProj({ ...editingProj, studentName: e.target.value })}
-                      placeholder="e.g. Baffour Akoto Aninfeng"
-                      className="w-full p-2.5 rounded bg-slate-900 border border-slate-700 text-white"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-slate-300 font-bold mb-1">Category</label>
-                    <select
-                      value={editingProj.category || 'Web Development'}
-                      onChange={(e) => setEditingProj({ ...editingProj, category: e.target.value as any })}
-                      className="w-full p-2.5 rounded bg-slate-900 border border-slate-700 text-white"
-                    >
-                      <option value="Web Development">Web Development</option>
-                      <option value="Mobile Applications">Mobile Applications</option>
-                      <option value="Artificial Intelligence">Artificial Intelligence</option>
-                      <option value="Data Analytics">Data Analytics</option>
-                      <option value="Cybersecurity">Cybersecurity</option>
-                      <option value="Information Systems">Information Systems</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-slate-300 font-bold mb-1">Image URL</label>
-                    <input
-                      type="text"
-                      value={editingProj.imageUrl || ''}
-                      onChange={(e) => setEditingProj({ ...editingProj, imageUrl: e.target.value })}
-                      placeholder="/images/bloodvault_preview.jpg"
-                      className="w-full p-2.5 rounded bg-slate-900 border border-slate-700 text-white"
+                      className="w-full p-2 rounded bg-slate-900 border border-slate-700 text-white"
                     />
                   </div>
                 </div>
-                <div>
-                  <label className="block text-xs text-slate-300 font-bold mb-1">Description</label>
-                  <textarea
-                    rows={2}
-                    value={editingProj.description || ''}
-                    onChange={(e) => setEditingProj({ ...editingProj, description: e.target.value })}
-                    placeholder="Short description of the system..."
-                    className="w-full p-2.5 rounded bg-slate-900 border border-slate-700 text-white text-xs"
-                  />
-                </div>
-                <div className="flex justify-end gap-2 pt-2">
-                  <button
-                    type="button"
-                    onClick={() => setEditingProj(null)}
-                    className="px-4 py-2 rounded bg-slate-700 text-xs font-bold text-slate-300"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="px-4 py-2 rounded bg-[#003366] text-xs font-bold text-white flex items-center gap-1.5"
-                  >
-                    <Save className="w-3.5 h-3.5" />
-                    <span>Save Project Live</span>
-                  </button>
+                <div className="flex gap-2">
+                  <button type="submit" className="px-4 py-2 rounded bg-emerald-600 font-bold">Save Project</button>
+                  <button type="button" onClick={() => setEditingProj(null)} className="px-4 py-2 rounded bg-slate-700 font-bold">Cancel</button>
                 </div>
               </form>
             )}
 
-            <div className="overflow-x-auto rounded-xl border border-slate-800 bg-slate-800/60">
+            <div className="overflow-x-auto rounded-xl border border-slate-800">
               <table className="w-full text-left text-xs text-slate-300">
-                <thead className="bg-slate-800 text-slate-400 font-mono uppercase text-[11px] border-b border-slate-700">
+                <thead className="bg-slate-800 text-slate-400 font-bold uppercase border-b border-slate-700">
                   <tr>
                     <th className="p-3">Title</th>
+                    <th className="p-3">Student</th>
                     <th className="p-3">Category</th>
-                    <th className="p-3">Student Lead</th>
                     <th className="p-3 text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-800">
                   {projects.map((p) => (
-                    <tr key={p.id} className="hover:bg-slate-800/40">
+                    <tr key={p.id} className="hover:bg-slate-800/50">
                       <td className="p-3 font-bold text-white">{p.title}</td>
-                      <td className="p-3 font-mono text-[#F2B705]">{p.category}</td>
                       <td className="p-3">{p.studentName}</td>
-                      <td className="p-3 text-right flex justify-end gap-2">
-                        <button
-                          onClick={() => setEditingProj(p)}
-                          className="p-1.5 rounded bg-slate-700 hover:bg-slate-600 text-white"
-                        >
-                          <Edit className="w-3.5 h-3.5" />
-                        </button>
-                        <button
-                          onClick={() => handleDeleteProject(p.id)}
-                          className="p-1.5 rounded bg-red-600/30 hover:bg-red-600 text-red-200"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
+                      <td className="p-3">{p.category}</td>
+                      <td className="p-3 text-right space-x-2">
+                        <button onClick={() => setEditingProj(p)} className="p-1.5 rounded bg-slate-700 hover:bg-slate-600 text-white"><Edit className="w-3.5 h-3.5" /></button>
+                        <button onClick={() => handleDeleteProject(p.id)} className="p-1.5 rounded bg-red-600/80 hover:bg-red-600 text-white"><Trash2 className="w-3.5 h-3.5" /></button>
                       </td>
                     </tr>
                   ))}
@@ -649,15 +1104,13 @@ export const AdminDashboard: React.FC<{ onNavigateHome: () => void }> = ({ onNav
           </div>
         )}
 
-        {/* ==========================================
-            TAB 3: FACULTY DIRECTORY
-           ========================================== */}
+        {/* TAB 6: FACULTY DIRECTORY */}
         {activeTab === 'faculty' && (
           <div className="space-y-6">
             <div className="flex justify-between items-center">
-              <h2 className="text-base font-extrabold text-white">Faculty & Department Leadership Directory</h2>
+              <h2 className="text-base font-extrabold text-white">Faculty & Leadership Directory</h2>
               <button
-                onClick={() => setEditingFaculty({ name: '', title: '', academicDegree: 'PhD', role: 'Lecturer' })}
+                onClick={() => setEditingFaculty({ name: '', title: '' })}
                 className="px-3.5 py-2 rounded-lg bg-[#003366] hover:bg-blue-900 text-white text-xs font-bold flex items-center gap-1.5"
               >
                 <Plus className="w-4 h-4" />
@@ -666,86 +1119,40 @@ export const AdminDashboard: React.FC<{ onNavigateHome: () => void }> = ({ onNav
             </div>
 
             {editingFaculty && (
-              <form onSubmit={handleSaveFaculty} className="p-5 rounded-xl bg-slate-800 border border-slate-700 space-y-4">
-                <h3 className="text-sm font-bold text-[#F2B705]">
-                  {editingFaculty.id ? 'Edit Faculty Record' : 'New Faculty Member'}
-                </h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+              <form onSubmit={handleSaveFaculty} className="p-5 rounded-xl bg-slate-800 border border-slate-700 space-y-4 text-xs">
+                <h3 className="font-bold text-[#F2B705]">{editingFaculty.id ? 'Edit Faculty' : 'New Faculty Entry'}</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-slate-300 font-bold mb-1">Full Name *</label>
+                    <label className="block font-bold text-slate-300 mb-1">Name *</label>
                     <input
                       type="text"
                       required
                       value={editingFaculty.name || ''}
                       onChange={(e) => setEditingFaculty({ ...editingFaculty, name: e.target.value })}
-                      placeholder="e.g. Dr. Joshua Kwaku Ofoeda"
-                      className="w-full p-2.5 rounded bg-slate-900 border border-slate-700 text-white"
+                      className="w-full p-2 rounded bg-slate-900 border border-slate-700 text-white"
                     />
                   </div>
                   <div>
-                    <label className="block text-slate-300 font-bold mb-1">Title / Position *</label>
+                    <label className="block font-bold text-slate-300 mb-1">Title *</label>
                     <input
                       type="text"
                       required
                       value={editingFaculty.title || ''}
                       onChange={(e) => setEditingFaculty({ ...editingFaculty, title: e.target.value })}
-                      placeholder="e.g. Head of Department, IT Studies"
-                      className="w-full p-2.5 rounded bg-slate-900 border border-slate-700 text-white"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-slate-300 font-bold mb-1">Academic Degree</label>
-                    <input
-                      type="text"
-                      value={editingFaculty.academicDegree || ''}
-                      onChange={(e) => setEditingFaculty({ ...editingFaculty, academicDegree: e.target.value })}
-                      placeholder="e.g. PhD (Information Systems)"
-                      className="w-full p-2.5 rounded bg-slate-900 border border-slate-700 text-white"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-slate-300 font-bold mb-1">Avatar / Photo URL</label>
-                    <input
-                      type="text"
-                      value={editingFaculty.avatarUrl || ''}
-                      onChange={(e) => setEditingFaculty({ ...editingFaculty, avatarUrl: e.target.value })}
-                      placeholder="/images/dr_joshua_ofoeda.png"
-                      className="w-full p-2.5 rounded bg-slate-900 border border-slate-700 text-white"
+                      className="w-full p-2 rounded bg-slate-900 border border-slate-700 text-white"
                     />
                   </div>
                 </div>
-                <div>
-                  <label className="block text-xs text-slate-300 font-bold mb-1">Biography</label>
-                  <textarea
-                    rows={2}
-                    value={editingFaculty.bio || ''}
-                    onChange={(e) => setEditingFaculty({ ...editingFaculty, bio: e.target.value })}
-                    placeholder="Short academic bio..."
-                    className="w-full p-2.5 rounded bg-slate-900 border border-slate-700 text-white text-xs"
-                  />
-                </div>
-                <div className="flex justify-end gap-2 pt-2">
-                  <button
-                    type="button"
-                    onClick={() => setEditingFaculty(null)}
-                    className="px-4 py-2 rounded bg-slate-700 text-xs font-bold text-slate-300"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="px-4 py-2 rounded bg-[#003366] text-xs font-bold text-white flex items-center gap-1.5"
-                  >
-                    <Save className="w-3.5 h-3.5" />
-                    <span>Save Faculty Record Live</span>
-                  </button>
+                <div className="flex gap-2">
+                  <button type="submit" className="px-4 py-2 rounded bg-emerald-600 font-bold">Save Faculty</button>
+                  <button type="button" onClick={() => setEditingFaculty(null)} className="px-4 py-2 rounded bg-slate-700 font-bold">Cancel</button>
                 </div>
               </form>
             )}
 
-            <div className="overflow-x-auto rounded-xl border border-slate-800 bg-slate-800/60">
+            <div className="overflow-x-auto rounded-xl border border-slate-800">
               <table className="w-full text-left text-xs text-slate-300">
-                <thead className="bg-slate-800 text-slate-400 font-mono uppercase text-[11px] border-b border-slate-700">
+                <thead className="bg-slate-800 text-slate-400 font-bold uppercase border-b border-slate-700">
                   <tr>
                     <th className="p-3">Name</th>
                     <th className="p-3">Title</th>
@@ -755,23 +1162,13 @@ export const AdminDashboard: React.FC<{ onNavigateHome: () => void }> = ({ onNav
                 </thead>
                 <tbody className="divide-y divide-slate-800">
                   {faculty.map((f) => (
-                    <tr key={f.id} className="hover:bg-slate-800/40">
+                    <tr key={f.id} className="hover:bg-slate-800/50">
                       <td className="p-3 font-bold text-white">{f.name}</td>
-                      <td className="p-3 font-semibold text-[#F2B705]">{f.title}</td>
+                      <td className="p-3">{f.title}</td>
                       <td className="p-3 font-mono">{f.academicDegree}</td>
-                      <td className="p-3 text-right flex justify-end gap-2">
-                        <button
-                          onClick={() => setEditingFaculty(f)}
-                          className="p-1.5 rounded bg-slate-700 hover:bg-slate-600 text-white"
-                        >
-                          <Edit className="w-3.5 h-3.5" />
-                        </button>
-                        <button
-                          onClick={() => handleDeleteFaculty(f.id)}
-                          className="p-1.5 rounded bg-red-600/30 hover:bg-red-600 text-red-200"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
+                      <td className="p-3 text-right space-x-2">
+                        <button onClick={() => setEditingFaculty(f)} className="p-1.5 rounded bg-slate-700 hover:bg-slate-600 text-white"><Edit className="w-3.5 h-3.5" /></button>
+                        <button onClick={() => handleDeleteFaculty(f.id)} className="p-1.5 rounded bg-red-600/80 hover:bg-red-600 text-white"><Trash2 className="w-3.5 h-3.5" /></button>
                       </td>
                     </tr>
                   ))}
@@ -781,135 +1178,308 @@ export const AdminDashboard: React.FC<{ onNavigateHome: () => void }> = ({ onNav
           </div>
         )}
 
-        {/* ==========================================
-            TAB 4: ANNOUNCEMENT SLIDER
-           ========================================== */}
-        {activeTab === 'slides' && (
+        {/* TAB 7: FOOTER & LINKS */}
+        {activeTab === 'footer' && (
+          <div className="space-y-8">
+            {/* Footer Branding Form */}
+            <div className="p-6 rounded-xl bg-slate-800 border border-slate-700 space-y-4 text-xs">
+              <div className="flex justify-between items-center">
+                <h3 className="text-sm font-extrabold text-[#F2B705]">Footer Branding & Contact Settings</h3>
+                <button
+                  type="button"
+                  onClick={() => setEditingFooterContent(footerContent)}
+                  className="px-3 py-1.5 rounded bg-[#003366] text-white font-bold"
+                >
+                  Edit Footer Content
+                </button>
+              </div>
+
+              {editingFooterContent ? (
+                <form onSubmit={handleSaveFooterContent} className="space-y-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block font-bold text-slate-300 mb-1">Logo Text</label>
+                      <input
+                        type="text"
+                        value={editingFooterContent.logoText ?? footerContent.logoText}
+                        onChange={(e) => setEditingFooterContent({ ...editingFooterContent, logoText: e.target.value })}
+                        className="w-full p-2.5 rounded bg-slate-900 border border-slate-700 text-white"
+                      />
+                    </div>
+                    <div>
+                      <label className="block font-bold text-slate-300 mb-1">Motto Text</label>
+                      <input
+                        type="text"
+                        value={editingFooterContent.mottoText ?? footerContent.mottoText}
+                        onChange={(e) => setEditingFooterContent({ ...editingFooterContent, mottoText: e.target.value })}
+                        className="w-full p-2.5 rounded bg-slate-900 border border-slate-700 text-white"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block font-bold text-slate-300 mb-1">Description Paragraph</label>
+                    <textarea
+                      rows={2}
+                      value={editingFooterContent.description ?? footerContent.description}
+                      onChange={(e) => setEditingFooterContent({ ...editingFooterContent, description: e.target.value })}
+                      className="w-full p-2.5 rounded bg-slate-900 border border-slate-700 text-white"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div>
+                      <label className="block font-bold text-slate-300 mb-1">Digital Address</label>
+                      <input
+                        type="text"
+                        value={editingFooterContent.digitalAddress ?? footerContent.digitalAddress}
+                        onChange={(e) => setEditingFooterContent({ ...editingFooterContent, digitalAddress: e.target.value })}
+                        className="w-full p-2.5 rounded bg-slate-900 border border-slate-700 text-white font-mono"
+                      />
+                    </div>
+                    <div>
+                      <label className="block font-bold text-slate-300 mb-1">Admissions Phone</label>
+                      <input
+                        type="text"
+                        value={editingFooterContent.phoneAdmissions ?? footerContent.phoneAdmissions}
+                        onChange={(e) => setEditingFooterContent({ ...editingFooterContent, phoneAdmissions: e.target.value })}
+                        className="w-full p-2.5 rounded bg-slate-900 border border-slate-700 text-white font-mono"
+                      />
+                    </div>
+                    <div>
+                      <label className="block font-bold text-slate-300 mb-1">Official Email</label>
+                      <input
+                        type="email"
+                        value={editingFooterContent.email ?? footerContent.email}
+                        onChange={(e) => setEditingFooterContent({ ...editingFooterContent, email: e.target.value })}
+                        className="w-full p-2.5 rounded bg-slate-900 border border-slate-700 text-white font-mono"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex gap-2 pt-2">
+                    <button type="submit" className="px-4 py-2 rounded bg-emerald-600 font-bold">Save Footer</button>
+                    <button type="button" onClick={() => setEditingFooterContent(null)} className="px-4 py-2 rounded bg-slate-700 font-bold">Cancel</button>
+                  </div>
+                </form>
+              ) : (
+                <div className="space-y-1 text-slate-300">
+                  <p><strong className="text-slate-400">Logo:</strong> {footerContent.logoText} | <strong className="text-slate-400">Motto:</strong> {footerContent.mottoText}</p>
+                  <p><strong className="text-slate-400">Digital Address:</strong> {footerContent.digitalAddress} | <strong className="text-slate-400">Email:</strong> {footerContent.email}</p>
+                </div>
+              )}
+            </div>
+
+            {/* Footer Links Table */}
+            <div className="space-y-4">
+              <div className="flex justify-between items-center">
+                <h3 className="text-sm font-extrabold text-white">Footer Quick Links ({footerLinks.length})</h3>
+                <button
+                  onClick={() => setEditingFooterLink({ columnTitle: 'ACADEMICS & HUB', label: '', url: 'academics', isExternal: false, displayOrder: footerLinks.length + 1 })}
+                  className="px-3.5 py-2 rounded-lg bg-[#003366] hover:bg-blue-900 text-white text-xs font-bold flex items-center gap-1.5"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>Add Footer Link</span>
+                </button>
+              </div>
+
+              {editingFooterLink && (
+                <form onSubmit={handleSaveFooterLink} className="p-5 rounded-xl bg-slate-800 border border-slate-700 space-y-4 text-xs">
+                  <h4 className="font-bold text-[#F2B705]">{editingFooterLink.id ? 'Edit Footer Link' : 'New Footer Link Entry'}</h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div>
+                      <label className="block font-bold text-slate-300 mb-1">Column Title *</label>
+                      <input
+                        type="text"
+                        required
+                        value={editingFooterLink.columnTitle || ''}
+                        onChange={(e) => setEditingFooterLink({ ...editingFooterLink, columnTitle: e.target.value })}
+                        className="w-full p-2 rounded bg-slate-900 border border-slate-700 text-white"
+                      />
+                    </div>
+                    <div>
+                      <label className="block font-bold text-slate-300 mb-1">Link Label *</label>
+                      <input
+                        type="text"
+                        required
+                        value={editingFooterLink.label || ''}
+                        onChange={(e) => setEditingFooterLink({ ...editingFooterLink, label: e.target.value })}
+                        className="w-full p-2 rounded bg-slate-900 border border-slate-700 text-white"
+                      />
+                    </div>
+                    <div>
+                      <label className="block font-bold text-slate-300 mb-1">URL / Section ID *</label>
+                      <input
+                        type="text"
+                        required
+                        value={editingFooterLink.url || ''}
+                        onChange={(e) => setEditingFooterLink({ ...editingFooterLink, url: e.target.value })}
+                        className="w-full p-2 rounded bg-slate-900 border border-slate-700 text-white font-mono"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <button type="submit" className="px-4 py-2 rounded bg-emerald-600 font-bold">Save Link</button>
+                    <button type="button" onClick={() => setEditingFooterLink(null)} className="px-4 py-2 rounded bg-slate-700 font-bold">Cancel</button>
+                  </div>
+                </form>
+              )}
+
+              <div className="overflow-x-auto rounded-xl border border-slate-800">
+                <table className="w-full text-left text-xs text-slate-300">
+                  <thead className="bg-slate-800 text-slate-400 font-bold uppercase border-b border-slate-700">
+                    <tr>
+                      <th className="p-3">Column</th>
+                      <th className="p-3">Label</th>
+                      <th className="p-3">URL</th>
+                      <th className="p-3 text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-800">
+                    {footerLinks.map((link) => (
+                      <tr key={link.id} className="hover:bg-slate-800/50">
+                        <td className="p-3 font-bold text-[#F2B705]">{link.columnTitle}</td>
+                        <td className="p-3 font-bold text-white">{link.label}</td>
+                        <td className="p-3 font-mono">{link.url}</td>
+                        <td className="p-3 text-right space-x-2">
+                          <button onClick={() => setEditingFooterLink(link)} className="p-1.5 rounded bg-slate-700 hover:bg-slate-600 text-white"><Edit className="w-3.5 h-3.5" /></button>
+                          <button onClick={() => handleDeleteFooterLink(link.id)} className="p-1.5 rounded bg-red-600/80 hover:bg-red-600 text-white"><Trash2 className="w-3.5 h-3.5" /></button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* TAB 8: SOCIAL LINKS */}
+        {activeTab === 'social' && (
           <div className="space-y-6">
             <div className="flex justify-between items-center">
-              <h2 className="text-base font-extrabold text-white">Announcement Banners & Hero Slider</h2>
+              <h2 className="text-base font-extrabold text-white">Social Media Platforms</h2>
               <button
-                onClick={() => setEditingSlide({ title: '', badgeText: 'DEPARTMENT ANNOUNCEMENT', ctaText: 'Explore Programmes', ctaLink: 'academics', imageUrl: '/images/upsa_congregation_2026.png' })}
+                onClick={() => setEditingSocialLink({ platform: 'Facebook', url: 'https://', displayOrder: socialLinks.length + 1 })}
                 className="px-3.5 py-2 rounded-lg bg-[#003366] hover:bg-blue-900 text-white text-xs font-bold flex items-center gap-1.5"
               >
                 <Plus className="w-4 h-4" />
-                <span>Add Announcement Slide</span>
+                <span>Add Social Platform</span>
               </button>
             </div>
 
-            {editingSlide && (
-              <form onSubmit={handleSaveSlide} className="p-5 rounded-xl bg-slate-800 border border-slate-700 space-y-4">
-                <h3 className="text-sm font-bold text-[#F2B705]">
-                  {editingSlide.id ? 'Edit Slide' : 'New Announcement Slide'}
-                </h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+            {editingSocialLink && (
+              <form onSubmit={handleSaveSocialLink} className="p-5 rounded-xl bg-slate-800 border border-slate-700 space-y-4 text-xs">
+                <h3 className="font-bold text-[#F2B705]">{editingSocialLink.id ? 'Edit Social Link' : 'New Social Entry'}</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-slate-300 font-bold mb-1">Badge Text</label>
-                    <input
-                      type="text"
-                      value={editingSlide.badgeText || ''}
-                      onChange={(e) => setEditingSlide({ ...editingSlide, badgeText: e.target.value })}
-                      placeholder="e.g. 14TH CONGREGATION CEREMONY"
-                      className="w-full p-2.5 rounded bg-slate-900 border border-slate-700 text-white"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-slate-300 font-bold mb-1">Slide Title *</label>
+                    <label className="block font-bold text-slate-300 mb-1">Platform Name *</label>
                     <input
                       type="text"
                       required
-                      value={editingSlide.title || ''}
-                      onChange={(e) => setEditingSlide({ ...editingSlide, title: e.target.value })}
-                      placeholder="e.g. 2026 Graduating Class"
-                      className="w-full p-2.5 rounded bg-slate-900 border border-slate-700 text-white"
+                      value={editingSocialLink.platform || ''}
+                      onChange={(e) => setEditingSocialLink({ ...editingSocialLink, platform: e.target.value })}
+                      className="w-full p-2 rounded bg-slate-900 border border-slate-700 text-white"
                     />
                   </div>
                   <div>
-                    <label className="block text-slate-300 font-bold mb-1">Banner Image URL *</label>
+                    <label className="block font-bold text-slate-300 mb-1">URL *</label>
                     <input
-                      type="text"
+                      type="url"
                       required
-                      value={editingSlide.imageUrl || ''}
-                      onChange={(e) => setEditingSlide({ ...editingSlide, imageUrl: e.target.value })}
-                      placeholder="/images/upsa_congregation_2026.png"
-                      className="w-full p-2.5 rounded bg-slate-900 border border-slate-700 text-white"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-slate-300 font-bold mb-1">CTA Button Text</label>
-                    <input
-                      type="text"
-                      value={editingSlide.ctaText || ''}
-                      onChange={(e) => setEditingSlide({ ...editingSlide, ctaText: e.target.value })}
-                      placeholder="e.g. Explore Programmes"
-                      className="w-full p-2.5 rounded bg-slate-900 border border-slate-700 text-white"
+                      value={editingSocialLink.url || ''}
+                      onChange={(e) => setEditingSocialLink({ ...editingSocialLink, url: e.target.value })}
+                      className="w-full p-2 rounded bg-slate-900 border border-slate-700 text-white font-mono"
                     />
                   </div>
                 </div>
-                <div>
-                  <label className="block text-xs text-slate-300 font-bold mb-1">Subtext / Description</label>
-                  <textarea
-                    rows={2}
-                    value={editingSlide.subtext || ''}
-                    onChange={(e) => setEditingSlide({ ...editingSlide, subtext: e.target.value })}
-                    placeholder="Short banner description..."
-                    className="w-full p-2.5 rounded bg-slate-900 border border-slate-700 text-white text-xs"
-                  />
-                </div>
-                <div className="flex justify-end gap-2 pt-2">
-                  <button
-                    type="button"
-                    onClick={() => setEditingSlide(null)}
-                    className="px-4 py-2 rounded bg-slate-700 text-xs font-bold text-slate-300"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="px-4 py-2 rounded bg-[#003366] text-xs font-bold text-white flex items-center gap-1.5"
-                  >
-                    <Save className="w-3.5 h-3.5" />
-                    <span>Save Slide Live</span>
-                  </button>
+                <div className="flex gap-2">
+                  <button type="submit" className="px-4 py-2 rounded bg-emerald-600 font-bold">Save Social Link</button>
+                  <button type="button" onClick={() => setEditingSocialLink(null)} className="px-4 py-2 rounded bg-slate-700 font-bold">Cancel</button>
                 </div>
               </form>
             )}
 
-            <div className="overflow-x-auto rounded-xl border border-slate-800 bg-slate-800/60">
+            <div className="overflow-x-auto rounded-xl border border-slate-800">
               <table className="w-full text-left text-xs text-slate-300">
-                <thead className="bg-slate-800 text-slate-400 font-mono uppercase text-[11px] border-b border-slate-700">
+                <thead className="bg-slate-800 text-slate-400 font-bold uppercase border-b border-slate-700">
                   <tr>
-                    <th className="p-3">Badge</th>
-                    <th className="p-3">Title</th>
-                    <th className="p-3">CTA Link</th>
+                    <th className="p-3">Platform</th>
+                    <th className="p-3">URL</th>
                     <th className="p-3 text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-800">
-                  {promoSlides.map((s) => (
-                    <tr key={s.id} className="hover:bg-slate-800/40">
-                      <td className="p-3 font-mono text-[#F2B705]">{s.badgeText || 'ANNOUNCEMENT'}</td>
-                      <td className="p-3 font-bold text-white">{s.title}</td>
-                      <td className="p-3 font-mono">{s.ctaLink || 'academics'}</td>
-                      <td className="p-3 text-right flex justify-end gap-2">
-                        <button
-                          onClick={() => setEditingSlide(s)}
-                          className="p-1.5 rounded bg-slate-700 hover:bg-slate-600 text-white"
-                        >
-                          <Edit className="w-3.5 h-3.5" />
-                        </button>
-                        <button
-                          onClick={() => handleDeleteSlide(s.id)}
-                          className="p-1.5 rounded bg-red-600/30 hover:bg-red-600 text-red-200"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
+                  {socialLinks.map((s) => (
+                    <tr key={s.id} className="hover:bg-slate-800/50">
+                      <td className="p-3 font-bold text-white">{s.platform}</td>
+                      <td className="p-3 font-mono text-[#00AEEF]">{s.url}</td>
+                      <td className="p-3 text-right space-x-2">
+                        <button onClick={() => setEditingSocialLink(s)} className="p-1.5 rounded bg-slate-700 hover:bg-slate-600 text-white"><Edit className="w-3.5 h-3.5" /></button>
+                        <button onClick={() => handleDeleteSocialLink(s.id)} className="p-1.5 rounded bg-red-600/80 hover:bg-red-600 text-white"><Trash2 className="w-3.5 h-3.5" /></button>
                       </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
+          </div>
+        )}
+
+        {/* TAB 9: SITE SETTINGS & SEO */}
+        {activeTab === 'settings' && (
+          <div className="space-y-6">
+            <h2 className="text-base font-extrabold text-white">Site Configuration & SEO Metadata</h2>
+
+            <form onSubmit={handleSaveSiteSettings} className="p-6 rounded-xl bg-slate-800 border border-slate-700 space-y-4 text-xs">
+              <div>
+                <label className="block font-bold text-slate-300 mb-1">Web Portal Title *</label>
+                <input
+                  type="text"
+                  required
+                  value={editingSiteSettings?.siteTitle ?? siteSettings.siteTitle}
+                  onChange={(e) => setEditingSiteSettings({ ...editingSiteSettings, siteTitle: e.target.value })}
+                  className="w-full p-2.5 rounded bg-slate-900 border border-slate-700 text-white font-bold"
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-300 mb-1">Meta Description</label>
+                <textarea
+                  rows={3}
+                  value={editingSiteSettings?.metaDescription ?? siteSettings.metaDescription}
+                  onChange={(e) => setEditingSiteSettings({ ...editingSiteSettings, metaDescription: e.target.value })}
+                  className="w-full p-2.5 rounded bg-slate-900 border border-slate-700 text-white"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block font-bold text-slate-300 mb-1">Organization Name</label>
+                  <input
+                    type="text"
+                    value={editingSiteSettings?.organizationName ?? siteSettings.organizationName}
+                    onChange={(e) => setEditingSiteSettings({ ...editingSiteSettings, organizationName: e.target.value })}
+                    className="w-full p-2.5 rounded bg-slate-900 border border-slate-700 text-white"
+                  />
+                </div>
+                <div>
+                  <label className="block font-bold text-slate-300 mb-1">Canonical URL</label>
+                  <input
+                    type="url"
+                    value={editingSiteSettings?.canonicalUrl ?? siteSettings.canonicalUrl}
+                    onChange={(e) => setEditingSiteSettings({ ...editingSiteSettings, canonicalUrl: e.target.value })}
+                    className="w-full p-2.5 rounded bg-slate-900 border border-slate-700 text-white font-mono"
+                  />
+                </div>
+              </div>
+
+              <div className="pt-2">
+                <button type="submit" className="px-5 py-2.5 rounded bg-emerald-600 font-extrabold text-white text-xs tracking-wider uppercase">
+                  Save Site Settings
+                </button>
+              </div>
+            </form>
           </div>
         )}
 

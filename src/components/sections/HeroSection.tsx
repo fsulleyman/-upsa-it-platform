@@ -1,23 +1,28 @@
 import React from 'react';
-import type { NavSectionId } from '../../types';
+import type { NavSectionId, HeroContent } from '../../types';
 import { ArrowRight } from 'lucide-react';
 
 interface HeroSectionProps {
   onNavigate: (section: NavSectionId) => void;
+  heroContent?: HeroContent;
 }
 
-export const HeroSection: React.FC<HeroSectionProps> = ({ onNavigate }) => {
+export const HeroSection: React.FC<HeroSectionProps> = ({ onNavigate, heroContent }) => {
+  const topLine = heroContent?.topLine || 'UPSA ACCRA • FACULTY OF INFORMATION TECHNOLOGY & COMMUNICATION STUDIES • EST. 1965';
+  const headline = heroContent?.headline || 'Department of Information Technology Studies';
+  const subtext = heroContent?.subtext || 'University of Professional Studies, Accra (UPSA). Delivering undergraduate and postgraduate qualifications combining enterprise software architecture, cybersecurity, and data science with professional IT management.';
+  const primaryCtaText = heroContent?.primaryCtaText || 'Explore Academic Programmes';
+  const primaryCtaLink = (heroContent?.primaryCtaLink as NavSectionId) || 'academics';
+  const secondaryCtaText = heroContent?.secondaryCtaText || 'Inspect Student Systems & Code';
+  const secondaryCtaLink = (heroContent?.secondaryCtaLink as NavSectionId) || 'innovation';
+
   return (
     <section className="relative w-full max-w-full overflow-hidden pt-10 pb-16 bg-[#FFFFFF] border-b border-slate-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Top Institutional Line */}
         <div className="flex items-center gap-2.5 text-xs font-bold text-[#003366] uppercase tracking-wider mb-5 flex-wrap">
-          <span>UPSA ACCRA</span>
-          <span>•</span>
-          <span>FACULTY OF INFORMATION TECHNOLOGY & COMMUNICATION STUDIES</span>
-          <span>•</span>
-          <span className="text-[#00AEEF]">EST. 1965</span>
+          <span>{topLine}</span>
         </div>
 
         {/* Hero Content Layout */}
@@ -27,29 +32,29 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onNavigate }) => {
             
             {/* JOMACS-Grade Confident Hero Headline (68px desktop) */}
             <h1 className="hero-heading">
-              Department of Information Technology Studies
+              {headline}
             </h1>
 
             {/* Hero Subtext (22px medium weight line) */}
             <p className="hero-subtext max-w-2xl">
-              University of Professional Studies, Accra (UPSA). Delivering undergraduate and postgraduate qualifications combining enterprise software architecture, cybersecurity, and data science with professional IT management.
+              {subtext}
             </p>
 
             {/* Action Buttons */}
             <div className="flex flex-wrap items-center gap-3.5 pt-2">
               <button
-                onClick={() => onNavigate('academics')}
+                onClick={() => onNavigate(primaryCtaLink)}
                 className="px-6 py-3.5 rounded-lg bg-[#003366] text-white font-extrabold text-xs sm:text-sm uppercase tracking-wider shadow-sm hover:bg-blue-900 border border-[#F2B705] transition-all flex items-center gap-2 group"
               >
-                <span>Explore Academic Programmes</span>
+                <span>{primaryCtaText}</span>
                 <ArrowRight className="w-4 h-4 text-[#F2B705] group-hover:translate-x-1 transition-transform" />
               </button>
 
               <button
-                onClick={() => onNavigate('innovation')}
+                onClick={() => onNavigate(secondaryCtaLink)}
                 className="px-5 py-3.5 rounded-lg bg-[#F5F7FA] border border-slate-300 text-[#1A1A1A] hover:text-[#003366] hover:bg-slate-200 font-extrabold text-xs sm:text-sm uppercase tracking-wider transition-all"
               >
-                <span>Inspect Student Systems & Code</span>
+                <span>{secondaryCtaText}</span>
               </button>
             </div>
           </div>
