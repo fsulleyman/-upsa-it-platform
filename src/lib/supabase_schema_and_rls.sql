@@ -1,15 +1,23 @@
 -- ============================================================================
 -- UPSA DEPARTMENT OF INFORMATION TECHNOLOGY STUDIES
--- SUPABASE COMPLETE IDEMPOTENT SCHEMA MIGRATION & RLS SECURITY POLICIES
+-- HARDENED SUPABASE SCHEMA MIGRATION & ADMIN-ROLE RLS SECURITY POLICIES
 -- ============================================================================
 -- Copy and paste this ENTIRE file into the Supabase SQL Editor and click RUN.
 -- It is 100% idempotent: safe to run on new or existing databases.
 
 -- ----------------------------------------------------------------------------
--- PART 1: CREATE ALL TABLES FIRST
+-- PART 1: CREATE ALL CONTENT & AUTHORIZATION TABLES
 -- ----------------------------------------------------------------------------
 
--- 1. Academic Qualifications & Programmes Table
+-- 1. Admin Authorization Table (Stores authorized admin user_ids)
+CREATE TABLE IF NOT EXISTS admin_users (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL UNIQUE REFERENCES auth.users(id) ON DELETE CASCADE,
+  email TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 2. Academic Qualifications & Programmes Table
 CREATE TABLE IF NOT EXISTS programmes (
   id TEXT PRIMARY KEY,
   code TEXT NOT NULL,
@@ -28,7 +36,7 @@ CREATE TABLE IF NOT EXISTS programmes (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 2. Innovation Showcase Student Projects Table
+-- 3. Innovation Showcase Student Projects Table
 CREATE TABLE IF NOT EXISTS projects (
   id TEXT PRIMARY KEY,
   title TEXT NOT NULL,
@@ -54,7 +62,7 @@ CREATE TABLE IF NOT EXISTS projects (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 3. Faculty & Leadership Directory Table
+-- 4. Faculty & Leadership Directory Table
 CREATE TABLE IF NOT EXISTS faculty (
   id TEXT PRIMARY KEY,
   name TEXT NOT NULL,
@@ -71,7 +79,7 @@ CREATE TABLE IF NOT EXISTS faculty (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 4. Promotional Announcement Banners Table
+-- 5. Promotional Announcement Banners Table
 CREATE TABLE IF NOT EXISTS promo_slides (
   id TEXT PRIMARY KEY,
   badge_text TEXT,
@@ -84,7 +92,7 @@ CREATE TABLE IF NOT EXISTS promo_slides (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 5. Secretariat & Institution Info Table
+-- 6. Secretariat & Institution Info Table
 CREATE TABLE IF NOT EXISTS institution_info (
   id TEXT PRIMARY KEY DEFAULT 'primary',
   university_name TEXT NOT NULL,
@@ -109,7 +117,7 @@ CREATE TABLE IF NOT EXISTS institution_info (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 6. Developers Hub Details & Milestones Table
+-- 7. Developers Hub Details & Milestones Table
 CREATE TABLE IF NOT EXISTS developers_hub (
   id TEXT PRIMARY KEY DEFAULT 'primary',
   nature TEXT,
@@ -128,8 +136,35 @@ CREATE TABLE IF NOT EXISTS developers_hub (
 
 
 -- ----------------------------------------------------------------------------
--- PART 2: ENABLE ROW LEVEL SECURITY (RLS) ON ALL TABLES
+-- PART 2: SEED ADMIN USERS TABLE WITH EXISTING ADMIN ACCOUNT
 -- ----------------------------------------------------------------------------
+INSERT INTO admin_users (user_id, email)
+SELECT id, email FROM auth.users WHERE email = '10310342@upsamail.edu.gh'
+ON CONFLICT (user_id) DO NOTHING;
+
+
+-- ----------------------------------------------------------------------------
+-- PART 3: CREATE POSTGRESQL ADMIN VERIFICATION FUNCTION
+-- ----------------------------------------------------------------------------
+CREATE OR REPLACE FUNCTION is_admin()
+RETURNS BOOLEAN
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path = public
+STABLE
+AS $$
+  SELECT EXISTS (
+    SELECT 1
+    FROM admin_users
+    WHERE user_id = auth.uid()
+  );
+$$;
+
+
+-- ----------------------------------------------------------------------------
+-- PART 4: ENABLE ROW LEVEL SECURITY (RLS) ON ALL TABLES
+-- ----------------------------------------------------------------------------
+ALTER TABLE admin_users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE programmes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE projects ENABLE ROW LEVEL SECURITY;
 ALTER TABLE faculty ENABLE ROW LEVEL SECURITY;
@@ -139,8 +174,9 @@ ALTER TABLE developers_hub ENABLE ROW LEVEL SECURITY;
 
 
 -- ----------------------------------------------------------------------------
--- PART 3: CLEANUP ALL PREVIOUS POLICIES (GUARANTEES CLEAN SLATE)
+-- PART 5: CLEANUP PREVIOUS POLICIES
 -- ----------------------------------------------------------------------------
+DROP POLICY IF EXISTS "No Client Writes Admin Users" ON admin_users;
 DROP POLICY IF EXISTS "Public Read Programmes" ON programmes;
 DROP POLICY IF EXISTS "Public Read Projects" ON projects;
 DROP POLICY IF EXISTS "Public Read Faculty" ON faculty;
@@ -176,7 +212,15 @@ DROP POLICY IF EXISTS "Admin Delete Developers Hub" ON developers_hub;
 
 
 -- ----------------------------------------------------------------------------
--- PART 4: APPLY PUBLIC READ POLICIES (SELECT Allowed for All Visitors)
+-- PART 6: LOCK DOWN admin_users TABLE (Client Writes Strictly Prohibited)
+-- ----------------------------------------------------------------------------
+-- Blocks all client-side INSERT, UPDATE, DELETE on admin_users table.
+-- Modifications can ONLY be done via Supabase SQL Editor / DDL by database owner.
+CREATE POLICY "No Client Writes Admin Users" ON admin_users FOR ALL USING (false);
+
+
+-- ----------------------------------------------------------------------------
+-- PART 7: APPLY PUBLIC READ POLICIES (SELECT Allowed for All Visitors)
 -- ----------------------------------------------------------------------------
 CREATE POLICY "Public Read Programmes" ON programmes FOR SELECT USING (true);
 CREATE POLICY "Public Read Projects" ON projects FOR SELECT USING (true);
@@ -187,35 +231,35 @@ CREATE POLICY "Public Read Developers Hub" ON developers_hub FOR SELECT USING (t
 
 
 -- ----------------------------------------------------------------------------
--- PART 5: APPLY ADMIN WRITE POLICIES FOR AUTHENTICATED ADMIN (SELECT/INSERT/UPDATE/DELETE)
+-- PART 8: APPLY STRICT ADMIN WRITE POLICIES (Requires Membership in admin_users)
 -- ----------------------------------------------------------------------------
 
 -- Programmes Policies
-CREATE POLICY "Admin Insert Programmes" ON programmes FOR INSERT TO authenticated WITH CHECK (true);
-CREATE POLICY "Admin Update Programmes" ON programmes FOR UPDATE TO authenticated USING (true) WITH CHECK (true);
-CREATE POLICY "Admin Delete Programmes" ON programmes FOR DELETE TO authenticated USING (true);
+CREATE POLICY "Admin Insert Programmes" ON programmes FOR INSERT TO authenticated WITH CHECK (is_admin());
+CREATE POLICY "Admin Update Programmes" ON programmes FOR UPDATE TO authenticated USING (is_admin()) WITH CHECK (is_admin());
+CREATE POLICY "Admin Delete Programmes" ON programmes FOR DELETE TO authenticated USING (is_admin());
 
 -- Projects Policies
-CREATE POLICY "Admin Insert Projects" ON projects FOR INSERT TO authenticated WITH CHECK (true);
-CREATE POLICY "Admin Update Projects" ON projects FOR UPDATE TO authenticated USING (true) WITH CHECK (true);
-CREATE POLICY "Admin Delete Projects" ON projects FOR DELETE TO authenticated USING (true);
+CREATE POLICY "Admin Insert Projects" ON projects FOR INSERT TO authenticated WITH CHECK (is_admin());
+CREATE POLICY "Admin Update Projects" ON projects FOR UPDATE TO authenticated USING (is_admin()) WITH CHECK (is_admin());
+CREATE POLICY "Admin Delete Projects" ON projects FOR DELETE TO authenticated USING (is_admin());
 
 -- Faculty Policies
-CREATE POLICY "Admin Insert Faculty" ON faculty FOR INSERT TO authenticated WITH CHECK (true);
-CREATE POLICY "Admin Update Faculty" ON faculty FOR UPDATE TO authenticated USING (true) WITH CHECK (true);
-CREATE POLICY "Admin Delete Faculty" ON faculty FOR DELETE TO authenticated USING (true);
+CREATE POLICY "Admin Insert Faculty" ON faculty FOR INSERT TO authenticated WITH CHECK (is_admin());
+CREATE POLICY "Admin Update Faculty" ON faculty FOR UPDATE TO authenticated USING (is_admin()) WITH CHECK (is_admin());
+CREATE POLICY "Admin Delete Faculty" ON faculty FOR DELETE TO authenticated USING (is_admin());
 
 -- Promo Slides Policies
-CREATE POLICY "Admin Insert Promo Slides" ON promo_slides FOR INSERT TO authenticated WITH CHECK (true);
-CREATE POLICY "Admin Update Promo Slides" ON promo_slides FOR UPDATE TO authenticated USING (true) WITH CHECK (true);
-CREATE POLICY "Admin Delete Promo Slides" ON promo_slides FOR DELETE TO authenticated USING (true);
+CREATE POLICY "Admin Insert Promo Slides" ON promo_slides FOR INSERT TO authenticated WITH CHECK (is_admin());
+CREATE POLICY "Admin Update Promo Slides" ON promo_slides FOR UPDATE TO authenticated USING (is_admin()) WITH CHECK (is_admin());
+CREATE POLICY "Admin Delete Promo Slides" ON promo_slides FOR DELETE TO authenticated USING (is_admin());
 
 -- Institution Info Policies
-CREATE POLICY "Admin Insert Institution Info" ON institution_info FOR INSERT TO authenticated WITH CHECK (true);
-CREATE POLICY "Admin Update Institution Info" ON institution_info FOR UPDATE TO authenticated USING (true) WITH CHECK (true);
-CREATE POLICY "Admin Delete Institution Info" ON institution_info FOR DELETE TO authenticated USING (true);
+CREATE POLICY "Admin Insert Institution Info" ON institution_info FOR INSERT TO authenticated WITH CHECK (is_admin());
+CREATE POLICY "Admin Update Institution Info" ON institution_info FOR UPDATE TO authenticated USING (is_admin()) WITH CHECK (is_admin());
+CREATE POLICY "Admin Delete Institution Info" ON institution_info FOR DELETE TO authenticated USING (is_admin());
 
 -- Developers Hub Policies
-CREATE POLICY "Admin Insert Developers Hub" ON developers_hub FOR INSERT TO authenticated WITH CHECK (true);
-CREATE POLICY "Admin Update Developers Hub" ON developers_hub FOR UPDATE TO authenticated USING (true) WITH CHECK (true);
-CREATE POLICY "Admin Delete Developers Hub" ON developers_hub FOR DELETE TO authenticated USING (true);
+CREATE POLICY "Admin Insert Developers Hub" ON developers_hub FOR INSERT TO authenticated WITH CHECK (is_admin());
+CREATE POLICY "Admin Update Developers Hub" ON developers_hub FOR UPDATE TO authenticated USING (is_admin()) WITH CHECK (is_admin());
+CREATE POLICY "Admin Delete Developers Hub" ON developers_hub FOR DELETE TO authenticated USING (is_admin());
