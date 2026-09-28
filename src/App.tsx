@@ -15,6 +15,7 @@ import { DevelopersHubSection } from './components/sections/DevelopersHubSection
 import { InnovationShowcase } from './components/sections/InnovationShowcase';
 import { CommunitySection } from './components/sections/CommunitySection';
 import { ContactSection } from './components/sections/ContactSection';
+import { FacultyPage } from './pages/FacultyPage';
 
 import { JoinHubModal } from './components/modals/JoinHubModal';
 import { ProjectDetailModal } from './components/modals/ProjectDetailModal';
@@ -39,11 +40,16 @@ function AppContent() {
     institutionInfo
   } = useData();
 
-  // Route to Admin Control Center if hash is #admin
+  // Route flags
   const isAdminRoute = hashState.section === 'admin';
+  const isFacultyRoute = hashState.section === 'faculty';
 
   useEffect(() => {
-    if (hashState.section && !isAdminRoute) {
+    if (isFacultyRoute) {
+      document.title = 'Faculty & Staff | UPSA IT Studies';
+      window.scrollTo({ top: 0, behavior: 'instant' });
+    } else if (hashState.section && !isAdminRoute) {
+      document.title = 'UPSA IT Studies | Department of Information Technology';
       const element = document.getElementById(hashState.section);
       if (element) {
         element.scrollIntoView({ behavior: 'smooth' });
@@ -51,7 +57,7 @@ function AppContent() {
         window.scrollTo({ top: 0, behavior: 'smooth' });
       }
     }
-  }, [hashState.section, isAdminRoute]);
+  }, [hashState.section, isAdminRoute, isFacultyRoute]);
 
   const handleNavigateSection = (section: NavSectionId) => {
     updateHash({ section, modal: null, programmeId: null, projectId: null });
@@ -92,39 +98,45 @@ function AppContent() {
     <div className="min-h-screen bg-white text-[#1A1A1A] font-sans selection:bg-[#F2B705] selection:text-[#003366]">
       <SpeedInsights />
       
-      {/* Header Navigation (Permanently Dark Navbar) */}
+      {/* Header Navigation */}
       <Navbar
         activeSection={hashState.section}
         onNavigate={handleNavigateSection}
         navItems={navItems}
       />
 
-      {/* Main Content Sections (pt-28 sits flush right below 112px fixed navbar) */}
+      {/* Main Content (pt-28 sits flush right below 112px fixed navbar) */}
       <main className="relative pt-28">
-        <div id="home">
-          <PromoSlider slides={promoSlides} onNavigate={handleNavigateSection} />
-          <HeroSection onNavigate={handleNavigateSection} heroContent={heroContent} />
-        </div>
+        {isFacultyRoute ? (
+          <FacultyPage faculty={faculty} onNavigate={handleNavigateSection} />
+        ) : (
+          <>
+            <div id="home">
+              <PromoSlider slides={promoSlides} onNavigate={handleNavigateSection} />
+              <HeroSection onNavigate={handleNavigateSection} heroContent={heroContent} />
+            </div>
 
-        <AboutSection faculty={faculty} />
+            <AboutSection faculty={faculty} />
 
-        <AcademicsSection programmes={programmes} onSelectProgramme={handleSelectProgramme} />
+            <AcademicsSection programmes={programmes} onSelectProgramme={handleSelectProgramme} />
 
-        <DevelopersHubSection
-          hubDetails={hubDetails}
-          onOpenJoinModal={() => updateHash({ section: 'hub', modal: 'join-hub' })}
-        />
+            <DevelopersHubSection
+              hubDetails={hubDetails}
+              onOpenJoinModal={() => updateHash({ section: 'hub', modal: 'join-hub' })}
+            />
 
-        <InnovationShowcase
-          projects={projects}
-          onSelectProject={handleSelectProject}
-          activeCategoryFilter={hashState.categoryFilter}
-          onFilterCategory={handleFilterCategory}
-        />
+            <InnovationShowcase
+              projects={projects}
+              onSelectProject={handleSelectProject}
+              activeCategoryFilter={hashState.categoryFilter}
+              onFilterCategory={handleFilterCategory}
+            />
 
-        <CommunitySection />
+            <CommunitySection />
 
-        <ContactSection institutionInfo={institutionInfo} footerContent={footerContent} />
+            <ContactSection institutionInfo={institutionInfo} footerContent={footerContent} />
+          </>
+        )}
       </main>
 
       {/* Footer */}
@@ -150,7 +162,6 @@ function AppContent() {
         isOpen={isJoinModalOpen}
         onClose={() => updateHash({ modal: null })}
       />
-
     </div>
   );
 }

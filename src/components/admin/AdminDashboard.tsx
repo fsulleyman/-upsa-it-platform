@@ -242,10 +242,18 @@ export const AdminDashboard: React.FC<{ onNavigateHome: () => void }> = ({ onNav
         name: editingFaculty.name.trim(),
         title: editingFaculty.title.trim(),
         academic_degree: editingFaculty.academicDegree || '',
-        office_location: editingFaculty.officeLocation || '',
+        office_location: editingFaculty.officeLocation || editingFaculty.office || '',
+        email: editingFaculty.email || '',
+        phone: editingFaculty.phone || '',
         role: editingFaculty.role || 'Lecturer',
-        bio: editingFaculty.bio || '',
+        bio: editingFaculty.bio || editingFaculty.biography || '',
         specialization: editingFaculty.specialization || [],
+        qualifications: editingFaculty.qualifications || [],
+        teaching_areas: editingFaculty.teachingAreas || [],
+        research_interests: editingFaculty.researchInterests || [],
+        google_scholar_url: editingFaculty.googleScholarUrl || '',
+        orcid_url: editingFaculty.orcidUrl || '',
+        linkedin_url: editingFaculty.linkedinUrl || '',
         avatar_url: editingFaculty.avatarUrl || '',
         is_hod: editingFaculty.isHOD || false,
         is_unconfirmed_hod: editingFaculty.isUnconfirmedHOD || false
@@ -1120,32 +1128,209 @@ export const AdminDashboard: React.FC<{ onNavigateHome: () => void }> = ({ onNav
 
             {editingFaculty && (
               <form onSubmit={handleSaveFaculty} className="p-5 rounded-xl bg-slate-800 border border-slate-700 space-y-4 text-xs">
-                <h3 className="font-bold text-[#F2B705]">{editingFaculty.id ? 'Edit Faculty' : 'New Faculty Entry'}</h3>
+                <h3 className="font-bold text-[#F2B705]">{editingFaculty.id ? 'Edit Faculty Member' : 'New Faculty Member Entry'}</h3>
+                
+                {/* Name & Title */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block font-bold text-slate-300 mb-1">Name *</label>
+                    <label className="block font-bold text-slate-300 mb-1">Full Name *</label>
                     <input
                       type="text"
                       required
+                      placeholder="e.g. Dr. John Mensah"
                       value={editingFaculty.name || ''}
                       onChange={(e) => setEditingFaculty({ ...editingFaculty, name: e.target.value })}
-                      className="w-full p-2 rounded bg-slate-900 border border-slate-700 text-white"
+                      className="w-full p-2 rounded bg-slate-900 border border-slate-700 text-white font-bold"
                     />
                   </div>
                   <div>
-                    <label className="block font-bold text-slate-300 mb-1">Title *</label>
+                    <label className="block font-bold text-slate-300 mb-1">Academic Designation / Title *</label>
                     <input
                       type="text"
                       required
+                      placeholder="e.g. Senior Lecturer"
                       value={editingFaculty.title || ''}
                       onChange={(e) => setEditingFaculty({ ...editingFaculty, title: e.target.value })}
                       className="w-full p-2 rounded bg-slate-900 border border-slate-700 text-white"
                     />
                   </div>
                 </div>
-                <div className="flex gap-2">
-                  <button type="submit" className="px-4 py-2 rounded bg-emerald-600 font-bold">Save Faculty</button>
-                  <button type="button" onClick={() => setEditingFaculty(null)} className="px-4 py-2 rounded bg-slate-700 font-bold">Cancel</button>
+
+                {/* Academic Degree & Position/Role */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block font-bold text-slate-300 mb-1">Academic Degree</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Ph.D. in Computer Science"
+                      value={editingFaculty.academicDegree || ''}
+                      onChange={(e) => setEditingFaculty({ ...editingFaculty, academicDegree: e.target.value })}
+                      className="w-full p-2 rounded bg-slate-900 border border-slate-700 text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-bold text-slate-300 mb-1">Role / Position</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Senior Lecturer / Researcher"
+                      value={editingFaculty.role || ''}
+                      onChange={(e) => setEditingFaculty({ ...editingFaculty, role: e.target.value })}
+                      className="w-full p-2 rounded bg-slate-900 border border-slate-700 text-white"
+                    />
+                  </div>
+                </div>
+
+                {/* Contact: Email & Phone */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block font-bold text-slate-300 mb-1">Email Address</label>
+                    <input
+                      type="email"
+                      placeholder="e.g. lecturer@upsa.edu.gh"
+                      value={editingFaculty.email || ''}
+                      onChange={(e) => setEditingFaculty({ ...editingFaculty, email: e.target.value })}
+                      className="w-full p-2 rounded bg-slate-900 border border-slate-700 text-white font-mono"
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-bold text-slate-300 mb-1">Phone Number</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. +233 20 000 0000"
+                      value={editingFaculty.phone || ''}
+                      onChange={(e) => setEditingFaculty({ ...editingFaculty, phone: e.target.value })}
+                      className="w-full p-2 rounded bg-slate-900 border border-slate-700 text-white font-mono"
+                    />
+                  </div>
+                </div>
+
+                {/* Office Location & Office Hours */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block font-bold text-slate-300 mb-1">Office Location</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. IT Block, Room 204"
+                      value={editingFaculty.officeLocation || editingFaculty.office || ''}
+                      onChange={(e) => setEditingFaculty({ ...editingFaculty, officeLocation: e.target.value })}
+                      className="w-full p-2 rounded bg-slate-900 border border-slate-700 text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-bold text-slate-300 mb-1">Office Hours</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Mon & Wed 2pm - 4pm"
+                      value={editingFaculty.officeHours || ''}
+                      onChange={(e) => setEditingFaculty({ ...editingFaculty, officeHours: e.target.value })}
+                      className="w-full p-2 rounded bg-slate-900 border border-slate-700 text-white"
+                    />
+                  </div>
+                </div>
+
+                {/* Avatar Photo URL */}
+                <div>
+                  <label className="block font-bold text-slate-300 mb-1">Profile Photo URL</label>
+                  <input
+                    type="text"
+                    placeholder="https://images.unsplash.com/..."
+                    value={editingFaculty.avatarUrl || ''}
+                    onChange={(e) => setEditingFaculty({ ...editingFaculty, avatarUrl: e.target.value })}
+                    className="w-full p-2 rounded bg-slate-900 border border-slate-700 text-white font-mono"
+                  />
+                </div>
+
+                {/* Biography */}
+                <div>
+                  <label className="block font-bold text-slate-300 mb-1">Biography & Background</label>
+                  <textarea
+                    rows={3}
+                    placeholder="Short professional biography..."
+                    value={editingFaculty.bio || editingFaculty.biography || ''}
+                    onChange={(e) => setEditingFaculty({ ...editingFaculty, bio: e.target.value, biography: e.target.value })}
+                    className="w-full p-2 rounded bg-slate-900 border border-slate-700 text-white"
+                  />
+                </div>
+
+                {/* Specializations & Research Interests */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block font-bold text-slate-300 mb-1">Specializations (comma separated)</label>
+                    <input
+                      type="text"
+                      placeholder="Artificial Intelligence, Data Analytics"
+                      value={Array.isArray(editingFaculty.specialization) ? editingFaculty.specialization.join(', ') : editingFaculty.specialization || ''}
+                      onChange={(e) => setEditingFaculty({
+                        ...editingFaculty,
+                        specialization: e.target.value.split(',').map((s) => s.trim()).filter(Boolean)
+                      })}
+                      className="w-full p-2 rounded bg-slate-900 border border-slate-700 text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-bold text-slate-300 mb-1">Research Interests (comma separated)</label>
+                    <input
+                      type="text"
+                      placeholder="Machine Learning, Cybersecurity"
+                      value={Array.isArray(editingFaculty.researchInterests) ? editingFaculty.researchInterests.join(', ') : editingFaculty.researchInterests || ''}
+                      onChange={(e) => setEditingFaculty({
+                        ...editingFaculty,
+                        researchInterests: e.target.value.split(',').map((s) => s.trim()).filter(Boolean)
+                      })}
+                      className="w-full p-2 rounded bg-slate-900 border border-slate-700 text-white"
+                    />
+                  </div>
+                </div>
+
+                {/* Academic Links */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block font-bold text-slate-300 mb-1">Google Scholar URL</label>
+                    <input
+                      type="text"
+                      placeholder="https://scholar.google.com/..."
+                      value={editingFaculty.googleScholarUrl || ''}
+                      onChange={(e) => setEditingFaculty({ ...editingFaculty, googleScholarUrl: e.target.value })}
+                      className="w-full p-2 rounded bg-slate-900 border border-slate-700 text-white font-mono"
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-bold text-slate-300 mb-1">ORCID URL</label>
+                    <input
+                      type="text"
+                      placeholder="https://orcid.org/..."
+                      value={editingFaculty.orcidUrl || ''}
+                      onChange={(e) => setEditingFaculty({ ...editingFaculty, orcidUrl: e.target.value })}
+                      className="w-full p-2 rounded bg-slate-900 border border-slate-700 text-white font-mono"
+                    />
+                  </div>
+                  <div>
+                    <label className="block font-bold text-slate-300 mb-1">LinkedIn URL</label>
+                    <input
+                      type="text"
+                      placeholder="https://linkedin.com/in/..."
+                      value={editingFaculty.linkedinUrl || ''}
+                      onChange={(e) => setEditingFaculty({ ...editingFaculty, linkedinUrl: e.target.value })}
+                      className="w-full p-2 rounded bg-slate-900 border border-slate-700 text-white font-mono"
+                    />
+                  </div>
+                </div>
+
+                {/* HOD Checkbox */}
+                <div className="flex items-center gap-2 pt-2">
+                  <input
+                    type="checkbox"
+                    id="isHODCheckbox"
+                    checked={editingFaculty.isHOD || false}
+                    onChange={(e) => setEditingFaculty({ ...editingFaculty, isHOD: e.target.checked })}
+                    className="w-4 h-4 rounded bg-slate-900 border-slate-700 text-[#003366] focus:ring-[#F2B705]"
+                  />
+                  <label htmlFor="isHODCheckbox" className="font-bold text-[#F2B705]">Designate as Head of Department (HOD)</label>
+                </div>
+
+                <div className="flex gap-2 pt-2">
+                  <button type="submit" className="px-4 py-2 rounded bg-emerald-600 hover:bg-emerald-700 font-bold text-white">Save Faculty Profile</button>
+                  <button type="button" onClick={() => setEditingFaculty(null)} className="px-4 py-2 rounded bg-slate-700 hover:bg-slate-600 font-bold text-white">Cancel</button>
                 </div>
               </form>
             )}

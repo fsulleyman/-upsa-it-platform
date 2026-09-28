@@ -1,4 +1,4 @@
-export type NavSectionId = 'home' | 'about' | 'academics' | 'hub' | 'innovation' | 'community' | 'contact' | 'admin';
+export type NavSectionId = 'home' | 'about' | 'academics' | 'faculty' | 'hub' | 'innovation' | 'community' | 'contact' | 'admin';
 
 export type DegreeLevel = 'Undergraduate' | 'Postgraduate' | 'Diploma';
 
@@ -66,11 +66,28 @@ export interface FacultyMember {
   academicDegree: string;
   officeLocation?: string;
   role: string;
+  position?: string;
   bio: string;
+  biography?: string;
   specialization: string[];
   isHOD?: boolean;
   isUnconfirmedHOD?: boolean;
   avatarUrl?: string;
+  email?: string;
+  phone?: string;
+  office?: string;
+  officeNumber?: string;
+  officeHours?: string;
+  qualifications?: string[];
+  teachingAreas?: string[];
+  researchInterests?: string[];
+  researchTopics?: string[];
+  googleScholarUrl?: string;
+  orcidUrl?: string;
+  linkedinUrl?: string;
+  coursesTaught?: string[];
+  displayOrder?: number;
+  isActive?: boolean;
 }
 
 export interface HubMilestone {
@@ -153,4 +170,3 @@ export interface SocialLink {
   displayOrder: number;
   isActive: boolean;
 }
-
