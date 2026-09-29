@@ -55,12 +55,27 @@ export const AdminManagementSection: React.FC = () => {
 
     try {
       setLoading(true);
+      setErrorMsg(null);
       const { data: profiles, error: profErr } = await supabase
         .from('admin_profiles')
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (profErr) throw profErr;
+      if (profErr) {
+        if (
+          profErr.message.includes('admin_profiles') ||
+          profErr.message.includes('schema cache') ||
+          profErr.code === 'PGRST204' ||
+          profErr.code === '42P01'
+        ) {
+          setErrorMsg(
+            "Supabase Database Setup Required: Table 'public.admin_profiles' is missing from your Supabase schema cache. Please execute 'src/lib/admin_system_migration.sql' in the Supabase SQL Editor."
+          );
+          setLoading(false);
+          return;
+        }
+        throw profErr;
+      }
 
       const { data: permissionsData } = await supabase
         .from('admin_permissions')

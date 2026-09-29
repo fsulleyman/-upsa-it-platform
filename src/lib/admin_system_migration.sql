@@ -6,23 +6,34 @@
 -- It is 100% idempotent: safe to run on new or existing databases.
 
 -- ----------------------------------------------------------------------------
--- PART 1: CREATE ADMIN PROFILES TABLE
+-- PART 1: CREATE LEGACY & CORE AUTHORIZATION TABLES
 -- ----------------------------------------------------------------------------
+
+-- Legacy Admin Table (Preserves compatibility with earlier migrations)
+CREATE TABLE IF NOT EXISTS public.admin_users (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL UNIQUE REFERENCES auth.users(id) ON DELETE CASCADE,
+  email TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Admin Profiles Table
 CREATE TABLE IF NOT EXISTS public.admin_profiles (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL UNIQUE REFERENCES auth.users(id) ON DELETE CASCADE,
   full_name TEXT NOT NULL,
   email TEXT NOT NULL,
-  role TEXT NOT NULL CHECK (role IN ('super_admin', 'sub_admin')),
-  is_active BOOLEAN DEFAULT TRUE,
+  role TEXT NOT NULL DEFAULT 'sub_admin' CHECK (role IN ('super_admin', 'sub_admin')),
+  is_active BOOLEAN NOT NULL DEFAULT TRUE,
   last_login_at TIMESTAMPTZ,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW()
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 -- Ensure columns exist if table was partially created previously
-ALTER TABLE public.admin_profiles ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT TRUE;
+ALTER TABLE public.admin_profiles ADD COLUMN IF NOT EXISTS is_active BOOLEAN NOT NULL DEFAULT TRUE;
 ALTER TABLE public.admin_profiles ADD COLUMN IF NOT EXISTS last_login_at TIMESTAMPTZ;
+ALTER TABLE public.admin_profiles ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW();
 
 -- ----------------------------------------------------------------------------
 -- PART 2: CREATE ADMIN PERMISSIONS TABLE
@@ -31,7 +42,7 @@ CREATE TABLE IF NOT EXISTS public.admin_permissions (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   admin_user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   permission TEXT NOT NULL,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   UNIQUE (admin_user_id, permission)
 );
 
@@ -43,16 +54,17 @@ CREATE TABLE IF NOT EXISTS public.admin_activity_logs (
   admin_user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
   admin_name TEXT NOT NULL DEFAULT 'System Admin',
   action TEXT NOT NULL,
-  resource_type TEXT NOT NULL,
+  resource_type TEXT,
   resource_id TEXT,
-  description TEXT NOT NULL,
+  description TEXT,
   metadata JSONB DEFAULT '{}'::jsonb,
-  created_at TIMESTAMPTZ DEFAULT NOW()
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 CREATE INDEX IF NOT EXISTS idx_activity_logs_created_at ON public.admin_activity_logs (created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_activity_logs_admin_user ON public.admin_activity_logs (admin_user_id);
 CREATE INDEX IF NOT EXISTS idx_activity_logs_action ON public.admin_activity_logs (action);
+CREATE INDEX IF NOT EXISTS idx_activity_logs_resource_type ON public.admin_activity_logs (resource_type);
 
 -- ----------------------------------------------------------------------------
 -- PART 4: CREATE SITE ANALYTICS EVENT TABLE
@@ -63,7 +75,7 @@ CREATE TABLE IF NOT EXISTS public.site_analytics (
   page_path TEXT NOT NULL,
   session_id TEXT,
   metadata JSONB DEFAULT '{}'::jsonb,
-  created_at TIMESTAMPTZ DEFAULT NOW()
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 CREATE INDEX IF NOT EXISTS idx_analytics_created_at ON public.site_analytics (created_at DESC);
@@ -105,10 +117,10 @@ LIMIT 1
 ON CONFLICT (user_id) DO NOTHING;
 
 -- ----------------------------------------------------------------------------
--- PART 6: HELPER SECURITY FUNCTIONS
+-- PART 6: HELPER SECURITY FUNCTIONS (OVERLOADED SIGNATURES FOR FULL COMPATIBILITY)
 -- ----------------------------------------------------------------------------
 
--- Function 1: Check if user is active Admin (Super or Sub)
+-- Function 1a: Zero-argument is_admin()
 CREATE OR REPLACE FUNCTION public.is_admin()
 RETURNS BOOLEAN
 LANGUAGE sql
@@ -125,6 +137,26 @@ AS $$
     SELECT 1
     FROM public.admin_users
     WHERE user_id = auth.uid()
+  );
+$$;
+
+-- Function 1b: Single-argument is_admin(UUID)
+CREATE OR REPLACE FUNCTION public.is_admin(p_user_id UUID)
+RETURNS BOOLEAN
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path = public
+STABLE
+AS $$
+  SELECT EXISTS (
+    SELECT 1
+    FROM public.admin_profiles
+    WHERE user_id = p_user_id
+      AND is_active = true
+  ) OR EXISTS (
+    SELECT 1
+    FROM public.admin_users
+    WHERE user_id = p_user_id
   );
 $$;
 
@@ -216,7 +248,11 @@ CREATE POLICY "Authenticated Read Analytics" ON public.site_analytics
   FOR SELECT TO authenticated USING (public.has_permission('view_analytics') OR public.is_super_admin());
 
 -- ----------------------------------------------------------------------------
--- PART 8: VERIFY TABLE STRUCTURE & SEED SUMMARY
+-- PART 8: RELOAD POSTGREST SCHEMA CACHE & VERIFY
 -- ----------------------------------------------------------------------------
-SELECT ap.user_id, ap.full_name, ap.email, ap.role, ap.is_active, ap.created_at
-FROM public.admin_profiles ap;
+NOTIFY pgrst, 'reload schema';
+
+SELECT table_name
+FROM information_schema.tables
+WHERE table_schema = 'public'
+  AND table_name IN ('admin_profiles', 'admin_permissions', 'admin_activity_logs', 'site_analytics');
