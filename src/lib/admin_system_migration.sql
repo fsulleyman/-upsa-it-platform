@@ -248,7 +248,83 @@ CREATE POLICY "Authenticated Read Analytics" ON public.site_analytics
   FOR SELECT TO authenticated USING (public.has_permission('view_analytics') OR public.is_super_admin());
 
 -- ----------------------------------------------------------------------------
--- PART 8: RELOAD POSTGREST SCHEMA CACHE & VERIFY
+-- PART 8: SECURE FALLBACK RPC FUNCTION FOR SUB-ADMIN CREATION
+-- ----------------------------------------------------------------------------
+-- Allows authenticated Super Admins to create sub-admin accounts directly via RPC
+-- if Edge Functions are not deployed or unavailable.
+
+CREATE OR REPLACE FUNCTION public.create_sub_admin(
+  p_email TEXT,
+  p_password TEXT,
+  p_full_name TEXT,
+  p_permissions TEXT[] DEFAULT '{}'
+)
+RETURNS JSONB
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, auth
+AS $$
+DECLARE
+  v_caller_id UUID;
+  v_is_super BOOLEAN;
+  v_new_user_id UUID;
+BEGIN
+  v_caller_id := auth.uid();
+  
+  -- Verify caller is super admin
+  SELECT (role = 'super_admin' AND is_active = true) INTO v_is_super
+  FROM public.admin_profiles
+  WHERE user_id = v_caller_id;
+
+  IF v_is_super IS NOT TRUE THEN
+    RAISE EXCEPTION 'Forbidden: Only active Super Administrators can create sub-admin accounts.';
+  END IF;
+
+  -- Create or find user id in auth.users
+  SELECT id INTO v_new_user_id FROM auth.users WHERE LOWER(email) = LOWER(TRIM(p_email));
+
+  IF v_new_user_id IS NULL THEN
+    v_new_user_id := gen_random_uuid();
+    INSERT INTO auth.users (
+      id, instance_id, email, encrypted_password, email_confirmed_at,
+      raw_app_meta_data, raw_user_meta_data, created_at, updated_at, role
+    )
+    VALUES (
+      v_new_user_id,
+      '00000000-0000-0000-0000-000000000000',
+      LOWER(TRIM(p_email)),
+      crypt(p_password, gen_salt('bf')),
+      NOW(),
+      '{"provider":"email","providers":["email"]}'::jsonb,
+      jsonb_build_object('full_name', p_full_name),
+      NOW(),
+      NOW(),
+      'authenticated'
+    );
+  END IF;
+
+  -- Insert profile
+  INSERT INTO public.admin_profiles (user_id, full_name, email, role, is_active)
+  VALUES (v_new_user_id, p_full_name, LOWER(TRIM(p_email)), 'sub_admin', true)
+  ON CONFLICT (user_id) DO UPDATE SET full_name = EXCLUDED.full_name, is_active = true;
+
+  -- Insert permissions
+  IF array_length(p_permissions, 1) > 0 THEN
+    DELETE FROM public.admin_permissions WHERE admin_user_id = v_new_user_id;
+    INSERT INTO public.admin_permissions (admin_user_id, permission)
+    SELECT v_new_user_id, unnest(p_permissions);
+  END IF;
+
+  -- Insert Activity Log
+  INSERT INTO public.admin_activity_logs (admin_user_id, admin_name, action, resource_type, resource_id, description)
+  VALUES (v_caller_id, 'Super Admin', 'CREATE', 'Admin Account', v_new_user_id, 'Created Sub Admin account for ' || p_full_name || ' (' || p_email || ')');
+
+  RETURN jsonb_build_object('success', true, 'user_id', v_new_user_id);
+END;
+$$;
+
+-- ----------------------------------------------------------------------------
+-- PART 9: RELOAD POSTGREST SCHEMA CACHE & VERIFY
 -- ----------------------------------------------------------------------------
 NOTIFY pgrst, 'reload schema';
 

@@ -137,7 +137,10 @@ export const AdminManagementSection: React.FC = () => {
 
       setLoading(true);
 
-      // Invoke server-side Supabase Edge Function
+      // Primary Path: Invoke server-side Supabase Edge Function
+      let success = false;
+      let errorMessage = '';
+
       const { data, error: funcErr } = await supabase.functions.invoke('create-sub-admin', {
         body: {
           name: newFullName.trim(),
@@ -148,15 +151,33 @@ export const AdminManagementSection: React.FC = () => {
         }
       });
 
-      if (funcErr) {
-        if (funcErr.message?.includes('Signups not allowed') || funcErr.message?.includes('404') || funcErr.message?.includes('Failed to send a request to the Edge Function')) {
-          throw new Error("Supabase Edge Function Deployment Required: Please deploy the 'create-sub-admin' function to Supabase using: 'supabase functions deploy create-sub-admin'.");
-        }
-        throw new Error(funcErr.message || 'Edge Function invocation failed.');
+      if (!funcErr && data?.success) {
+        success = true;
+      } else if (data?.error) {
+        errorMessage = data.error;
       }
 
-      if (data?.error) {
-        throw new Error(data.error);
+      // Secondary Path: Fallback to Database RPC procedure if Edge Function is not deployed
+      if (!success && !errorMessage) {
+        const { data: rpcData, error: rpcErr } = await supabase.rpc('create_sub_admin', {
+          p_email: newEmail.trim(),
+          p_password: newPassword,
+          p_full_name: newFullName.trim(),
+          p_permissions: newPermissions
+        });
+
+        if (!rpcErr && rpcData?.success) {
+          success = true;
+        } else if (rpcErr) {
+          errorMessage = rpcErr.message;
+        }
+      }
+
+      if (!success) {
+        if (errorMessage) {
+          throw new Error(errorMessage);
+        }
+        throw new Error("Supabase Edge Function Deployment Required: Please run 'supabase functions deploy create-sub-admin' in terminal or run the SQL migration script in Supabase.");
       }
 
       setIsAddModalOpen(false);
