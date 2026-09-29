@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { supabase, isSupabaseConfigured } from '../../lib/supabase';
 import { useData } from '../../hooks/useData';
-import { LogOut, ExternalLink, Plus, Trash2, Edit, ShieldAlert, CheckCircle, LayoutDashboard, Compass, Megaphone, GraduationCap, FolderGit2, Users, LayoutList, Share2, Settings } from 'lucide-react';
-import type { AcademicProgramme, StudentProject, FacultyMember, PromoSlide, HeroContent, NavItem, FooterContent, FooterLink, SocialLink, SiteSettings, NavSectionId } from '../../types';
+import { LogOut, ExternalLink, Plus, Trash2, Edit, ShieldAlert, CheckCircle, LayoutDashboard, Compass, Megaphone, GraduationCap, FolderGit2, Users, LayoutList, Share2, Settings, Sparkles } from 'lucide-react';
+import type { AcademicProgramme, StudentProject, FacultyMember, PromoSlide, HeroContent, NavItem, FooterContent, FooterLink, SocialLink, SiteSettings, NavSectionId, EventAnnouncement } from '../../types';
 import { ImageUploader } from './ImageUploader';
 
 export const AdminDashboard: React.FC<{ onNavigateHome: () => void }> = ({ onNavigateHome }) => {
@@ -19,13 +19,14 @@ export const AdminDashboard: React.FC<{ onNavigateHome: () => void }> = ({ onNav
     footerLinks,
     socialLinks,
     siteSettings,
+    eventAnnouncement,
     refreshData
   } = useData();
 
   const [emailInput, setEmailInput] = useState('');
   const [passwordInput, setPasswordInput] = useState('');
   const [loginError, setLoginError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'overview' | 'hero' | 'navigation' | 'programmes' | 'projects' | 'faculty' | 'footer' | 'social' | 'settings'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'hero' | 'navigation' | 'programmes' | 'projects' | 'faculty' | 'event' | 'footer' | 'social' | 'settings'>('overview');
   const [notice, setNotice] = useState<string | null>(null);
 
   const { login } = useAuth();
@@ -41,6 +42,7 @@ export const AdminDashboard: React.FC<{ onNavigateHome: () => void }> = ({ onNav
   const [editingFooterLink, setEditingFooterLink] = useState<Partial<FooterLink> | null>(null);
   const [editingSocialLink, setEditingSocialLink] = useState<Partial<SocialLink> | null>(null);
   const [editingSiteSettings, setEditingSiteSettings] = useState<Partial<SiteSettings> | null>(null);
+  const [editingEvent, setEditingEvent] = useState<Partial<EventAnnouncement> | null>(null);
 
   const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -285,6 +287,42 @@ export const AdminDashboard: React.FC<{ onNavigateHome: () => void }> = ({ onNav
     }
     refreshData();
     showNotification('Faculty record deleted.');
+  };
+
+  // ==========================================
+  // SAVE: EVENT ANNOUNCEMENT POPUP
+  // ==========================================
+  const handleSaveEvent = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const eventToSave = editingEvent || eventAnnouncement;
+    if (!eventToSave?.title) {
+      alert('Event Title is required.');
+      return;
+    }
+
+    if (isSupabaseConfigured && supabase) {
+      const payload = {
+        id: eventToSave.id || 'isap-forum-2026',
+        title: eventToSave.title.trim(),
+        description: eventToSave.description || '',
+        event_date: eventToSave.eventDate || '',
+        event_time: eventToSave.eventTime || '',
+        venue: eventToSave.venue || '',
+        image_url: eventToSave.imageUrl || '/images/isap_forum_2026.jpg',
+        registration_url: eventToSave.registrationUrl || '',
+        is_active: eventToSave.isActive ?? true,
+        display_order: eventToSave.displayOrder ?? 1
+      };
+
+      const { error } = await supabase.from('event_announcements').upsert(payload);
+      if (error) {
+        alert(`Supabase Save Error: ${error.message}`);
+        return;
+      }
+    }
+    refreshData();
+    setEditingEvent(null);
+    showNotification('Event Announcement Popup configuration saved successfully!');
   };
 
   // ==========================================
@@ -637,6 +675,18 @@ export const AdminDashboard: React.FC<{ onNavigateHome: () => void }> = ({ onNav
         >
           <Users className="w-4 h-4" />
           <span>Faculty ({faculty.length})</span>
+        </button>
+        <button
+          onClick={() => {
+            setActiveTab('event');
+            if (!editingEvent) setEditingEvent(eventAnnouncement);
+          }}
+          className={`px-4 py-2.5 rounded-t-lg font-bold text-xs flex items-center gap-1.5 transition-colors ${
+            activeTab === 'event' ? 'bg-slate-800 text-[#F2B705] border-t-2 border-[#F2B705]' : 'text-slate-400 hover:text-white'
+          }`}
+        >
+          <Sparkles className="w-4 h-4 text-[#F2B705]" />
+          <span>Event Popup</span>
         </button>
         <button
           onClick={() => setActiveTab('footer')}
@@ -1390,6 +1440,134 @@ export const AdminDashboard: React.FC<{ onNavigateHome: () => void }> = ({ onNav
                 </tbody>
               </table>
             </div>
+          </div>
+        )}
+
+        {/* TAB: EVENT ANNOUNCEMENT POPUP */}
+        {activeTab === 'event' && (
+          <div className="space-y-6">
+            <div className="flex justify-between items-center">
+              <div>
+                <h2 className="text-base font-extrabold text-white flex items-center gap-2">
+                  <Sparkles className="w-5 h-5 text-[#F2B705]" />
+                  <span>Automatic Event Announcement Popup</span>
+                </h2>
+                <p className="text-xs text-slate-400 mt-0.5">
+                  Configure the automatic pop-up announcement modal that displays to homepage visitors.
+                </p>
+              </div>
+            </div>
+
+            <form onSubmit={handleSaveEvent} className="p-6 rounded-xl bg-slate-800 border border-slate-700 space-y-5 text-xs">
+              
+              {/* Active Toggle */}
+              <div className="p-4 rounded-xl bg-slate-900 border border-slate-700 flex items-center justify-between">
+                <div>
+                  <span className="font-extrabold text-white text-sm block">Enable Automatic Event Popup</span>
+                  <span className="text-slate-400 text-xs">When enabled, visitors entering #/ will see this announcement.</span>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={(editingEvent?.isActive ?? eventAnnouncement.isActive) ?? true}
+                    onChange={(e) => setEditingEvent({ ...(editingEvent || eventAnnouncement), isActive: e.target.checked })}
+                    className="sr-only peer"
+                  />
+                  <div className="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600" />
+                </label>
+              </div>
+
+              {/* Image Uploader for Poster */}
+              <ImageUploader
+                label="Event Poster Image"
+                folder="general"
+                value={(editingEvent?.imageUrl ?? eventAnnouncement.imageUrl) || '/images/isap_forum_2026.jpg'}
+                onChange={(url) => setEditingEvent({ ...(editingEvent || eventAnnouncement), imageUrl: url })}
+                aspectHint="Official event poster graphic"
+              />
+
+              {/* Event Title & Date */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block font-bold text-slate-300 mb-1">Event Title *</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. ISAP Forum 2026"
+                    value={editingEvent?.title ?? eventAnnouncement.title ?? ''}
+                    onChange={(e) => setEditingEvent({ ...(editingEvent || eventAnnouncement), title: e.target.value })}
+                    className="w-full p-2.5 rounded bg-slate-900 border border-slate-700 text-white font-bold"
+                  />
+                </div>
+                <div>
+                  <label className="block font-bold text-slate-300 mb-1">Event Date</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Wednesday, 7th October 2026"
+                    value={editingEvent?.eventDate ?? eventAnnouncement.eventDate ?? ''}
+                    onChange={(e) => setEditingEvent({ ...(editingEvent || eventAnnouncement), eventDate: e.target.value })}
+                    className="w-full p-2.5 rounded bg-slate-900 border border-slate-700 text-white font-bold"
+                  />
+                </div>
+              </div>
+
+              {/* Event Time & Venue */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block font-bold text-slate-300 mb-1">Event Time</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. 9:00 AM GMT"
+                    value={editingEvent?.eventTime ?? eventAnnouncement.eventTime ?? ''}
+                    onChange={(e) => setEditingEvent({ ...(editingEvent || eventAnnouncement), eventTime: e.target.value })}
+                    className="w-full p-2.5 rounded bg-slate-900 border border-slate-700 text-white font-mono"
+                  />
+                </div>
+                <div>
+                  <label className="block font-bold text-slate-300 mb-1">Venue Location</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. PCU Auditorium (Second Floor), UPSA"
+                    value={editingEvent?.venue ?? eventAnnouncement.venue ?? ''}
+                    onChange={(e) => setEditingEvent({ ...(editingEvent || eventAnnouncement), venue: e.target.value })}
+                    className="w-full p-2.5 rounded bg-slate-900 border border-slate-700 text-white font-bold"
+                  />
+                </div>
+              </div>
+
+              {/* Description / Theme */}
+              <div>
+                <label className="block font-bold text-slate-300 mb-1">Event Theme / Description</label>
+                <textarea
+                  rows={3}
+                  placeholder="Theme and summary of event..."
+                  value={editingEvent?.description ?? eventAnnouncement.description ?? ''}
+                  onChange={(e) => setEditingEvent({ ...(editingEvent || eventAnnouncement), description: e.target.value })}
+                  className="w-full p-2.5 rounded bg-slate-900 border border-slate-700 text-white"
+                />
+              </div>
+
+              {/* Registration / External Link */}
+              <div>
+                <label className="block font-bold text-slate-300 mb-1">Registration / External URL (Optional)</label>
+                <input
+                  type="url"
+                  placeholder="https://forms.gle/..."
+                  value={editingEvent?.registrationUrl ?? eventAnnouncement.registrationUrl ?? ''}
+                  onChange={(e) => setEditingEvent({ ...(editingEvent || eventAnnouncement), registrationUrl: e.target.value })}
+                  className="w-full p-2.5 rounded bg-slate-900 border border-slate-700 text-white font-mono"
+                />
+              </div>
+
+              <div className="pt-2">
+                <button
+                  type="submit"
+                  className="px-6 py-2.5 rounded bg-emerald-600 hover:bg-emerald-700 font-extrabold text-white text-xs tracking-wider uppercase shadow-md transition-colors"
+                >
+                  Save Event Announcement Configuration
+                </button>
+              </div>
+            </form>
           </div>
         )}
 

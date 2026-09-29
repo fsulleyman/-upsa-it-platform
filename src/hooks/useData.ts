@@ -18,7 +18,8 @@ import type {
   FooterContent,
   FooterLink,
   SocialLink,
-  SiteSettings
+  SiteSettings,
+  EventAnnouncement
 } from '../types';
 
 const defaultHeroContent: HeroContent = {
@@ -77,6 +78,19 @@ const defaultSiteSettings: SiteSettings = {
   canonicalUrl: 'https://upsa.edu.gh'
 };
 
+const defaultEventAnnouncement: EventAnnouncement = {
+  id: 'isap-forum-2026',
+  title: 'ISAP Forum 2026',
+  description: 'Theme: Public Sector Identification Systems for Socioeconomic Development: Ghana’s Experience and the Way Forward. Hosted by the Faculty of IT and Communication Studies.',
+  eventDate: 'Wednesday, 7th October 2026',
+  eventTime: '9:00 AM GMT',
+  venue: 'PCU Auditorium (Second Floor), UPSA',
+  imageUrl: '/images/isap_forum_2026.jpg',
+  registrationUrl: '',
+  isActive: true,
+  displayOrder: 1
+};
+
 export function useData() {
   const [programmes, setProgrammes] = useState<AcademicProgramme[]>(fallbackProgrammes);
   const [projects, setProjects] = useState<StudentProject[]>(fallbackProjects);
@@ -92,6 +106,7 @@ export function useData() {
   const [footerLinks, setFooterLinks] = useState<FooterLink[]>(defaultFooterLinks);
   const [socialLinks, setSocialLinks] = useState<SocialLink[]>(defaultSocialLinks);
   const [siteSettings, setSiteSettings] = useState<SiteSettings>(defaultSiteSettings);
+  const [eventAnnouncement, setEventAnnouncement] = useState<EventAnnouncement>(defaultEventAnnouncement);
 
   const [loading, setLoading] = useState<boolean>(isSupabaseConfigured);
 
@@ -355,6 +370,23 @@ export function useData() {
         });
       }
 
+      // Fetch Event Announcement Popup
+      const { data: eventData, error: eventErr } = await supabase.from('event_announcements').select('*').order('display_order', { ascending: true }).limit(1).single();
+      if (!eventErr && eventData) {
+        setEventAnnouncement({
+          id: eventData.id,
+          title: eventData.title || defaultEventAnnouncement.title,
+          description: eventData.description || defaultEventAnnouncement.description,
+          eventDate: eventData.event_date || defaultEventAnnouncement.eventDate,
+          eventTime: eventData.event_time || defaultEventAnnouncement.eventTime,
+          venue: eventData.venue || defaultEventAnnouncement.venue,
+          imageUrl: eventData.image_url || defaultEventAnnouncement.imageUrl,
+          registrationUrl: eventData.registration_url || '',
+          isActive: eventData.is_active ?? defaultEventAnnouncement.isActive,
+          displayOrder: eventData.display_order ?? 1
+        });
+      }
+
     } catch (err) {
       console.warn('Supabase fetch notice: using static fallback data', err);
     } finally {
@@ -389,6 +421,7 @@ export function useData() {
     footerLinks,
     socialLinks,
     siteSettings,
+    eventAnnouncement,
     loading,
     refreshData: fetchAllData
   };

@@ -20,6 +20,7 @@ import { FacultyPage } from './pages/FacultyPage';
 import { JoinHubModal } from './components/modals/JoinHubModal';
 import { ProjectDetailModal } from './components/modals/ProjectDetailModal';
 import { ProgrammeDetailModal } from './components/modals/ProgrammeDetailModal';
+import { EventAnnouncementModal } from './components/modals/EventAnnouncementModal';
 import { AdminDashboard } from './components/admin/AdminDashboard';
 
 import { SpeedInsights } from '@vercel/speed-insights/react';
@@ -37,7 +38,8 @@ function AppContent() {
     footerContent,
     footerLinks,
     socialLinks,
-    institutionInfo
+    institutionInfo,
+    eventAnnouncement
   } = useData();
 
   // Route flags
@@ -161,6 +163,11 @@ function AppContent() {
       <JoinHubModal
         isOpen={isJoinModalOpen}
         onClose={() => updateHash({ modal: null })}
+      />
+
+      <EventAnnouncementModal
+        event={eventAnnouncement}
+        activeSection={hashState.section}
       />
     </div>
   );

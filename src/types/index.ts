@@ -170,3 +170,16 @@ export interface SocialLink {
   displayOrder: number;
   isActive: boolean;
 }
+
+export interface EventAnnouncement {
+  id: string;
+  title: string;
+  description: string;
+  eventDate: string;
+  eventTime: string;
+  venue: string;
+  imageUrl: string;
+  registrationUrl?: string;
+  isActive: boolean;
+  displayOrder?: number;
+}
