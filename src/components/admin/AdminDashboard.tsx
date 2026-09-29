@@ -2,13 +2,14 @@ import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { supabase, isSupabaseConfigured } from '../../lib/supabase';
 import { useData } from '../../hooks/useData';
-import { LogOut, ExternalLink, Plus, Trash2, Edit, ShieldAlert, CheckCircle, LayoutDashboard, Compass, Megaphone, GraduationCap, FolderGit2, Users, LayoutList, Share2, Settings, Sparkles, UserCheck, Shield, BarChart3, History } from 'lucide-react';
+import { LogOut, ExternalLink, Plus, Trash2, Edit, ShieldAlert, CheckCircle, LayoutDashboard, Compass, Megaphone, GraduationCap, FolderGit2, Users, LayoutList, Share2, Settings, Sparkles, UserCheck, Shield, BarChart3, History, BookOpen } from 'lucide-react';
 import type { AcademicProgramme, StudentProject, FacultyMember, PromoSlide, HeroContent, NavItem, FooterContent, FooterLink, SocialLink, SiteSettings, NavSectionId, EventAnnouncement } from '../../types';
 import { ImageUploader } from './ImageUploader';
 import { MyAccountSection } from './MyAccountSection';
 import { AdminManagementSection } from './AdminManagementSection';
 import { ActivityLogsSection } from './ActivityLogsSection';
 import { AnalyticsSection } from './AnalyticsSection';
+import { CurriculumManagementSection } from './CurriculumManagementSection';
 import { logAdminActivity } from '../../lib/activityLogger';
 
 export type AdminTab =
@@ -16,6 +17,7 @@ export type AdminTab =
   | 'hero'
   | 'navigation'
   | 'programmes'
+  | 'curriculum'
   | 'projects'
   | 'faculty'
   | 'event'
@@ -722,15 +724,27 @@ export const AdminDashboard: React.FC<{ onNavigateHome: () => void }> = ({ onNav
           )}
 
           {hasPermission('manage_academics') && (
-            <button
-              onClick={() => setActiveTab('programmes')}
-              className={`px-3 py-2 rounded-t-lg font-bold text-xs flex items-center gap-1.5 transition-colors shrink-0 ${
-                activeTab === 'programmes' ? 'bg-slate-800 text-[#F2B705] border-t-2 border-[#F2B705]' : 'text-slate-400 hover:text-white'
-              }`}
-            >
-              <GraduationCap className="w-3.5 h-3.5" />
-              <span>Programmes ({programmes.length})</span>
-            </button>
+            <>
+              <button
+                onClick={() => setActiveTab('programmes')}
+                className={`px-3 py-2 rounded-t-lg font-bold text-xs flex items-center gap-1.5 transition-colors shrink-0 ${
+                  activeTab === 'programmes' ? 'bg-slate-800 text-[#F2B705] border-t-2 border-[#F2B705]' : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                <GraduationCap className="w-3.5 h-3.5" />
+                <span>Programmes ({programmes.length})</span>
+              </button>
+
+              <button
+                onClick={() => setActiveTab('curriculum')}
+                className={`px-3 py-2 rounded-t-lg font-bold text-xs flex items-center gap-1.5 transition-colors shrink-0 ${
+                  activeTab === 'curriculum' ? 'bg-slate-800 text-[#F2B705] border-t-2 border-[#F2B705]' : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                <BookOpen className="w-3.5 h-3.5 text-[#F2B705]" />
+                <span>Curriculum / Courses</span>
+              </button>
+            </>
           )}
 
           {hasPermission('manage_innovation') && (
@@ -1255,6 +1269,9 @@ export const AdminDashboard: React.FC<{ onNavigateHome: () => void }> = ({ onNav
             </div>
           </div>
         )}
+
+        {/* TAB 4B: CURRICULUM MANAGEMENT */}
+        {activeTab === 'curriculum' && <CurriculumManagementSection />}
 
         {/* TAB 5: STUDENT PROJECTS */}
         {activeTab === 'projects' && (

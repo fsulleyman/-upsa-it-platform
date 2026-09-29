@@ -234,3 +234,50 @@ export interface SiteAnalyticsEvent {
   createdAt?: string;
 }
 
+export type CourseType = 'required' | 'elective';
+
+export interface Course {
+  id: string;
+  courseCode: string;
+  title: string;
+  description?: string;
+  level: string;
+  semester: string;
+  creditHours: number;
+  courseOutlineUrl?: string;
+  displayOrder: number;
+  isActive: boolean;
+  courseType: CourseType;
+  electiveGroup?: string | null;
+  programme: string;
+  academicYear?: string | null;
+  createdBy?: string | null;
+  updatedBy?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
+  resourceCount?: number;
+}
+
+export type ResourceType = 'slide' | 'note' | 'past_question' | 'assignment' | 'tutorial' | 'video' | 'other';
+
+export interface LearningResource {
+  id: string;
+  courseId: string;
+  title: string;
+  description?: string;
+  resourceType: ResourceType;
+  filePath?: string;
+  fileUrl?: string;
+  externalUrl?: string;
+  thumbnailUrl?: string;
+  academicYear?: string;
+  resourceYear?: number;
+  duration?: string;
+  isPublished: boolean;
+  displayOrder: number;
+  uploadedBy?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+
