@@ -194,7 +194,8 @@ export function useData() {
             orcidUrl: f.orcid_url || '',
             linkedinUrl: f.linkedin_url || '',
             displayOrder: f.display_order ?? 0,
-            isActive: f.is_active ?? true
+            isActive: f.is_active ?? true,
+            isFeatured: f.is_featured ?? (f.is_hod || f.id.includes('koi-akrofi') || f.id.includes('agor') || f.id.includes('ofoeda') || (f.name && (f.name.includes('Koi-Akrofi') || f.name.includes('Agor') || f.name.includes('Ofoeda'))))
           }))
         );
       }

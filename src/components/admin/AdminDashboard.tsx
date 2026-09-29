@@ -262,7 +262,8 @@ export const AdminDashboard: React.FC<{ onNavigateHome: () => void }> = ({ onNav
         is_hod: editingFaculty.isHOD || false,
         is_unconfirmed_hod: editingFaculty.isUnconfirmedHOD || false,
         display_order: editingFaculty.displayOrder ?? 0,
-        is_active: editingFaculty.isActive ?? true
+        is_active: editingFaculty.isActive ?? true,
+        is_featured: editingFaculty.isFeatured ?? false
       };
 
       const { error } = await supabase.from('faculty').upsert(payload);
@@ -1396,16 +1397,28 @@ export const AdminDashboard: React.FC<{ onNavigateHome: () => void }> = ({ onNav
                   </div>
                 </div>
 
-                {/* HOD Checkbox */}
-                <div className="flex items-center gap-2 pt-2">
-                  <input
-                    type="checkbox"
-                    id="isHODCheckbox"
-                    checked={editingFaculty.isHOD || false}
-                    onChange={(e) => setEditingFaculty({ ...editingFaculty, isHOD: e.target.checked })}
-                    className="w-4 h-4 rounded bg-slate-900 border-slate-700 text-[#003366] focus:ring-[#F2B705]"
-                  />
-                  <label htmlFor="isHODCheckbox" className="font-bold text-[#F2B705]">Designate as Head of Department (HOD)</label>
+                {/* HOD Checkbox & Featured Checkbox */}
+                <div className="flex flex-col sm:flex-row sm:items-center gap-4 pt-2">
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      id="isHODCheckbox"
+                      checked={editingFaculty.isHOD || false}
+                      onChange={(e) => setEditingFaculty({ ...editingFaculty, isHOD: e.target.checked })}
+                      className="w-4 h-4 rounded bg-slate-900 border-slate-700 text-[#003366] focus:ring-[#F2B705]"
+                    />
+                    <label htmlFor="isHODCheckbox" className="font-bold text-[#F2B705]">Designate as Head of Department (HOD)</label>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="checkbox"
+                      id="isFeaturedCheckbox"
+                      checked={editingFaculty.isFeatured || false}
+                      onChange={(e) => setEditingFaculty({ ...editingFaculty, isFeatured: e.target.checked })}
+                      className="w-4 h-4 rounded bg-slate-900 border-slate-700 text-[#003366] focus:ring-[#00AEEF]"
+                    />
+                    <label htmlFor="isFeaturedCheckbox" className="font-bold text-[#00AEEF]">Feature on Homepage (Display in single-page homepage Faculty section)</label>
+                  </div>
                 </div>
 
                 <div className="flex gap-2 pt-2">

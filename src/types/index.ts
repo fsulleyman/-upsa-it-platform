@@ -88,6 +88,7 @@ export interface FacultyMember {
   coursesTaught?: string[];
   displayOrder?: number;
   isActive?: boolean;
+  isFeatured?: boolean;
 }
 
 export interface HubMilestone {

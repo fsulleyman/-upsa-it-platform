@@ -7,7 +7,10 @@ interface AboutSectionProps {
 }
 
 export const AboutSection: React.FC<AboutSectionProps> = ({ faculty }) => {
-  const displayFaculty = faculty && faculty.length > 0 ? faculty : [];
+  const allFaculty = faculty && faculty.length > 0 ? faculty : [];
+  const displayFaculty = allFaculty.filter(
+    (member) => (member.isActive ?? true) && (member.isFeatured ?? false)
+  );
 
   return (
     <section id="about" className="py-16 bg-[#F5F7FA] border-b border-slate-200">

@@ -314,7 +314,8 @@ export const FACULTY_DIRECTORY: FacultyMember[] = [
     role: "Dean of Faculty",
     bio: "Distinguished academic leader driving excellence in IT management education, industry partnerships, and interdisciplinary research across FITCS.",
     specialization: ["IT Management", "Telecommunications Strategy", "Technology Leadership"],
-    avatarUrl: "/images/prof_koi_akrofi.png"
+    avatarUrl: "/images/prof_koi_akrofi.png",
+    isFeatured: true
   },
   {
     id: "dr-augustina-agor",
@@ -325,7 +326,8 @@ export const FACULTY_DIRECTORY: FacultyMember[] = [
     role: "Senior Lecturer / Hub Mentor",
     bio: "Senior Lecturer in Computer Science and key mentor behind the UPSA Developers Hub initiative, guiding student practical project cohorts and software engineering research.",
     specialization: ["Computer Science", "Software Engineering", "Algorithmic Design", "Student Mentorship"],
-    avatarUrl: "/images/dr_augustina_agor.png"
+    avatarUrl: "/images/dr_augustina_agor.png",
+    isFeatured: true
   },
   {
     id: "dr-joshua-ofoeda",
@@ -337,7 +339,8 @@ export const FACULTY_DIRECTORY: FacultyMember[] = [
     bio: "Head of Department leading academic excellence, curriculum innovation, and strategic industry alignment across all IT Studies degree and diploma programmes.",
     specialization: ["Information Systems", "IT Governance", "Digital Health & Tech Strategy"],
     avatarUrl: "/images/dr_joshua_ofoeda.png",
-    isHOD: true
+    isHOD: true,
+    isFeatured: true
   }
 ];
 
