@@ -141,7 +141,7 @@ AS $$
 $$;
 
 -- Function 1b: Single-argument is_admin(UUID)
-CREATE OR REPLACE FUNCTION public.is_admin(p_user_id UUID)
+CREATE OR REPLACE FUNCTION public.is_admin(check_user_id UUID)
 RETURNS BOOLEAN
 LANGUAGE sql
 SECURITY DEFINER
@@ -151,12 +151,12 @@ AS $$
   SELECT EXISTS (
     SELECT 1
     FROM public.admin_profiles
-    WHERE user_id = p_user_id
+    WHERE user_id = check_user_id
       AND is_active = true
   ) OR EXISTS (
     SELECT 1
     FROM public.admin_users
-    WHERE user_id = p_user_id
+    WHERE user_id = check_user_id
   );
 $$;
 
