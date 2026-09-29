@@ -246,6 +246,7 @@ export const AdminDashboard: React.FC<{ onNavigateHome: () => void }> = ({ onNav
         office_location: editingFaculty.officeLocation || editingFaculty.office || '',
         email: editingFaculty.email || '',
         phone: editingFaculty.phone || '',
+        office_hours: editingFaculty.officeHours || '',
         role: editingFaculty.role || 'Lecturer',
         bio: editingFaculty.bio || editingFaculty.biography || '',
         specialization: editingFaculty.specialization || [],
@@ -257,7 +258,9 @@ export const AdminDashboard: React.FC<{ onNavigateHome: () => void }> = ({ onNav
         linkedin_url: editingFaculty.linkedinUrl || '',
         avatar_url: editingFaculty.avatarUrl || '',
         is_hod: editingFaculty.isHOD || false,
-        is_unconfirmed_hod: editingFaculty.isUnconfirmedHOD || false
+        is_unconfirmed_hod: editingFaculty.isUnconfirmedHOD || false,
+        display_order: editingFaculty.displayOrder ?? 0,
+        is_active: editingFaculty.isActive ?? true
       };
 
       const { error } = await supabase.from('faculty').upsert(payload);

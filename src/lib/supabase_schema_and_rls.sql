@@ -69,15 +69,39 @@ CREATE TABLE IF NOT EXISTS faculty (
   title TEXT NOT NULL,
   academic_degree TEXT,
   office_location TEXT,
+  email TEXT,
+  phone TEXT,
+  office_hours TEXT,
   role TEXT,
   bio TEXT,
   specialization TEXT[] DEFAULT '{}',
+  qualifications TEXT[] DEFAULT '{}',
+  teaching_areas TEXT[] DEFAULT '{}',
+  research_interests TEXT[] DEFAULT '{}',
+  google_scholar_url TEXT,
+  orcid_url TEXT,
+  linkedin_url TEXT,
   avatar_url TEXT,
   is_hod BOOLEAN DEFAULT FALSE,
   is_unconfirmed_hod BOOLEAN DEFAULT FALSE,
+  display_order INT DEFAULT 0,
+  is_active BOOLEAN DEFAULT TRUE,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- Ensure existing installations receive new faculty columns safely
+ALTER TABLE public.faculty ADD COLUMN IF NOT EXISTS email TEXT;
+ALTER TABLE public.faculty ADD COLUMN IF NOT EXISTS phone TEXT;
+ALTER TABLE public.faculty ADD COLUMN IF NOT EXISTS office_hours TEXT;
+ALTER TABLE public.faculty ADD COLUMN IF NOT EXISTS qualifications TEXT[] DEFAULT '{}';
+ALTER TABLE public.faculty ADD COLUMN IF NOT EXISTS teaching_areas TEXT[] DEFAULT '{}';
+ALTER TABLE public.faculty ADD COLUMN IF NOT EXISTS research_interests TEXT[] DEFAULT '{}';
+ALTER TABLE public.faculty ADD COLUMN IF NOT EXISTS google_scholar_url TEXT;
+ALTER TABLE public.faculty ADD COLUMN IF NOT EXISTS orcid_url TEXT;
+ALTER TABLE public.faculty ADD COLUMN IF NOT EXISTS linkedin_url TEXT;
+ALTER TABLE public.faculty ADD COLUMN IF NOT EXISTS display_order INT DEFAULT 0;
+ALTER TABLE public.faculty ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT TRUE;
 
 -- 5. Promotional Announcement Banners Table
 CREATE TABLE IF NOT EXISTS promo_slides (

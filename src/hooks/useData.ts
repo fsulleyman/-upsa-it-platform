@@ -168,7 +168,18 @@ export function useData() {
             specialization: f.specialization || [],
             avatarUrl: f.avatar_url,
             isHOD: f.is_hod,
-            isUnconfirmedHOD: f.is_unconfirmed_hod
+            isUnconfirmedHOD: f.is_unconfirmed_hod,
+            email: f.email || '',
+            phone: f.phone || '',
+            officeHours: f.office_hours || '',
+            qualifications: f.qualifications || [],
+            teachingAreas: f.teaching_areas || [],
+            researchInterests: f.research_interests || [],
+            googleScholarUrl: f.google_scholar_url || '',
+            orcidUrl: f.orcid_url || '',
+            linkedinUrl: f.linkedin_url || '',
+            displayOrder: f.display_order ?? 0,
+            isActive: f.is_active ?? true
           }))
         );
       }
