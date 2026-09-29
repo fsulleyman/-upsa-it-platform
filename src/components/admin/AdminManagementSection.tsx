@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { supabase, isSupabaseConfigured } from '../../lib/supabase';
 import { logAdminActivity } from '../../lib/activityLogger';
-import { Shield, Plus, Edit, Trash2, AlertTriangle, CheckCircle, ShieldAlert, X } from 'lucide-react';
+import { Shield, Plus, Edit, Trash2, AlertTriangle, CheckCircle, ShieldAlert, X, KeyRound, Mail } from 'lucide-react';
 import type { AdminProfile, AdminPermission } from '../../types';
 
 const ALL_PERMISSIONS: { id: AdminPermission; label: string }[] = [
@@ -29,6 +29,10 @@ export const AdminManagementSection: React.FC = () => {
   // Modal / Form States
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingAdmin, setEditingAdmin] = useState<AdminProfile | null>(null);
+  const [resetPasswordAdmin, setResetPasswordAdmin] = useState<AdminProfile | null>(null);
+  const [resetMode, setResetMode] = useState<'email' | 'temporary'>('email');
+  const [tempPasswordInput, setTempPasswordInput] = useState('');
+  const [isResettingPassword, setIsResettingPassword] = useState(false);
   const [confirmModal, setConfirmModal] = useState<{
     isOpen: boolean;
     title: string;
@@ -310,6 +314,81 @@ export const AdminManagementSection: React.FC = () => {
     });
   };
 
+  // 5. PASSWORD RESET HANDLER
+  const handleExecutePasswordReset = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!resetPasswordAdmin) return;
+
+    setErrorMsg(null);
+    setIsResettingPassword(true);
+
+    try {
+      if (!isSupabaseConfigured || !supabase) {
+        throw new Error('Supabase client is not configured.');
+      }
+
+      if (resetMode === 'email') {
+        const redirectUrl = `${window.location.origin}/#/reset-password`;
+        const { error: resetErr } = await supabase.auth.resetPasswordForEmail(
+          resetPasswordAdmin.email.trim(),
+          { redirectTo: redirectUrl }
+        );
+
+        if (resetErr) {
+          throw resetErr;
+        }
+
+        await logAdminActivity({
+          action: 'PASSWORD_RESET_REQUESTED',
+          resourceType: 'Admin Account',
+          resourceId: resetPasswordAdmin.userId,
+          description: `Requested password recovery email for ${resetPasswordAdmin.fullName} (${resetPasswordAdmin.email})`,
+          adminUserId: user?.id,
+          adminName: user?.email || 'Super Admin'
+        });
+
+        showNotice(`Password recovery email sent successfully to ${resetPasswordAdmin.email}`);
+        setResetPasswordAdmin(null);
+      } else {
+        if (!tempPasswordInput || tempPasswordInput.length < 6) {
+          setErrorMsg('Temporary password must be at least 6 characters long.');
+          setIsResettingPassword(false);
+          return;
+        }
+
+        const { data: edgeData, error: edgeErr } = await supabase.functions.invoke('reset-admin-password', {
+          body: {
+            targetUserId: resetPasswordAdmin.userId,
+            newPassword: tempPasswordInput,
+            action: 'set_password'
+          }
+        });
+
+        if (edgeErr || edgeData?.error) {
+          throw new Error(edgeErr?.message || edgeData?.error || 'Failed to update temporary password via Edge Function.');
+        }
+
+        await logAdminActivity({
+          action: 'PASSWORD_RESET',
+          resourceType: 'Admin Account',
+          resourceId: resetPasswordAdmin.userId,
+          description: `Assigned temporary password to ${resetPasswordAdmin.fullName} (${resetPasswordAdmin.email})`,
+          adminUserId: user?.id,
+          adminName: user?.email || 'Super Admin'
+        });
+
+        showNotice(`Temporary password updated for ${resetPasswordAdmin.fullName} (${resetPasswordAdmin.email})`);
+        setResetPasswordAdmin(null);
+        setTempPasswordInput('');
+      }
+    } catch (err: any) {
+      console.error('Password reset handler error:', err);
+      setErrorMsg(err.message || 'Failed to execute password reset.');
+    } finally {
+      setIsResettingPassword(false);
+    }
+  };
+
   if (!isSuperAdmin) {
     return (
       <div className="p-6 rounded-xl bg-red-950/40 border border-red-800 text-red-200 text-xs font-bold flex items-center gap-3">
@@ -410,6 +489,18 @@ export const AdminManagementSection: React.FC = () => {
                     {new Date(adm.createdAt).toLocaleDateString()}
                   </td>
                   <td className="p-3 text-right space-x-2">
+                    <button
+                      onClick={() => {
+                        setResetPasswordAdmin(adm);
+                        setResetMode('email');
+                        setTempPasswordInput('');
+                        setErrorMsg(null);
+                      }}
+                      title="Reset Administrator Password"
+                      className="p-1.5 rounded bg-[#003366] hover:bg-blue-900 text-[#F2B705] border border-[#F2B705]/40 transition-colors"
+                    >
+                      <KeyRound className="w-3.5 h-3.5" />
+                    </button>
                     <button
                       onClick={() => setEditingAdmin(adm)}
                       title="Edit Permissions & Role"
@@ -590,6 +681,122 @@ export const AdminManagementSection: React.FC = () => {
                   Save Changes
                 </button>
                 <button type="button" onClick={() => setEditingAdmin(null)} className="px-4 py-2 rounded-lg bg-slate-700 text-white font-bold">
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* RESET PASSWORD MODAL */}
+      {resetPasswordAdmin && (
+        <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+          <div className="w-full max-w-lg bg-slate-800 border border-slate-700 rounded-2xl p-6 shadow-2xl space-y-4 text-xs text-white">
+            <div className="flex justify-between items-center border-b border-slate-700 pb-3">
+              <h3 className="text-sm font-extrabold text-[#F2B705] flex items-center gap-2">
+                <KeyRound className="w-4 h-4 text-[#F2B705]" />
+                Reset Password — {resetPasswordAdmin.fullName}
+              </h3>
+              <button onClick={() => setResetPasswordAdmin(null)} className="text-slate-400 hover:text-white">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="p-3 bg-slate-900 rounded-xl border border-slate-700 space-y-1">
+              <p className="text-slate-300">
+                Target Administrator: <strong className="text-white">{resetPasswordAdmin.fullName}</strong>
+              </p>
+              <p className="text-slate-400 font-mono text-[11px]">{resetPasswordAdmin.email}</p>
+              <p className="text-[11px] text-slate-400">
+                Role: <span className="font-bold text-[#F2B705] uppercase">{resetPasswordAdmin.role}</span>
+              </p>
+            </div>
+
+            {/* Mode Selector Tabs */}
+            <div className="flex items-center gap-2 bg-slate-900 p-1 rounded-lg border border-slate-700">
+              <button
+                type="button"
+                onClick={() => setResetMode('email')}
+                className={`flex-1 py-1.5 rounded-md font-bold text-xs flex items-center justify-center gap-1.5 transition-colors ${
+                  resetMode === 'email' ? 'bg-[#003366] text-[#F2B705]' : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                <Mail className="w-3.5 h-3.5" />
+                <span>Send Reset Email</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setResetMode('temporary')}
+                className={`flex-1 py-1.5 rounded-md font-bold text-xs flex items-center justify-center gap-1.5 transition-colors ${
+                  resetMode === 'temporary' ? 'bg-[#003366] text-[#F2B705]' : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                <KeyRound className="w-3.5 h-3.5" />
+                <span>Set Temporary Password</span>
+              </button>
+            </div>
+
+            <form onSubmit={handleExecutePasswordReset} className="space-y-4">
+              {resetMode === 'email' ? (
+                <div className="p-4 bg-slate-900/60 rounded-xl border border-slate-700/80 space-y-2 text-slate-300 leading-relaxed">
+                  <p className="font-bold text-white">Send Recovery Email Flow:</p>
+                  <p>
+                    A secure password reset link will be sent to <strong className="text-white">{resetPasswordAdmin.email}</strong>.
+                  </p>
+                  <p className="text-[11px] text-slate-400">
+                    The link directs the administrator to the application's secure password-update interface (<code className="text-[#00AEEF]">/#/reset-password</code>) to choose a new password.
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  <div className="p-3 bg-amber-500/10 border border-amber-500/30 text-amber-300 rounded-xl text-[11px]">
+                    Assigning a temporary password will immediately update the administrator's authentication credentials via the secure server-side Supabase Auth Admin API.
+                  </div>
+
+                  <div>
+                    <label className="block font-bold text-slate-300 mb-1">
+                      New Temporary Password <span className="text-red-400">*</span>
+                    </label>
+                    <input
+                      type="password"
+                      required
+                      placeholder="At least 6 characters..."
+                      value={tempPasswordInput}
+                      onChange={(e) => setTempPasswordInput(e.target.value)}
+                      className="w-full p-2.5 rounded-lg bg-slate-900 border border-slate-700 text-white font-medium focus:outline-none focus:border-[#F2B705]"
+                    />
+                  </div>
+                </div>
+              )}
+
+              <div className="flex gap-2 pt-2 border-t border-slate-700">
+                <button
+                  type="submit"
+                  disabled={isResettingPassword}
+                  className="px-4 py-2 rounded-lg bg-[#003366] hover:bg-blue-900 text-white font-extrabold flex items-center gap-2 border border-[#F2B705]/40 shadow-md"
+                >
+                  {isResettingPassword ? (
+                    <span>Processing Reset...</span>
+                  ) : resetMode === 'email' ? (
+                    <>
+                      <Mail className="w-3.5 h-3.5 text-[#F2B705]" />
+                      <span>Send Recovery Email</span>
+                    </>
+                  ) : (
+                    <>
+                      <KeyRound className="w-3.5 h-3.5 text-[#F2B705]" />
+                      <span>Set Temporary Password</span>
+                    </>
+                  )}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setResetPasswordAdmin(null)}
+                  className="px-4 py-2 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-200 font-bold"
+                >
                   Cancel
                 </button>
               </div>

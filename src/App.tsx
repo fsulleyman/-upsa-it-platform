@@ -17,6 +17,7 @@ import { CommunitySection } from './components/sections/CommunitySection';
 import { ContactSection } from './components/sections/ContactSection';
 import { FacultyPage } from './pages/FacultyPage';
 import { LearningHubPage } from './pages/LearningHubPage';
+import { ResetPasswordPage } from './pages/ResetPasswordPage';
 
 import { JoinHubModal } from './components/modals/JoinHubModal';
 import { ProjectDetailModal } from './components/modals/ProjectDetailModal';
@@ -49,6 +50,7 @@ function AppContent() {
   const isAdminRoute = hashState.section === 'admin';
   const isFacultyRoute = hashState.section === 'faculty';
   const isLearningHubRoute = hashState.section === 'learning-hub';
+  const isResetPasswordRoute = hashState.section === 'reset-password';
 
   useEffect(() => {
     // Track non-sensitive page view event
@@ -61,6 +63,9 @@ function AppContent() {
     } else if (isLearningHubRoute) {
       document.title = 'IT Learning Hub & Repository | UPSA IT Studies';
       window.scrollTo({ top: 0, behavior: 'instant' });
+    } else if (isResetPasswordRoute) {
+      document.title = 'Password Recovery | UPSA IT Studies';
+      window.scrollTo({ top: 0, behavior: 'instant' });
     } else if (hashState.section && !isAdminRoute) {
       document.title = 'UPSA IT Studies | Department of Information Technology';
       const element = document.getElementById(hashState.section);
@@ -70,7 +75,7 @@ function AppContent() {
         window.scrollTo({ top: 0, behavior: 'smooth' });
       }
     }
-  }, [hashState.section, isAdminRoute, isFacultyRoute, isLearningHubRoute]);
+  }, [hashState.section, isAdminRoute, isFacultyRoute, isLearningHubRoute, isResetPasswordRoute]);
 
   const handleNavigateSection = (section: NavSectionId) => {
     updateHash({ section, modal: null, programmeId: null, projectId: null });
@@ -97,6 +102,15 @@ function AppContent() {
     : null;
 
   const isJoinModalOpen = hashState.modal === 'join-hub';
+
+  if (isResetPasswordRoute) {
+    return (
+      <>
+        <SpeedInsights />
+        <ResetPasswordPage onNavigateAdmin={() => updateHash({ section: 'admin', modal: null })} />
+      </>
+    );
+  }
 
   if (isAdminRoute) {
     return (
