@@ -29,20 +29,27 @@ export function useLearningResources() {
         throw new Error(coursesErr.message);
       }
 
-      // 2. Query published learning resources
-      const { data: resData, error: resErr } = await supabase
-        .from('learning_resources')
-        .select('*')
-        .eq('is_published', true)
-        .order('display_order', { ascending: true });
+      // 2. Query published learning resources (non-blocking fallback)
+      let resData: any[] = [];
+      try {
+        const { data, error: resErr } = await supabase
+          .from('learning_resources')
+          .select('*')
+          .eq('is_published', true)
+          .order('display_order', { ascending: true });
 
-      if (resErr) {
-        throw new Error(resErr.message);
+        if (resErr) {
+          console.warn('Learning resources query notice (table may be empty or unmigrated):', resErr.message);
+        } else if (data) {
+          resData = data;
+        }
+      } catch (rErr: any) {
+        console.warn('Learning resources fetch notice:', rErr?.message || rErr);
       }
 
       // Map resource counts for courses
       const resourceCountMap: Record<string, number> = {};
-      const mappedResources: LearningResource[] = (resData || []).map((r) => {
+      const mappedResources: LearningResource[] = resData.map((r) => {
         resourceCountMap[r.course_id] = (resourceCountMap[r.course_id] || 0) + 1;
         return {
           id: r.id,
@@ -97,8 +104,8 @@ export function useLearningResources() {
       setCourses(mappedCourses);
       setResources(mappedResources);
     } catch (err: any) {
-      console.warn('Learning Hub data fetch notice:', err.message);
-      setError('Unable to load Learning Hub data. Using offline state.');
+      console.error('Learning Hub course data fetch error:', err.message);
+      setError(`Failed to load courses from Supabase: ${err.message}`);
     } finally {
       setLoading(false);
     }
