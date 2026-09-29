@@ -98,7 +98,11 @@ export async function uploadSiteImage(
       });
 
     if (uploadError) {
-      return { publicUrl: null, path: null, error: uploadError.message };
+      let friendlyMsg = uploadError.message;
+      if (uploadError.message.toLowerCase().includes('bucket not found') || uploadError.message.toLowerCase().includes('not_found')) {
+        friendlyMsg = `Storage bucket '${BUCKET_NAME}' not found in Supabase. Please run src/lib/storage_schema_and_rls.sql in Supabase SQL Editor or create bucket '${BUCKET_NAME}' in Storage.`;
+      }
+      return { publicUrl: null, path: null, error: friendlyMsg };
     }
 
     const { data: publicUrlData } = supabase.storage.from(BUCKET_NAME).getPublicUrl(filePath);
