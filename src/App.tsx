@@ -16,6 +16,7 @@ import { InnovationShowcase } from './components/sections/InnovationShowcase';
 import { CommunitySection } from './components/sections/CommunitySection';
 import { ContactSection } from './components/sections/ContactSection';
 import { FacultyPage } from './pages/FacultyPage';
+import { LearningHubPage } from './pages/LearningHubPage';
 
 import { JoinHubModal } from './components/modals/JoinHubModal';
 import { ProjectDetailModal } from './components/modals/ProjectDetailModal';
@@ -47,6 +48,7 @@ function AppContent() {
   // Route flags
   const isAdminRoute = hashState.section === 'admin';
   const isFacultyRoute = hashState.section === 'faculty';
+  const isLearningHubRoute = hashState.section === 'learning-hub';
 
   useEffect(() => {
     // Track non-sensitive page view event
@@ -55,6 +57,9 @@ function AppContent() {
 
     if (isFacultyRoute) {
       document.title = 'Faculty & Staff | UPSA IT Studies';
+      window.scrollTo({ top: 0, behavior: 'instant' });
+    } else if (isLearningHubRoute) {
+      document.title = 'IT Learning Hub & Repository | UPSA IT Studies';
       window.scrollTo({ top: 0, behavior: 'instant' });
     } else if (hashState.section && !isAdminRoute) {
       document.title = 'UPSA IT Studies | Department of Information Technology';
@@ -65,7 +70,7 @@ function AppContent() {
         window.scrollTo({ top: 0, behavior: 'smooth' });
       }
     }
-  }, [hashState.section, isAdminRoute, isFacultyRoute]);
+  }, [hashState.section, isAdminRoute, isFacultyRoute, isLearningHubRoute]);
 
   const handleNavigateSection = (section: NavSectionId) => {
     updateHash({ section, modal: null, programmeId: null, projectId: null });
@@ -117,6 +122,8 @@ function AppContent() {
       <main className="relative pt-28">
         {isFacultyRoute ? (
           <FacultyPage faculty={faculty} onNavigate={handleNavigateSection} />
+        ) : isLearningHubRoute ? (
+          <LearningHubPage onNavigate={handleNavigateSection} />
         ) : (
           <>
             <div id="home">

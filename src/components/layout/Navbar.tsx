@@ -22,6 +22,7 @@ export const Navbar: React.FC<NavbarProps> = ({
     { id: 'about', label: 'ABOUT' },
     { id: 'academics', label: 'ACADEMICS' },
     { id: 'faculty', label: 'FACULTY' },
+    { id: 'learning-hub', label: 'LEARNING HUB' },
     { id: 'hub', label: 'DEVELOPERS HUB' },
     { id: 'innovation', label: 'INNOVATION' },
     { id: 'community', label: 'COMMUNITY' },
@@ -53,6 +54,18 @@ export const Navbar: React.FC<NavbarProps> = ({
       displayNavItems.splice(academicsIndex + 1, 0, facultyItem);
     } else {
       displayNavItems.push(facultyItem);
+    }
+    seenSections.add('faculty');
+  }
+
+  // Guarantee LEARNING HUB is present in displayNavItems right after FACULTY if omitted from CMS nav items
+  if (!seenSections.has('learning-hub')) {
+    const facultyIndex = displayNavItems.findIndex((item) => item.id === 'faculty');
+    const hubItem = { id: 'learning-hub' as NavSectionId, label: 'LEARNING HUB' };
+    if (facultyIndex !== -1) {
+      displayNavItems.splice(facultyIndex + 1, 0, hubItem);
+    } else {
+      displayNavItems.push(hubItem);
     }
   }
 
