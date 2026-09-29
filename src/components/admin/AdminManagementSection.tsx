@@ -2,7 +2,6 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { supabase, isSupabaseConfigured } from '../../lib/supabase';
 import { logAdminActivity } from '../../lib/activityLogger';
-import { createClient } from '@supabase/supabase-js';
 import { Shield, Plus, Edit, Trash2, AlertTriangle, CheckCircle, ShieldAlert, X } from 'lucide-react';
 import type { AdminProfile, AdminPermission } from '../../types';
 
@@ -116,7 +115,7 @@ export const AdminManagementSection: React.FC = () => {
     setTimeout(() => setNotice(null), 4000);
   };
 
-  // 1. ADD SUB ADMIN (Uses isolated client to avoid signing out active Super Admin)
+  // 1. ADD SUB ADMIN (Invokes server-side Supabase Edge Function using Admin API)
   const handleAddSubAdmin = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg(null);
@@ -132,57 +131,33 @@ export const AdminManagementSection: React.FC = () => {
     }
 
     try {
-      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
-      const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
-      
-      // Secondary isolated client for creating sub-admin without overriding session
-      const tempClient = createClient(supabaseUrl, supabaseAnonKey, {
-        auth: { persistSession: false }
-      });
+      if (!isSupabaseConfigured || !supabase) {
+        throw new Error('Supabase client is not configured.');
+      }
 
-      const { data: signUpData, error: signUpErr } = await tempClient.auth.signUp({
-        email: newEmail.trim(),
-        password: newPassword,
-        options: {
-          data: { full_name: newFullName.trim() }
+      setLoading(true);
+
+      // Invoke server-side Supabase Edge Function
+      const { data, error: funcErr } = await supabase.functions.invoke('create-sub-admin', {
+        body: {
+          name: newFullName.trim(),
+          email: newEmail.trim(),
+          password: newPassword,
+          role: 'sub_admin',
+          permissions: newPermissions
         }
       });
 
-      if (signUpErr) throw signUpErr;
-      if (!signUpData.user) throw new Error('Sub-admin authentication account could not be created.');
-
-      const newUserId = signUpData.user.id;
-
-      // Insert admin_profile
-      const { error: profileErr } = await supabase!
-        .from('admin_profiles')
-        .insert({
-          user_id: newUserId,
-          full_name: newFullName.trim(),
-          email: newEmail.trim(),
-          role: 'sub_admin',
-          is_active: true
-        });
-
-      if (profileErr) throw profileErr;
-
-      // Insert permissions
-      if (newPermissions.length > 0) {
-        const permRows = newPermissions.map((p) => ({
-          admin_user_id: newUserId,
-          permission: p
-        }));
-        await supabase!.from('admin_permissions').insert(permRows);
+      if (funcErr) {
+        if (funcErr.message?.includes('Signups not allowed') || funcErr.message?.includes('404') || funcErr.message?.includes('Failed to send a request to the Edge Function')) {
+          throw new Error("Supabase Edge Function Deployment Required: Please deploy the 'create-sub-admin' function to Supabase using: 'supabase functions deploy create-sub-admin'.");
+        }
+        throw new Error(funcErr.message || 'Edge Function invocation failed.');
       }
 
-      await logAdminActivity({
-        action: 'CREATE',
-        resourceType: 'Admin Account',
-        resourceId: newUserId,
-        description: `Created Sub Admin account for ${newFullName} (${newEmail})`,
-        adminUserId: user?.id,
-        adminName: user?.email || 'Super Admin'
-      });
+      if (data?.error) {
+        throw new Error(data.error);
+      }
 
       setIsAddModalOpen(false);
       setNewFullName('');
@@ -190,10 +165,12 @@ export const AdminManagementSection: React.FC = () => {
       setNewPassword('');
       setNewPermissions(['manage_faculty', 'manage_events', 'view_analytics']);
 
-      showNotice(`Sub Admin ${newFullName} added successfully!`);
+      showNotice(`Sub Admin ${newFullName} created successfully!`);
       fetchAdmins();
     } catch (err: any) {
       setErrorMsg(err?.message || 'Failed to create Sub Admin account.');
+    } finally {
+      setLoading(false);
     }
   };
 
