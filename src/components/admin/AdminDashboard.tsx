@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { supabase, isSupabaseConfigured } from '../../lib/supabase';
 import { useData } from '../../hooks/useData';
-import { LogOut, ExternalLink, Plus, Trash2, Edit, ShieldAlert, CheckCircle, LayoutDashboard, Compass, Megaphone, GraduationCap, FolderGit2, Users, LayoutList, Share2, Settings, Sparkles, UserCheck, Shield, BarChart3, History, BookOpen } from 'lucide-react';
+import { LogOut, ExternalLink, Plus, Trash2, Edit, ShieldAlert, CheckCircle, LayoutDashboard, Compass, Megaphone, GraduationCap, FolderGit2, Users, LayoutList, Share2, Settings, Sparkles, UserCheck, Shield, BarChart3, History, BookOpen, FileText } from 'lucide-react';
 import type { AcademicProgramme, StudentProject, FacultyMember, PromoSlide, HeroContent, NavItem, FooterContent, FooterLink, SocialLink, SiteSettings, NavSectionId, EventAnnouncement } from '../../types';
 import { ImageUploader } from './ImageUploader';
 import { MyAccountSection } from './MyAccountSection';
@@ -10,6 +10,7 @@ import { AdminManagementSection } from './AdminManagementSection';
 import { ActivityLogsSection } from './ActivityLogsSection';
 import { AnalyticsSection } from './AnalyticsSection';
 import { CurriculumManagementSection } from './CurriculumManagementSection';
+import { ResourceManagementSection } from './ResourceManagementSection';
 import { logAdminActivity } from '../../lib/activityLogger';
 
 export type AdminTab =
@@ -18,6 +19,7 @@ export type AdminTab =
   | 'navigation'
   | 'programmes'
   | 'curriculum'
+  | 'resources'
   | 'projects'
   | 'faculty'
   | 'event'
@@ -744,6 +746,16 @@ export const AdminDashboard: React.FC<{ onNavigateHome: () => void }> = ({ onNav
                 <BookOpen className="w-3.5 h-3.5 text-[#F2B705]" />
                 <span>Curriculum / Courses</span>
               </button>
+
+              <button
+                onClick={() => setActiveTab('resources')}
+                className={`px-3 py-2 rounded-t-lg font-bold text-xs flex items-center gap-1.5 transition-colors shrink-0 ${
+                  activeTab === 'resources' ? 'bg-slate-800 text-[#00AEEF] border-t-2 border-[#00AEEF]' : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                <FileText className="w-3.5 h-3.5 text-[#00AEEF]" />
+                <span>Learning Resources</span>
+              </button>
             </>
           )}
 
@@ -1272,6 +1284,9 @@ export const AdminDashboard: React.FC<{ onNavigateHome: () => void }> = ({ onNav
 
         {/* TAB 4B: CURRICULUM MANAGEMENT */}
         {activeTab === 'curriculum' && <CurriculumManagementSection />}
+
+        {/* TAB 4C: LEARNING RESOURCES MANAGEMENT */}
+        {activeTab === 'resources' && <ResourceManagementSection />}
 
         {/* TAB 5: STUDENT PROJECTS */}
         {activeTab === 'projects' && (
