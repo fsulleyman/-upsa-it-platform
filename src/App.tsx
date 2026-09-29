@@ -25,6 +25,8 @@ import { AdminDashboard } from './components/admin/AdminDashboard';
 
 import { SpeedInsights } from '@vercel/speed-insights/react';
 
+import { trackAnalyticsEvent } from './lib/analyticsTracker';
+
 function AppContent() {
   const [hashState, updateHash] = useHashLocation();
   const {
@@ -47,6 +49,10 @@ function AppContent() {
   const isFacultyRoute = hashState.section === 'faculty';
 
   useEffect(() => {
+    // Track non-sensitive page view event
+    const path = window.location.hash || '#/';
+    trackAnalyticsEvent('PAGE_VIEW', path);
+
     if (isFacultyRoute) {
       document.title = 'Faculty & Staff | UPSA IT Studies';
       window.scrollTo({ top: 0, behavior: 'instant' });

@@ -2,12 +2,33 @@ import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { supabase, isSupabaseConfigured } from '../../lib/supabase';
 import { useData } from '../../hooks/useData';
-import { LogOut, ExternalLink, Plus, Trash2, Edit, ShieldAlert, CheckCircle, LayoutDashboard, Compass, Megaphone, GraduationCap, FolderGit2, Users, LayoutList, Share2, Settings, Sparkles } from 'lucide-react';
+import { LogOut, ExternalLink, Plus, Trash2, Edit, ShieldAlert, CheckCircle, LayoutDashboard, Compass, Megaphone, GraduationCap, FolderGit2, Users, LayoutList, Share2, Settings, Sparkles, UserCheck, Shield, BarChart3, History } from 'lucide-react';
 import type { AcademicProgramme, StudentProject, FacultyMember, PromoSlide, HeroContent, NavItem, FooterContent, FooterLink, SocialLink, SiteSettings, NavSectionId, EventAnnouncement } from '../../types';
 import { ImageUploader } from './ImageUploader';
+import { MyAccountSection } from './MyAccountSection';
+import { AdminManagementSection } from './AdminManagementSection';
+import { ActivityLogsSection } from './ActivityLogsSection';
+import { AnalyticsSection } from './AnalyticsSection';
+import { logAdminActivity } from '../../lib/activityLogger';
+
+export type AdminTab =
+  | 'overview'
+  | 'hero'
+  | 'navigation'
+  | 'programmes'
+  | 'projects'
+  | 'faculty'
+  | 'event'
+  | 'footer'
+  | 'social'
+  | 'settings'
+  | 'my_account'
+  | 'admin_mgmt'
+  | 'analytics'
+  | 'activity_logs';
 
 export const AdminDashboard: React.FC<{ onNavigateHome: () => void }> = ({ onNavigateHome }) => {
-  const { logout, isAdminLoggedIn } = useAuth();
+  const { logout, isAdminLoggedIn, isSuperAdmin, hasPermission } = useAuth();
   const {
     programmes,
     projects,
@@ -26,7 +47,7 @@ export const AdminDashboard: React.FC<{ onNavigateHome: () => void }> = ({ onNav
   const [emailInput, setEmailInput] = useState('');
   const [passwordInput, setPasswordInput] = useState('');
   const [loginError, setLoginError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'overview' | 'hero' | 'navigation' | 'programmes' | 'projects' | 'faculty' | 'event' | 'footer' | 'social' | 'settings'>('overview');
+  const [activeTab, setActiveTab] = useState<AdminTab>('overview');
   const [notice, setNotice] = useState<string | null>(null);
 
   const { login } = useAuth();
@@ -152,6 +173,12 @@ export const AdminDashboard: React.FC<{ onNavigateHome: () => void }> = ({ onNav
         alert(`Supabase Save Error: ${error.message}`);
         return;
       }
+      await logAdminActivity({
+        action: editingProg.id ? 'UPDATE' : 'CREATE',
+        resourceType: 'Academic',
+        resourceId: payload.id,
+        description: `Saved academic programme ${payload.name} (${payload.code})`
+      });
     }
     refreshData();
     setEditingProg(null);
@@ -166,6 +193,12 @@ export const AdminDashboard: React.FC<{ onNavigateHome: () => void }> = ({ onNav
         alert(`Supabase Delete Error: ${error.message}`);
         return;
       }
+      await logAdminActivity({
+        action: 'DELETE',
+        resourceType: 'Academic',
+        resourceId: id,
+        description: `Deleted academic programme ${id}`
+      });
     }
     refreshData();
     showNotification('Programme deleted.');
@@ -210,6 +243,12 @@ export const AdminDashboard: React.FC<{ onNavigateHome: () => void }> = ({ onNav
         alert(`Supabase Save Error: ${error.message}`);
         return;
       }
+      await logAdminActivity({
+        action: editingProj.id ? 'UPDATE' : 'CREATE',
+        resourceType: 'Student Project',
+        resourceId: payload.id,
+        description: `Saved student project ${payload.title} for ${payload.student_name}`
+      });
     }
     refreshData();
     setEditingProj(null);
@@ -224,6 +263,12 @@ export const AdminDashboard: React.FC<{ onNavigateHome: () => void }> = ({ onNav
         alert(`Supabase Delete Error: ${error.message}`);
         return;
       }
+      await logAdminActivity({
+        action: 'DELETE',
+        resourceType: 'Student Project',
+        resourceId: id,
+        description: `Deleted student project ${id}`
+      });
     }
     refreshData();
     showNotification('Student Project deleted.');
@@ -271,6 +316,12 @@ export const AdminDashboard: React.FC<{ onNavigateHome: () => void }> = ({ onNav
         alert(`Supabase Save Error: ${error.message}`);
         return;
       }
+      await logAdminActivity({
+        action: editingFaculty.id ? 'UPDATE' : 'CREATE',
+        resourceType: 'Faculty',
+        resourceId: payload.id,
+        description: `Saved faculty profile for ${payload.name} (${payload.title})`
+      });
     }
     refreshData();
     setEditingFaculty(null);
@@ -285,6 +336,12 @@ export const AdminDashboard: React.FC<{ onNavigateHome: () => void }> = ({ onNav
         alert(`Supabase Delete Error: ${error.message}`);
         return;
       }
+      await logAdminActivity({
+        action: 'DELETE',
+        resourceType: 'Faculty',
+        resourceId: id,
+        description: `Deleted faculty profile ${id}`
+      });
     }
     refreshData();
     showNotification('Faculty record deleted.');
@@ -621,101 +678,189 @@ export const AdminDashboard: React.FC<{ onNavigateHome: () => void }> = ({ onNav
         </div>
       )}
 
-      {/* Navigation Tabs (CMS Modules) */}
-      <div className="px-6 pt-6 flex gap-2 border-b border-slate-800 overflow-x-auto">
-        <button
-          onClick={() => setActiveTab('overview')}
-          className={`px-4 py-2.5 rounded-t-lg font-bold text-xs flex items-center gap-1.5 transition-colors ${
-            activeTab === 'overview' ? 'bg-slate-800 text-[#F2B705] border-t-2 border-[#F2B705]' : 'text-slate-400 hover:text-white'
-          }`}
-        >
-          <LayoutDashboard className="w-4 h-4" />
-          <span>Overview</span>
-        </button>
-        <button
-          onClick={() => setActiveTab('hero')}
-          className={`px-4 py-2.5 rounded-t-lg font-bold text-xs flex items-center gap-1.5 transition-colors ${
-            activeTab === 'hero' ? 'bg-slate-800 text-[#F2B705] border-t-2 border-[#F2B705]' : 'text-slate-400 hover:text-white'
-          }`}
-        >
-          <Megaphone className="w-4 h-4" />
-          <span>Hero & Banners ({promoSlides.length})</span>
-        </button>
-        <button
-          onClick={() => setActiveTab('navigation')}
-          className={`px-4 py-2.5 rounded-t-lg font-bold text-xs flex items-center gap-1.5 transition-colors ${
-            activeTab === 'navigation' ? 'bg-slate-800 text-[#F2B705] border-t-2 border-[#F2B705]' : 'text-slate-400 hover:text-white'
-          }`}
-        >
-          <Compass className="w-4 h-4" />
-          <span>Navigation ({navItems.length})</span>
-        </button>
-        <button
-          onClick={() => setActiveTab('programmes')}
-          className={`px-4 py-2.5 rounded-t-lg font-bold text-xs flex items-center gap-1.5 transition-colors ${
-            activeTab === 'programmes' ? 'bg-slate-800 text-[#F2B705] border-t-2 border-[#F2B705]' : 'text-slate-400 hover:text-white'
-          }`}
-        >
-          <GraduationCap className="w-4 h-4" />
-          <span>Programmes ({programmes.length})</span>
-        </button>
-        <button
-          onClick={() => setActiveTab('projects')}
-          className={`px-4 py-2.5 rounded-t-lg font-bold text-xs flex items-center gap-1.5 transition-colors ${
-            activeTab === 'projects' ? 'bg-slate-800 text-[#F2B705] border-t-2 border-[#F2B705]' : 'text-slate-400 hover:text-white'
-          }`}
-        >
-          <FolderGit2 className="w-4 h-4" />
-          <span>Projects ({projects.length})</span>
-        </button>
-        <button
-          onClick={() => setActiveTab('faculty')}
-          className={`px-4 py-2.5 rounded-t-lg font-bold text-xs flex items-center gap-1.5 transition-colors ${
-            activeTab === 'faculty' ? 'bg-slate-800 text-[#F2B705] border-t-2 border-[#F2B705]' : 'text-slate-400 hover:text-white'
-          }`}
-        >
-          <Users className="w-4 h-4" />
-          <span>Faculty ({faculty.length})</span>
-        </button>
-        <button
-          onClick={() => {
-            setActiveTab('event');
-            if (!editingEvent) setEditingEvent(eventAnnouncement);
-          }}
-          className={`px-4 py-2.5 rounded-t-lg font-bold text-xs flex items-center gap-1.5 transition-colors ${
-            activeTab === 'event' ? 'bg-slate-800 text-[#F2B705] border-t-2 border-[#F2B705]' : 'text-slate-400 hover:text-white'
-          }`}
-        >
-          <Sparkles className="w-4 h-4 text-[#F2B705]" />
-          <span>Event Popup</span>
-        </button>
-        <button
-          onClick={() => setActiveTab('footer')}
-          className={`px-4 py-2.5 rounded-t-lg font-bold text-xs flex items-center gap-1.5 transition-colors ${
-            activeTab === 'footer' ? 'bg-slate-800 text-[#F2B705] border-t-2 border-[#F2B705]' : 'text-slate-400 hover:text-white'
-          }`}
-        >
-          <LayoutList className="w-4 h-4" />
-          <span>Footer ({footerLinks.length})</span>
-        </button>
-        <button
-          onClick={() => setActiveTab('social')}
-          className={`px-4 py-2.5 rounded-t-lg font-bold text-xs flex items-center gap-1.5 transition-colors ${
-            activeTab === 'social' ? 'bg-slate-800 text-[#F2B705] border-t-2 border-[#F2B705]' : 'text-slate-400 hover:text-white'
-          }`}
-        >
-          <Share2 className="w-4 h-4" />
-          <span>Social ({socialLinks.length})</span>
-        </button>
-        <button
-          onClick={() => setActiveTab('settings')}
-          className={`px-4 py-2.5 rounded-t-lg font-bold text-xs flex items-center gap-1.5 transition-colors ${
-            activeTab === 'settings' ? 'bg-slate-800 text-[#F2B705] border-t-2 border-[#F2B705]' : 'text-slate-400 hover:text-white'
-          }`}
-        >
-          <Settings className="w-4 h-4" />
-          <span>Site SEO</span>
-        </button>
+      {/* Navigation Tabs Header */}
+      <div className="px-6 pt-4 space-y-3 border-b border-slate-800 bg-slate-900/60">
+        
+        {/* Row 1: CMS Content Tabs */}
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 text-xs">
+          <span className="px-2 py-1 rounded bg-slate-800 text-[10px] font-extrabold text-[#F2B705] tracking-wider uppercase shrink-0">
+            CMS CONTENT
+          </span>
+
+          <button
+            onClick={() => setActiveTab('overview')}
+            className={`px-3 py-2 rounded-t-lg font-bold text-xs flex items-center gap-1.5 transition-colors shrink-0 ${
+              activeTab === 'overview' ? 'bg-slate-800 text-[#F2B705] border-t-2 border-[#F2B705]' : 'text-slate-400 hover:text-white'
+            }`}
+          >
+            <LayoutDashboard className="w-3.5 h-3.5" />
+            <span>Overview</span>
+          </button>
+
+          {hasPermission('manage_homepage') && (
+            <button
+              onClick={() => setActiveTab('hero')}
+              className={`px-3 py-2 rounded-t-lg font-bold text-xs flex items-center gap-1.5 transition-colors shrink-0 ${
+                activeTab === 'hero' ? 'bg-slate-800 text-[#F2B705] border-t-2 border-[#F2B705]' : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              <Megaphone className="w-3.5 h-3.5" />
+              <span>Hero & Banners ({promoSlides.length})</span>
+            </button>
+          )}
+
+          {hasPermission('manage_navbar') && (
+            <button
+              onClick={() => setActiveTab('navigation')}
+              className={`px-3 py-2 rounded-t-lg font-bold text-xs flex items-center gap-1.5 transition-colors shrink-0 ${
+                activeTab === 'navigation' ? 'bg-slate-800 text-[#F2B705] border-t-2 border-[#F2B705]' : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              <Compass className="w-3.5 h-3.5" />
+              <span>Navigation ({navItems.length})</span>
+            </button>
+          )}
+
+          {hasPermission('manage_academics') && (
+            <button
+              onClick={() => setActiveTab('programmes')}
+              className={`px-3 py-2 rounded-t-lg font-bold text-xs flex items-center gap-1.5 transition-colors shrink-0 ${
+                activeTab === 'programmes' ? 'bg-slate-800 text-[#F2B705] border-t-2 border-[#F2B705]' : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              <GraduationCap className="w-3.5 h-3.5" />
+              <span>Programmes ({programmes.length})</span>
+            </button>
+          )}
+
+          {hasPermission('manage_innovation') && (
+            <button
+              onClick={() => setActiveTab('projects')}
+              className={`px-3 py-2 rounded-t-lg font-bold text-xs flex items-center gap-1.5 transition-colors shrink-0 ${
+                activeTab === 'projects' ? 'bg-slate-800 text-[#F2B705] border-t-2 border-[#F2B705]' : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              <FolderGit2 className="w-3.5 h-3.5" />
+              <span>Projects ({projects.length})</span>
+            </button>
+          )}
+
+          {hasPermission('manage_faculty') && (
+            <button
+              onClick={() => setActiveTab('faculty')}
+              className={`px-3 py-2 rounded-t-lg font-bold text-xs flex items-center gap-1.5 transition-colors shrink-0 ${
+                activeTab === 'faculty' ? 'bg-slate-800 text-[#F2B705] border-t-2 border-[#F2B705]' : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              <Users className="w-3.5 h-3.5" />
+              <span>Faculty ({faculty.length})</span>
+            </button>
+          )}
+
+          {hasPermission('manage_events') && (
+            <button
+              onClick={() => {
+                setActiveTab('event');
+                if (!editingEvent) setEditingEvent(eventAnnouncement);
+              }}
+              className={`px-3 py-2 rounded-t-lg font-bold text-xs flex items-center gap-1.5 transition-colors shrink-0 ${
+                activeTab === 'event' ? 'bg-slate-800 text-[#F2B705] border-t-2 border-[#F2B705]' : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              <Sparkles className="w-3.5 h-3.5 text-[#F2B705]" />
+              <span>Event Popup</span>
+            </button>
+          )}
+
+          {hasPermission('manage_community') && (
+            <>
+              <button
+                onClick={() => setActiveTab('footer')}
+                className={`px-3 py-2 rounded-t-lg font-bold text-xs flex items-center gap-1.5 transition-colors shrink-0 ${
+                  activeTab === 'footer' ? 'bg-slate-800 text-[#F2B705] border-t-2 border-[#F2B705]' : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                <LayoutList className="w-3.5 h-3.5" />
+                <span>Footer ({footerLinks.length})</span>
+              </button>
+              <button
+                onClick={() => setActiveTab('social')}
+                className={`px-3 py-2 rounded-t-lg font-bold text-xs flex items-center gap-1.5 transition-colors shrink-0 ${
+                  activeTab === 'social' ? 'bg-slate-800 text-[#F2B705] border-t-2 border-[#F2B705]' : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                <Share2 className="w-3.5 h-3.5" />
+                <span>Social ({socialLinks.length})</span>
+              </button>
+            </>
+          )}
+
+          {hasPermission('manage_homepage') && (
+            <button
+              onClick={() => setActiveTab('settings')}
+              className={`px-3 py-2 rounded-t-lg font-bold text-xs flex items-center gap-1.5 transition-colors shrink-0 ${
+                activeTab === 'settings' ? 'bg-slate-800 text-[#F2B705] border-t-2 border-[#F2B705]' : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              <Settings className="w-3.5 h-3.5" />
+              <span>Site SEO</span>
+            </button>
+          )}
+        </div>
+
+        {/* Row 2: Administration Tabs */}
+        <div className="flex items-center gap-2 overflow-x-auto pb-2 text-xs border-t border-slate-800/80 pt-2">
+          <span className="px-2 py-1 rounded bg-[#003366] text-[10px] font-extrabold text-[#00AEEF] tracking-wider uppercase shrink-0">
+            ADMINISTRATION
+          </span>
+
+          <button
+            onClick={() => setActiveTab('my_account')}
+            className={`px-3 py-2 rounded-t-lg font-bold text-xs flex items-center gap-1.5 transition-colors shrink-0 ${
+              activeTab === 'my_account' ? 'bg-slate-800 text-[#00AEEF] border-t-2 border-[#00AEEF]' : 'text-slate-400 hover:text-white'
+            }`}
+          >
+            <UserCheck className="w-3.5 h-3.5" />
+            <span>My Account</span>
+          </button>
+
+          {isSuperAdmin && (
+            <button
+              onClick={() => setActiveTab('admin_mgmt')}
+              className={`px-3 py-2 rounded-t-lg font-bold text-xs flex items-center gap-1.5 transition-colors shrink-0 ${
+                activeTab === 'admin_mgmt' ? 'bg-slate-800 text-[#00AEEF] border-t-2 border-[#00AEEF]' : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              <Shield className="w-3.5 h-3.5 text-[#F2B705]" />
+              <span>Admin Management</span>
+            </button>
+          )}
+
+          {hasPermission('view_analytics') && (
+            <button
+              onClick={() => setActiveTab('analytics')}
+              className={`px-3 py-2 rounded-t-lg font-bold text-xs flex items-center gap-1.5 transition-colors shrink-0 ${
+                activeTab === 'analytics' ? 'bg-slate-800 text-[#00AEEF] border-t-2 border-[#00AEEF]' : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              <BarChart3 className="w-3.5 h-3.5" />
+              <span>Analytics</span>
+            </button>
+          )}
+
+          {hasPermission('view_activity_logs') && (
+            <button
+              onClick={() => setActiveTab('activity_logs')}
+              className={`px-3 py-2 rounded-t-lg font-bold text-xs flex items-center gap-1.5 transition-colors shrink-0 ${
+                activeTab === 'activity_logs' ? 'bg-slate-800 text-[#00AEEF] border-t-2 border-[#00AEEF]' : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              <History className="w-3.5 h-3.5" />
+              <span>Activity Logs</span>
+            </button>
+          )}
+        </div>
+
       </div>
 
       {/* Main Content Area */}
@@ -1898,6 +2043,12 @@ export const AdminDashboard: React.FC<{ onNavigateHome: () => void }> = ({ onNav
             </form>
           </div>
         )}
+
+        {/* ADMINISTRATION MODULE TABS */}
+        {activeTab === 'my_account' && <MyAccountSection />}
+        {activeTab === 'admin_mgmt' && <AdminManagementSection />}
+        {activeTab === 'analytics' && <AnalyticsSection />}
+        {activeTab === 'activity_logs' && <ActivityLogsSection />}
 
       </div>
     </div>

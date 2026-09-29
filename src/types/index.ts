@@ -184,3 +184,53 @@ export interface EventAnnouncement {
   isActive: boolean;
   displayOrder?: number;
 }
+
+export type AdminRole = 'super_admin' | 'sub_admin';
+
+export type AdminPermission =
+  | 'manage_faculty'
+  | 'manage_events'
+  | 'manage_homepage'
+  | 'manage_navbar'
+  | 'manage_academics'
+  | 'manage_community'
+  | 'manage_innovation'
+  | 'manage_hub'
+  | 'manage_media'
+  | 'view_analytics'
+  | 'view_activity_logs'
+  | 'manage_admins';
+
+export interface AdminProfile {
+  id: string;
+  userId: string;
+  fullName: string;
+  email: string;
+  role: AdminRole;
+  isActive: boolean;
+  lastLoginAt?: string;
+  createdAt: string;
+  permissions?: AdminPermission[];
+}
+
+export interface AdminActivityLog {
+  id: string;
+  adminUserId?: string;
+  adminName: string;
+  action: string;
+  resourceType: string;
+  resourceId?: string;
+  description: string;
+  metadata?: Record<string, any>;
+  createdAt: string;
+}
+
+export interface SiteAnalyticsEvent {
+  id?: string;
+  eventType: 'PAGE_VIEW' | 'FACULTY_PROFILE_VIEW' | 'EVENT_VIEW' | 'SEARCH' | 'CONTACT_CLICK' | 'DOCUMENT_VIEW';
+  pagePath: string;
+  sessionId?: string;
+  metadata?: Record<string, any>;
+  createdAt?: string;
+}
+
