@@ -1,6 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { supabase, isSupabaseConfigured } from '../../lib/supabase';
+import { AdminPageHeader } from './ui/AdminPageHeader';
+import { DataTable } from './ui/DataTable';
+import type { Column } from './ui/DataTable';
+import { StatusBadge } from './ui/StatusBadge';
+import type { BadgeVariant } from './ui/StatusBadge';
 import { History, Search, RefreshCw, ChevronLeft, ChevronRight } from 'lucide-react';
 import type { AdminActivityLog } from '../../types';
 
@@ -60,13 +65,12 @@ export const ActivityLogsSection: React.FC = () => {
 
   if (!hasPermission('view_activity_logs')) {
     return (
-      <div className="p-6 rounded-xl bg-slate-800 border border-slate-700 text-slate-300 text-xs font-bold">
+      <div className="p-6 rounded-xl bg-slate-900 border border-slate-800 text-slate-300 text-xs font-semibold">
         Access Restricted: You do not have permission to view administrative activity logs.
       </div>
     );
   }
 
-  // Filtering
   const filteredLogs = logs.filter((log) => {
     const matchesSearch =
       log.adminName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -80,165 +84,202 @@ export const ActivityLogsSection: React.FC = () => {
     return matchesSearch && matchesAction && matchesResource;
   });
 
-  // Pagination calculation
   const totalPages = Math.ceil(filteredLogs.length / itemsPerPage) || 1;
   const paginatedLogs = filteredLogs.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
 
+  const getActionBadgeVariant = (action: string): BadgeVariant => {
+    switch (action) {
+      case 'CREATE':
+        return 'active';
+      case 'UPDATE':
+      case 'UPDATE_PERMISSIONS':
+        return 'info';
+      case 'DELETE':
+      case 'DELETE_ADMIN':
+        return 'danger';
+      case 'PASSWORD_RESET':
+      case 'PASSWORD_RESET_REQUESTED':
+      case 'CHANGE_PASSWORD':
+        return 'warning';
+      case 'PUBLISH':
+        return 'success';
+      case 'UNPUBLISH':
+        return 'neutral';
+      default:
+        return 'neutral';
+    }
+  };
+
+  const getRelativeTime = (isoString: string) => {
+    try {
+      const date = new Date(isoString);
+      const now = new Date();
+      const diffMs = now.getTime() - date.getTime();
+      const diffMins = Math.floor(diffMs / (1000 * 60));
+      const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+      const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+      if (diffMins < 1) return 'Just now';
+      if (diffMins < 60) return `${diffMins}m ago`;
+      if (diffHours < 24) return `${diffHours}h ago`;
+      if (diffDays < 7) return `${diffDays}d ago`;
+      return date.toLocaleDateString();
+    } catch {
+      return isoString;
+    }
+  };
+
+  const columns: Column<AdminActivityLog>[] = [
+    {
+      header: 'Timestamp',
+      accessor: (row) => (
+        <div className="space-y-0.5">
+          <span className="font-mono text-xs text-white block">{getRelativeTime(row.createdAt)}</span>
+          <span className="text-[10px] text-slate-500 block font-mono">
+            {new Date(row.createdAt).toLocaleString()}
+          </span>
+        </div>
+      )
+    },
+    {
+      header: 'Administrator',
+      accessor: (row) => (
+        <span className="font-bold text-slate-200 text-xs">{row.adminName}</span>
+      )
+    },
+    {
+      header: 'Action',
+      accessor: (row) => (
+        <StatusBadge variant={getActionBadgeVariant(row.action)} label={row.action} size="sm" />
+      )
+    },
+    {
+      header: 'Resource',
+      accessor: (row) => (
+        <span className="px-2 py-0.5 rounded bg-slate-950 border border-slate-800 font-mono text-[11px] text-slate-300">
+          {row.resourceType}
+        </span>
+      )
+    },
+    {
+      header: 'Audit Description',
+      accessor: (row) => (
+        <p className="text-xs text-slate-300 line-clamp-2">{row.description}</p>
+      )
+    }
+  ];
+
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-700 pb-4">
-        <div className="flex items-center gap-3">
-          <History className="w-6 h-6 text-[#F2B705]" />
-          <div>
-            <h2 className="text-base font-extrabold text-white">Administrative Activity Audit Logs</h2>
-            <p className="text-xs text-slate-400">Persistent immutable audit log of administrative actions, mutations, and authentications</p>
-          </div>
-        </div>
-
+      <AdminPageHeader
+        title="Audit Activity Logs"
+        description="Persistent immutable audit trail of administrative actions, mutations, and authentication attempts."
+        badge={`${logs.length} Entries`}
+      >
         <button
           onClick={fetchLogs}
-          className="px-3.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-bold text-white flex items-center gap-2"
+          className="p-2 rounded-lg bg-slate-900 border border-slate-800 text-slate-400 hover:text-white transition-colors"
+          title="Refresh Logs"
         >
-          <RefreshCw className="w-3.5 h-3.5" />
-          <span>Refresh Logs</span>
+          <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
         </button>
-      </div>
+      </AdminPageHeader>
 
-      {/* Filter & Search Bar */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        <div className="relative">
-          <Search className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
-          <input
-            type="text"
-            placeholder="Search logs by keyword..."
-            value={searchTerm}
-            onChange={(e) => {
-              setSearchTerm(e.target.value);
-              setCurrentPage(1);
-            }}
-            className="w-full pl-9 pr-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white text-xs font-medium focus:outline-none focus:border-[#003366]"
-          />
-        </div>
+      {/* Filter Bar */}
+      <div className="p-4 rounded-xl bg-slate-900/90 border border-slate-800 space-y-3 shadow-xs">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          <div className="relative lg:col-span-2">
+            <Search className="w-4 h-4 absolute left-3 top-2.5 text-slate-500" />
+            <input
+              type="text"
+              placeholder="Search admin name, action, or description..."
+              value={searchTerm}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                setCurrentPage(1);
+              }}
+              className="w-full pl-9 pr-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-white text-xs focus:outline-none focus:border-blue-500"
+            />
+          </div>
 
-        <div>
           <select
             value={actionFilter}
             onChange={(e) => {
               setActionFilter(e.target.value);
               setCurrentPage(1);
             }}
-            className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white text-xs font-bold"
+            className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-white text-xs focus:outline-none focus:border-blue-500"
           >
-            <option value="ALL">All Actions</option>
-            <option value="LOGIN">LOGIN</option>
-            <option value="LOGOUT">LOGOUT</option>
+            <option value="ALL">All Action Types</option>
             <option value="CREATE">CREATE</option>
             <option value="UPDATE">UPDATE</option>
             <option value="DELETE">DELETE</option>
-            <option value="CHANGE_PERMISSIONS">CHANGE_PERMISSIONS</option>
-            <option value="CHANGE_PASSWORD">CHANGE_PASSWORD</option>
-            <option value="CHANGE_EMAIL">CHANGE_EMAIL</option>
-            <option value="ACTIVATE_ADMIN">ACTIVATE_ADMIN</option>
-            <option value="DEACTIVATE_ADMIN">DEACTIVATE_ADMIN</option>
+            <option value="PASSWORD_RESET">PASSWORD_RESET</option>
+            <option value="PUBLISH">PUBLISH</option>
           </select>
-        </div>
 
-        <div>
           <select
             value={resourceFilter}
             onChange={(e) => {
               setResourceFilter(e.target.value);
               setCurrentPage(1);
             }}
-            className="w-full px-3 py-2 rounded-lg bg-slate-800 border border-slate-700 text-white text-xs font-bold"
+            className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-white text-xs focus:outline-none focus:border-blue-500"
           >
             <option value="ALL">All Resource Types</option>
-            <option value="Faculty">Faculty</option>
-            <option value="Event">Event</option>
-            <option value="Homepage">Homepage</option>
-            <option value="Navbar">Navbar</option>
-            <option value="Academic">Academic</option>
-            <option value="Student Project">Student Project</option>
             <option value="Admin Account">Admin Account</option>
             <option value="Admin Profile">Admin Profile</option>
-            <option value="Auth">Auth</option>
+            <option value="Academic">Academic Programme</option>
+            <option value="Learning Resource">Learning Resource</option>
+            <option value="Faculty">Faculty Profile</option>
+            <option value="Student Project">Student Project</option>
           </select>
         </div>
       </div>
 
-      {/* Activity Log Table */}
-      <div className="overflow-x-auto rounded-xl border border-slate-800 bg-slate-800">
-        <table className="w-full text-left text-xs text-slate-300">
-          <thead className="bg-slate-900 text-slate-400 font-bold uppercase border-b border-slate-700">
-            <tr>
-              <th className="p-3">Date / Time</th>
-              <th className="p-3">Administrator</th>
-              <th className="p-3">Action</th>
-              <th className="p-3">Resource</th>
-              <th className="p-3">Description</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-800">
-            {loading ? (
-              <tr>
-                <td colSpan={5} className="p-6 text-center text-slate-400">Loading activity logs...</td>
-              </tr>
-            ) : paginatedLogs.length === 0 ? (
-              <tr>
-                <td colSpan={5} className="p-6 text-center text-slate-400">No matching activity logs found.</td>
-              </tr>
-            ) : (
-              paginatedLogs.map((log) => (
-                <tr key={log.id} className="hover:bg-slate-800/60 transition-colors">
-                  <td className="p-3 font-mono text-slate-400 whitespace-nowrap">
-                    {new Date(log.createdAt).toLocaleString()}
-                  </td>
-                  <td className="p-3 font-extrabold text-white">{log.adminName}</td>
-                  <td className="p-3">
-                    <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
-                      log.action === 'CREATE' ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40' :
-                      log.action === 'UPDATE' ? 'bg-blue-500/20 text-blue-300 border border-blue-500/40' :
-                      log.action === 'DELETE' ? 'bg-red-500/20 text-red-300 border border-red-500/40' :
-                      log.action === 'LOGIN' || log.action === 'LOGOUT' ? 'bg-purple-500/20 text-purple-300 border border-purple-500/40' :
-                      'bg-slate-700 text-slate-300'
-                    }`}>
-                      {log.action}
-                    </span>
-                  </td>
-                  <td className="p-3 font-semibold text-[#00AEEF]">{log.resourceType}</td>
-                  <td className="p-3 text-slate-200">{log.description}</td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+      {/* Data Table */}
+      <DataTable
+        columns={columns}
+        data={paginatedLogs}
+        loading={loading}
+        keyExtractor={(item) => item.id}
+        emptyMessage="No activity logs found"
+        emptySubtext="Administrative mutations and authentications will be recorded here automatically."
+        emptyIcon={<History className="w-6 h-6 text-slate-400" />}
+      />
 
-      {/* Pagination Bar */}
-      <div className="flex items-center justify-between text-xs text-slate-400 border-t border-slate-800 pt-3">
-        <span>Showing {paginatedLogs.length} of {filteredLogs.length} activity records</span>
+      {/* Pagination Controls */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between pt-2 text-xs text-slate-400">
+          <span>
+            Showing {(currentPage - 1) * itemsPerPage + 1} to{' '}
+            {Math.min(currentPage * itemsPerPage, filteredLogs.length)} of {filteredLogs.length} logs
+          </span>
 
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
-            disabled={currentPage === 1}
-            className="p-1.5 rounded bg-slate-800 border border-slate-700 disabled:opacity-30 hover:bg-slate-700 text-white"
-          >
-            <ChevronLeft className="w-4 h-4" />
-          </button>
-          <span className="font-mono font-bold text-white">Page {currentPage} of {totalPages}</span>
-          <button
-            onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
-            disabled={currentPage === totalPages}
-            className="p-1.5 rounded bg-slate-800 border border-slate-700 disabled:opacity-30 hover:bg-slate-700 text-white"
-          >
-            <ChevronRight className="w-4 h-4" />
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+              className="p-1.5 rounded-lg bg-slate-900 border border-slate-800 disabled:opacity-40 hover:text-white"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+            <span className="font-mono">
+              {currentPage} / {totalPages}
+            </span>
+            <button
+              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages}
+              className="p-1.5 rounded-lg bg-slate-900 border border-slate-800 disabled:opacity-40 hover:text-white"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };
