@@ -1,0 +1,35 @@
+graph TB
+    subgraph Client Browser
+        UserBrowser["User Web Browser"]
+    end
+
+    subgraph Content Delivery Network & Edge
+        VercelCDN["Vercel Global Edge Network<br/>(Hosts Static Assets & SPA Bundle)"]
+    end
+
+    subgraph Supabase Cloud Platform Backend
+        subgraph Compute Region
+            EdgeCluster["Supabase Edge Functions Cluster<br/>(Deno Deploy Microservices)"]
+        end
+
+        subgraph Managed Database & API Region
+            KongGateway["Supabase API Gateway / Kong<br/>(HTTPS Reverse Proxy)"]
+            GoTrueAuth["GoTrue Auth Service<br/>(JWT Signing & Verification)"]
+            PostgRESTAPI["PostgREST Service<br/>(Auto-generated REST API)"]
+            StorageService["Storage Engine<br/>(File Object Storage)"]
+            PostgresMaster["PostgreSQL 15 Managed Instance<br/>(WAL, RLS, SQL Functions)"]
+        end
+    end
+
+    UserBrowser -->|HTTPS GET static bundle| VercelCDN
+    UserBrowser -->|HTTPS API Requests| KongGateway
+
+    KongGateway -->|/auth/v1| GoTrueAuth
+    KongGateway -->|/rest/v1| PostgRESTAPI
+    KongGateway -->|/storage/v1| StorageService
+    KongGateway -->|/functions/v1| EdgeCluster
+
+    EdgeCluster -->|Service Role Key DB Access| PostgresMaster
+    PostgRESTAPI -->|SQL Execution as anon/authenticated| PostgresMaster
+    GoTrueAuth -->|User Table Management| PostgresMaster
+    StorageService -->|Bucket Metadata & Objects| PostgresMaster

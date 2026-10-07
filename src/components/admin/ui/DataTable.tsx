@@ -2,7 +2,7 @@ import React from 'react';
 import { Inbox } from 'lucide-react';
 
 export interface Column<T> {
-  header: string;
+  header: React.ReactNode;
   accessor?: keyof T | ((row: T) => React.ReactNode);
   className?: string;
   headerClassName?: string;

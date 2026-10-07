@@ -1,0 +1,40 @@
+graph TB
+    subgraph Trust Zone 1: Untrusted Public Client
+        AnonUser["Anonymous Student / Visitor Browser"]
+        ClientStorage["Browser sessionStorage / localStorage<br/>(Session ID, Auth Tokens)"]
+    end
+
+    subgraph Trust Zone 2: Authenticated Admin Client
+        AdminUser["Authenticated Sub-Admin / Super-Admin Browser"]
+        JWTToken["Bearer JWT Token (Short-Lived)"]
+    end
+
+    subgraph Trust Boundary A: Edge & Network Perimeter
+        SSLTLSPermeter["HTTPS TLS Encryption Boundary"]
+    end
+
+    subgraph Trust Zone 3: Supabase Cloud Secured Services
+        PostgRESTEngine["PostgREST API Engine<br/>(RLS Enforcement Layer)"]
+        StorageEngine["Supabase Storage Engine<br/>(Bucket RLS & Sanitize Layer)"]
+    end
+
+    subgraph Trust Zone 4: Serverless Privilege Tier
+        EdgeFunctionService["Supabase Edge Functions<br/>(Service Role Key Access Layer)"]
+    end
+
+    subgraph Trust Zone 5: Data Persistence Tier
+        DBData[("PostgreSQL Database Core<br/>(admin_profiles, auth.users, learning_resources)")]
+        FileStorage[("S3 Storage Bucket<br/>(learning-resources Files)")]
+    end
+
+    AnonUser -->|Unauthenticated Requests| SSLTLSPermeter
+    AdminUser -->|Authenticated JWT Requests| SSLTLSPermeter
+
+    SSLTLSPermeter -->|Anon RLS Filtered Access| PostgRESTEngine
+    SSLTLSPermeter -->|Role-Based RLS Access| PostgRESTEngine
+    SSLTLSPermeter -->|Public Bucket Read / Admin File Operations| StorageEngine
+    SSLTLSPermeter -->|Admin Authorization Token| EdgeFunctionService
+
+    PostgRESTEngine --> DBData
+    StorageEngine --> FileStorage
+    EdgeFunctionService -->|Bypasses RLS via Service Role Key| DBData

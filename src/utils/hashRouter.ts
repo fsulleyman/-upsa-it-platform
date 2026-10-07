@@ -7,6 +7,9 @@ export interface HashState {
   programmeId: string | null;
   projectId: string | null;
   categoryFilter: string | null;
+  courseCode: string | null;
+  level: string | null;
+  semester: string | null;
 }
 
 export function parseHash(hash: string): HashState {
@@ -17,7 +20,10 @@ export function parseHash(hash: string): HashState {
       modal: null,
       programmeId: null,
       projectId: null,
-      categoryFilter: null
+      categoryFilter: null,
+      courseCode: null,
+      level: null,
+      semester: null
     };
   }
 
@@ -25,15 +31,38 @@ export function parseHash(hash: string): HashState {
   const path = parts[0] || 'home';
   const queryParams = new URLSearchParams(parts[1] || '');
 
-  const validSections: NavSectionId[] = ['home', 'about', 'academics', 'faculty', 'learning-hub', 'hub', 'innovation', 'community', 'contact', 'admin'];
-  const section: NavSectionId = validSections.includes(path as NavSectionId) ? (path as NavSectionId) : 'home';
+  const validSections: NavSectionId[] = [
+    'home',
+    'about',
+    'academics',
+    'faculty',
+    'learning-hub',
+    'hub',
+    'innovation',
+    'community',
+    'contact',
+    'admin',
+    'reset-password'
+  ];
+  const section: NavSectionId = validSections.includes(path as NavSectionId)
+    ? (path as NavSectionId)
+    : 'home';
+
+  const rawLevel = queryParams.get('level');
+  const validLevel = rawLevel && ['100', '200', '300', '400', 'All'].includes(rawLevel) ? rawLevel : null;
+
+  const rawSem = queryParams.get('semester');
+  const validSem = rawSem && ['1', '2', 'All'].includes(rawSem) ? rawSem : null;
 
   return {
     section,
     modal: queryParams.get('modal'),
     programmeId: queryParams.get('programme'),
     projectId: queryParams.get('project'),
-    categoryFilter: queryParams.get('category')
+    categoryFilter: queryParams.get('category'),
+    courseCode: queryParams.get('course'),
+    level: validLevel,
+    semester: validSem
   };
 }
 
@@ -44,12 +73,18 @@ export function buildHash(state: Partial<HashState>): string {
   const programmeId = state.programmeId !== undefined ? state.programmeId : current.programmeId;
   const projectId = state.projectId !== undefined ? state.projectId : current.projectId;
   const categoryFilter = state.categoryFilter !== undefined ? state.categoryFilter : current.categoryFilter;
+  const courseCode = state.courseCode !== undefined ? state.courseCode : current.courseCode;
+  const level = state.level !== undefined ? state.level : current.level;
+  const semester = state.semester !== undefined ? state.semester : current.semester;
 
   const params = new URLSearchParams();
   if (modal) params.set('modal', modal);
   if (programmeId) params.set('programme', programmeId);
   if (projectId) params.set('project', projectId);
   if (categoryFilter && categoryFilter !== 'All') params.set('category', categoryFilter);
+  if (level && level !== 'All') params.set('level', level);
+  if (semester && semester !== 'All') params.set('semester', semester);
+  if (courseCode) params.set('course', courseCode.toUpperCase());
 
   const queryString = params.toString();
   return `#${section}${queryString ? `?${queryString}` : ''}`;

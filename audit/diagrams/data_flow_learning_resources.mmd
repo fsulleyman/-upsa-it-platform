@@ -1,0 +1,15 @@
+graph TD
+    subgraph Student Viewer
+        S1["Browse /learning-hub"] -->|Select Level/Semester| S2["Fetch Courses & Resources"]
+        S2 -->|Click Resource Link| S3["Call trackResourceEvent(id, 'view')"]
+        S3 -->|RPC track_resource_event| S4["Record Event in site_analytics"]
+        S2 -->|Download File| S5["Open Direct Storage Public URL"]
+    end
+
+    subgraph Admin Management Flow
+        A1["Super Admin / Sub-Admin"] -->|Select File & Metadata| A2["Validate File Size (<50MB) & Mime Type"]
+        A2 -->|Pass Validation| A3["Upload File to Storage Bucket"]
+        A3 -->|Returns Path & Public URL| A4["Upsert Record to learning_resources Table"]
+        A4 -->|Success| A5["Insert Admin Activity Log"]
+        A5 -->|Complete| A6["Refresh Data & UI"]
+    end

@@ -1,0 +1,92 @@
+erDiagram
+    auth_users ||--o| admin_profiles : "has"
+    auth_users ||--o| admin_users : "legacy sync"
+    auth_users ||--o{ admin_permissions : "granted"
+    auth_users ||--o{ admin_activity_logs : "performed"
+    
+    courses ||--o{ learning_resources : "contains"
+    learning_resources ||--o{ site_analytics : "tracked in metadata"
+
+    auth_users {
+        uuid id PK
+        string email
+        timestamp email_confirmed_at
+    }
+
+    admin_profiles {
+        uuid id PK
+        uuid user_id FK
+        string full_name
+        string email
+        string role
+        boolean is_active
+        timestamp last_login_at
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    admin_users {
+        uuid id PK
+        uuid user_id FK
+        string email
+        timestamp created_at
+    }
+
+    admin_permissions {
+        uuid id PK
+        uuid admin_user_id FK
+        string permission
+        timestamp created_at
+    }
+
+    admin_activity_logs {
+        uuid id PK
+        uuid admin_user_id FK
+        string admin_name
+        string action
+        string resource_type
+        string resource_id
+        string description
+        jsonb metadata
+        timestamp created_at
+    }
+
+    courses {
+        uuid id PK
+        string code
+        string title
+        string level
+        integer semester
+        string course_type
+        string outline_url
+        boolean is_published
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    learning_resources {
+        uuid id PK
+        uuid course_id FK
+        string title
+        string description
+        string resource_type
+        string file_url
+        string file_path
+        string external_url
+        string academic_year
+        integer resource_year
+        string duration
+        boolean is_published
+        integer display_order
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    site_analytics {
+        uuid id PK
+        string event_type
+        string page_path
+        string session_id
+        jsonb metadata
+        timestamp created_at
+    }

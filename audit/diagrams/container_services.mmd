@@ -1,0 +1,37 @@
+graph TB
+    subgraph Client Tier
+        SPA["Vite Single Page Application<br/>(React 19 / TS / Tailwind CSS)"]
+        Router["Hash Router Router Utility<br/>(src/utils/hashRouter.ts)"]
+        StateContext["Auth & Data Contexts<br/>(AuthContext, useData, useCourses)"]
+    end
+
+    subgraph Supabase Platform Services
+        PostgREST["PostgREST Engine<br/>(REST API over PostgreSQL)"]
+        AuthEngine["Supabase GoTrue Auth<br/>(JWT Token & User Store)"]
+        StorageEngine["Supabase Storage Engine<br/>(S3-compatible Object Store)"]
+    end
+
+    subgraph Serverless Compute Tier
+        FuncSubAdmin["create-sub-admin Edge Function<br/>(Deno Runtime + Service Role)"]
+        FuncResetPass["reset-admin-password Edge Function<br/>(Deno Runtime + Service Role)"]
+    end
+
+    subgraph Database Tier
+        PostgresDB[("PostgreSQL 15 Database<br/>(RLS, Triggers, RPC Functions)")]
+    end
+
+    SPA --> Router
+    SPA --> StateContext
+    StateContext -->|HTTPS / WSS| PostgREST
+    StateContext -->|HTTPS| AuthEngine
+    StateContext -->|HTTPS| StorageEngine
+    StateContext -->|HTTPS POST + Bearer JWT| FuncSubAdmin
+    StateContext -->|HTTPS POST + Bearer JWT| FuncResetPass
+
+    FuncSubAdmin -->|Supabase Admin SDK| AuthEngine
+    FuncSubAdmin -->|Service Role SQL| PostgresDB
+    FuncResetPass -->|Supabase Admin SDK| AuthEngine
+    FuncResetPass -->|Service Role SQL| PostgresDB
+
+    PostgREST -->|SQL Queries with Auth Claims| PostgresDB
+    StorageEngine -->|Bucket RLS Check| PostgresDB

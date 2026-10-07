@@ -120,10 +120,13 @@ serve(async (req) => {
         );
       }
 
-      // Update password using Supabase Auth Admin API
+      // Update password and confirm email using Supabase Auth Admin API
       const { error: updateAuthErr } = await supabaseAdmin.auth.admin.updateUserById(
         targetUserId,
-        { password: newPassword }
+        {
+          password: newPassword,
+          email_confirm: true
+        }
       );
 
       if (updateAuthErr) {

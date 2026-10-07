@@ -75,7 +75,7 @@ export const AdminDashboard: React.FC<{ onNavigateHome: () => void }> = ({ onNav
   const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoginError(null);
-    const res = await login(emailInput, passwordInput);
+    const res = await login(emailInput.trim().toLowerCase(), passwordInput);
     if (res.error) {
       setLoginError(res.error);
     }

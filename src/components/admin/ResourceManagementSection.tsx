@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { useAuth } from '../../context/AuthContext';
 import { supabase, isSupabaseConfigured } from '../../lib/supabase';
 import { logAdminActivity } from '../../lib/activityLogger';
 import {
@@ -21,12 +22,12 @@ import {
   Edit2,
   Trash2,
   ExternalLink,
-  FileText,
   Calendar,
   FolderOpen
 } from 'lucide-react';
 
 export const ResourceManagementSection: React.FC = () => {
+  const { hasPermission } = useAuth();
   const [courses, setCourses] = useState<Course[]>([]);
   const [resources, setResources] = useState<LearningResource[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -44,8 +45,13 @@ export const ResourceManagementSection: React.FC = () => {
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [modalError, setModalError] = useState<string | null>(null);
 
-  // Delete Confirmation State
+  // Single Delete Confirmation State
   const [deleteResourceTarget, setDeleteResourceTarget] = useState<LearningResource | null>(null);
+
+  // Bulk Operations State
+  const [selectedResourceIds, setSelectedResourceIds] = useState<Set<string>>(new Set());
+  const [isBulkProcessing, setIsBulkProcessing] = useState<boolean>(false);
+  const [isBulkDeleteConfirmOpen, setIsBulkDeleteConfirmOpen] = useState<boolean>(false);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -202,6 +208,11 @@ export const ResourceManagementSection: React.FC = () => {
     e.preventDefault();
     setModalError(null);
 
+    if (!hasPermission('manage_academics')) {
+      setModalError('Permission denied: You do not have permission to manage academic learning resources.');
+      return;
+    }
+
     if (!editingResource?.courseId || !editingResource?.title) {
       setModalError('Target Course and Resource Title are required.');
       return;
@@ -297,6 +308,10 @@ export const ResourceManagementSection: React.FC = () => {
 
   const handleTogglePublish = async (resource: LearningResource) => {
     if (!isSupabaseConfigured || !supabase) return;
+    if (!hasPermission('manage_academics')) {
+      alert('Permission denied: You do not have permission to manage academic learning resources.');
+      return;
+    }
     try {
       const newStatus = !resource.isPublished;
       const { error: err } = await supabase
@@ -321,9 +336,17 @@ export const ResourceManagementSection: React.FC = () => {
 
   const handleDeleteResourceExecute = async () => {
     if (!deleteResourceTarget || !isSupabaseConfigured || !supabase) return;
+    if (!hasPermission('manage_academics')) {
+      alert('Permission denied: You do not have permission to manage academic learning resources.');
+      setDeleteResourceTarget(null);
+      return;
+    }
     try {
       if (deleteResourceTarget.filePath) {
-        await deleteLearningResourceFile(deleteResourceTarget.filePath);
+        const fileDeleted = await deleteLearningResourceFile(deleteResourceTarget.filePath);
+        if (!fileDeleted) {
+          throw new Error(`Failed to delete storage file (${deleteResourceTarget.filePath}). Database record deletion aborted.`);
+        }
       }
 
       const { error: delErr } = await supabase
@@ -348,6 +371,137 @@ export const ResourceManagementSection: React.FC = () => {
     }
   };
 
+  // Bulk Selection Handlers
+  const handleToggleSelectRow = (id: string) => {
+    setSelectedResourceIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  };
+
+  const handleToggleSelectAll = () => {
+    if (selectedResourceIds.size === filteredResources.length && filteredResources.length > 0) {
+      setSelectedResourceIds(new Set());
+    } else {
+      const allIds = new Set(filteredResources.map((r) => r.id));
+      setSelectedResourceIds(allIds);
+    }
+  };
+
+  // Bulk Operation Handlers
+  const handleBulkPublish = async (publishStatus: boolean) => {
+    if (!hasPermission('manage_academics')) {
+      alert('Permission denied: You do not have permission to manage academic learning resources.');
+      return;
+    }
+
+    if (selectedResourceIds.size === 0 || !isSupabaseConfigured || !supabase) return;
+
+    setIsBulkProcessing(true);
+    let successCount = 0;
+    let failCount = 0;
+
+    const targets = resources.filter((r) => selectedResourceIds.has(r.id));
+
+    for (const res of targets) {
+      try {
+        const { error: err } = await supabase
+          .from('learning_resources')
+          .update({ is_published: publishStatus, updated_at: new Date().toISOString() })
+          .eq('id', res.id);
+
+        if (err) {
+          failCount++;
+        } else {
+          successCount++;
+          await logAdminActivity({
+            action: publishStatus ? 'PUBLISH' : 'UNPUBLISH',
+            resourceType: 'Learning Resource',
+            resourceId: res.id,
+            description: `Bulk ${publishStatus ? 'published' : 'unpublished'} resource "${res.title}"`
+          });
+        }
+      } catch {
+        failCount++;
+      }
+    }
+
+    setIsBulkProcessing(false);
+    setSelectedResourceIds(new Set());
+
+    if (failCount === 0) {
+      alert(`Bulk ${publishStatus ? 'publish' : 'unpublish'} complete: All ${successCount} items updated successfully.`);
+    } else {
+      alert(`Bulk ${publishStatus ? 'publish' : 'unpublish'} finished: ${successCount} of ${targets.length} succeeded, ${failCount} failed.`);
+    }
+
+    fetchData();
+  };
+
+  const handleBulkDeleteExecute = async () => {
+    if (!hasPermission('manage_academics')) {
+      alert('Permission denied: You do not have permission to manage academic learning resources.');
+      setIsBulkDeleteConfirmOpen(false);
+      return;
+    }
+
+    if (selectedResourceIds.size === 0 || !isSupabaseConfigured || !supabase) return;
+
+    setIsBulkProcessing(true);
+    let successCount = 0;
+    let failCount = 0;
+
+    const targets = resources.filter((r) => selectedResourceIds.has(r.id));
+
+    for (const res of targets) {
+      try {
+        if (res.filePath) {
+          const fileDeleted = await deleteLearningResourceFile(res.filePath);
+          if (!fileDeleted) {
+            failCount++;
+            continue; // Skip DB row deletion to prevent orphaned storage objects and report partial failure
+          }
+        }
+
+        const { error: delErr } = await supabase
+          .from('learning_resources')
+          .delete()
+          .eq('id', res.id);
+
+        if (delErr) {
+          failCount++;
+        } else {
+          successCount++;
+          await logAdminActivity({
+            action: 'DELETE',
+            resourceType: 'Learning Resource',
+            resourceId: res.id,
+            description: `Bulk deleted learning resource "${res.title}"`
+          });
+        }
+      } catch {
+        failCount++;
+      }
+    }
+
+    setIsBulkProcessing(false);
+    setIsBulkDeleteConfirmOpen(false);
+    setSelectedResourceIds(new Set());
+
+    if (failCount === 0) {
+      alert(`Bulk deletion complete: All ${successCount} items deleted successfully.`);
+    } else {
+      alert(`Bulk deletion finished: ${successCount} of ${targets.length} deleted, ${failCount} failed.`);
+    }
+
+    fetchData();
+  };
+
   const getResourceTypeLabel = (type: ResourceType) => {
     switch (type) {
       case 'past_question':
@@ -369,6 +523,28 @@ export const ResourceManagementSection: React.FC = () => {
   };
 
   const columns: Column<LearningResource>[] = [
+    {
+      header: (
+        <input
+          type="checkbox"
+          checked={filteredResources.length > 0 && selectedResourceIds.size === filteredResources.length}
+          onChange={handleToggleSelectAll}
+          className="rounded border-slate-700 bg-slate-900 text-blue-600 focus:ring-0 focus:ring-offset-0 cursor-pointer"
+          aria-label="Select all resources on page"
+        />
+      ),
+      className: 'w-10 text-center',
+      headerClassName: 'w-10 text-center',
+      accessor: (row) => (
+        <input
+          type="checkbox"
+          checked={selectedResourceIds.has(row.id)}
+          onChange={() => handleToggleSelectRow(row.id)}
+          className="rounded border-slate-700 bg-slate-900 text-blue-600 focus:ring-0 focus:ring-offset-0 cursor-pointer"
+          aria-label={`Select resource ${row.title}`}
+        />
+      )
+    },
     {
       header: 'Course Code & Title',
       accessor: (row) => {
@@ -435,11 +611,10 @@ export const ResourceManagementSection: React.FC = () => {
             href={targetUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-blue-400 text-[11px] font-semibold inline-flex items-center gap-1 transition-colors"
+            className="inline-flex items-center gap-1 text-xs font-bold text-blue-400 hover:text-blue-300 transition-colors"
           >
-            <FileText className="w-3.5 h-3.5" />
-            <span>Access File</span>
-            <ExternalLink className="w-3 h-3" />
+            <span>View File</span>
+            <ExternalLink className="w-3.5 h-3.5" />
           </a>
         );
       }
@@ -447,13 +622,11 @@ export const ResourceManagementSection: React.FC = () => {
     {
       header: 'Status',
       accessor: (row) => (
-        <button onClick={() => handleTogglePublish(row)} className="cursor-pointer">
-          <StatusBadge
-            variant={row.isPublished ? 'active' : 'warning'}
-            label={row.isPublished ? 'Published' : 'Draft'}
-            size="sm"
-          />
-        </button>
+        <StatusBadge
+          variant={row.isPublished ? 'active' : 'inactive'}
+          label={row.isPublished ? 'Published' : 'Draft'}
+          size="sm"
+        />
       )
     },
     {
@@ -462,6 +635,13 @@ export const ResourceManagementSection: React.FC = () => {
       className: 'text-right',
       accessor: (row) => (
         <div className="flex items-center justify-end gap-1.5">
+          <button
+            onClick={() => handleTogglePublish(row)}
+            className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-amber-400 hover:text-amber-300 transition-colors text-xs font-bold"
+            title={row.isPublished ? 'Unpublish' : 'Publish'}
+          >
+            {row.isPublished ? 'Unpublish' : 'Publish'}
+          </button>
           <button
             onClick={() => handleOpenEditModal(row)}
             className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-blue-400 hover:text-blue-300 transition-colors"
@@ -514,7 +694,7 @@ export const ResourceManagementSection: React.FC = () => {
           <select
             value={filterLevel}
             onChange={(e) => setFilterLevel(e.target.value)}
-            className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-white text-xs focus:outline-none focus:border-blue-500"
+            className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-white text-xs focus:outline-none focus:border-blue-500 cursor-pointer"
           >
             <option value="All">All Levels</option>
             <option value="100">Level 100</option>
@@ -526,7 +706,7 @@ export const ResourceManagementSection: React.FC = () => {
           <select
             value={filterResourceType}
             onChange={(e) => setFilterResourceType(e.target.value)}
-            className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-white text-xs focus:outline-none focus:border-blue-500"
+            className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-white text-xs focus:outline-none focus:border-blue-500 cursor-pointer"
           >
             <option value="All">All Categories</option>
             <option value="slide">Lecture Slides</option>
@@ -541,7 +721,7 @@ export const ResourceManagementSection: React.FC = () => {
           <select
             value={filterPublished}
             onChange={(e) => setFilterPublished(e.target.value)}
-            className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-white text-xs focus:outline-none focus:border-blue-500"
+            className="w-full px-3 py-2 rounded-lg bg-slate-950 border border-slate-800 text-white text-xs focus:outline-none focus:border-blue-500 cursor-pointer"
           >
             <option value="All">All Statuses</option>
             <option value="Published">Published Only</option>
@@ -549,6 +729,48 @@ export const ResourceManagementSection: React.FC = () => {
           </select>
         </div>
       </div>
+
+      {/* Bulk Action Bar */}
+      {selectedResourceIds.size > 0 && (
+        <div className="p-3.5 rounded-xl bg-blue-950/80 border border-blue-500/40 flex flex-wrap items-center justify-between gap-3 text-xs text-white shadow-lg animate-in fade-in duration-150">
+          <div className="flex items-center gap-2 font-bold">
+            <span className="px-2.5 py-0.5 rounded-full bg-blue-600 text-white font-mono text-[11px]">
+              {selectedResourceIds.size}
+            </span>
+            <span>items selected for bulk action</span>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => handleBulkPublish(true)}
+              disabled={isBulkProcessing}
+              className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold transition-colors disabled:opacity-50"
+            >
+              {isBulkProcessing ? 'Processing...' : 'Bulk Publish'}
+            </button>
+            <button
+              onClick={() => handleBulkPublish(false)}
+              disabled={isBulkProcessing}
+              className="px-3 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-bold transition-colors disabled:opacity-50"
+            >
+              {isBulkProcessing ? 'Processing...' : 'Bulk Unpublish'}
+            </button>
+            <button
+              onClick={() => setIsBulkDeleteConfirmOpen(true)}
+              disabled={isBulkProcessing}
+              className="px-3 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white font-bold transition-colors disabled:opacity-50"
+            >
+              Bulk Delete
+            </button>
+            <button
+              onClick={() => setSelectedResourceIds(new Set())}
+              className="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold transition-colors"
+            >
+              Deselect All
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Data Table */}
       <DataTable
@@ -581,58 +803,52 @@ export const ResourceManagementSection: React.FC = () => {
               type="submit"
               form="resource-form"
               disabled={isSaving}
-              className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs transition-colors disabled:opacity-50"
+              className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs transition-colors disabled:opacity-50 flex items-center gap-1.5"
             >
-              {isSaving ? 'Uploading...' : editingResource?.id ? 'Save Changes' : 'Upload Resource'}
+              {isSaving ? 'Saving...' : editingResource?.id ? 'Update Resource' : 'Upload Resource'}
             </button>
           </>
         }
       >
-        <form id="resource-form" onSubmit={handleSaveResource} className="space-y-4">
+        <form id="resource-form" onSubmit={handleSaveResource} className="space-y-4 text-xs">
           {modalError && (
-            <div className="p-3 bg-rose-500/20 border border-rose-500 text-rose-200 text-xs font-semibold rounded-lg">
+            <div className="p-3 rounded-lg bg-red-500/20 border border-red-500/40 text-red-200 font-bold">
               {modalError}
             </div>
           )}
 
           <FormSelect
-            label="Target Course"
-            required
-            options={courses.map((c) => ({
-              value: c.id,
-              label: `[${c.courseCode}] ${c.title} (Level ${c.level}, Sem ${c.semester})`
-            }))}
+            label="Associated Course *"
             value={editingResource?.courseId || ''}
             onChange={(e) => setEditingResource({ ...editingResource, courseId: e.target.value })}
+            options={courses.map((c) => ({
+              value: c.id,
+              label: `${c.courseCode} - ${c.title} (L${c.level} S${c.semester})`
+            }))}
+            helperText="Select the undergraduate course this resource belongs to."
           />
 
           <FormInput
-            label="Resource Title"
-            required
-            placeholder="e.g. Chapter 3 Lecture Slides - Object-Oriented Concepts"
+            label="Resource Title *"
+            placeholder="e.g. 2024 End of Semester Examination Past Question"
             value={editingResource?.title || ''}
             onChange={(e) => setEditingResource({ ...editingResource, title: e.target.value })}
           />
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <FormSelect
-              label="Resource Category"
+              label="Resource Type *"
+              value={editingResource?.resourceType || 'slide'}
+              onChange={(e) => setEditingResource({ ...editingResource, resourceType: e.target.value as ResourceType })}
               options={[
                 { value: 'slide', label: 'Lecture Slide' },
-                { value: 'note', label: 'Lecture Handout' },
-                { value: 'past_question', label: 'Past Examination Question' },
-                { value: 'assignment', label: 'Assignment / Lab Manual' },
+                { value: 'note', label: 'Lecture Handout / Notes' },
+                { value: 'past_question', label: 'Past Exam Question' },
+                { value: 'assignment', label: 'Lab Manual / Assignment' },
                 { value: 'tutorial', label: 'Tutorial Guide' },
-                { value: 'video', label: 'Educational Video Link' },
-                { value: 'other', label: 'Other Material' }
+                { value: 'video', label: 'Video Link' },
+                { value: 'other', label: 'Other' }
               ]}
-              value={editingResource?.resourceType || 'slide'}
-              onChange={(e) =>
-                setEditingResource({
-                  ...editingResource,
-                  resourceType: e.target.value as ResourceType
-                })
-              }
             />
 
             <FormInput
@@ -647,18 +863,13 @@ export const ResourceManagementSection: React.FC = () => {
             <FormInput
               label="Exam / Resource Year"
               type="number"
-              placeholder="e.g. 2025"
+              placeholder="e.g. 2024"
               value={editingResource?.resourceYear || ''}
-              onChange={(e) =>
-                setEditingResource({
-                  ...editingResource,
-                  resourceYear: Number(e.target.value) || undefined
-                })
-              }
+              onChange={(e) => setEditingResource({ ...editingResource, resourceYear: Number(e.target.value) || undefined })}
             />
 
             <FormInput
-              label="Reading Time / Duration"
+              label="Duration / Est. Time"
               placeholder="e.g. 45 mins"
               value={editingResource?.duration || ''}
               onChange={(e) => setEditingResource({ ...editingResource, duration: e.target.value })}
@@ -666,63 +877,69 @@ export const ResourceManagementSection: React.FC = () => {
           </div>
 
           <FormTextarea
-            label="Description / Topics Covered"
-            rows={2}
-            placeholder="Brief overview of contents..."
+            label="Description & Notes"
+            placeholder="Provide context, topics covered, or instructions for students..."
             value={editingResource?.description || ''}
             onChange={(e) => setEditingResource({ ...editingResource, description: e.target.value })}
+            rows={2}
           />
 
-          <div className="p-4 bg-slate-950 rounded-xl border border-slate-800 space-y-3">
-            <span className="text-xs font-semibold text-blue-400 block uppercase tracking-wider">
-              File Attachment & Storage
-            </span>
-
-            <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1">
-                Upload Document (Max 50 MB)
-              </label>
-              <input
-                type="file"
-                onChange={handleFileChange}
-                className="block w-full text-xs text-slate-400 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-700 cursor-pointer"
-              />
-              {selectedFile && (
-                <p className="text-[11px] text-emerald-400 font-semibold mt-1">
-                  Selected: {selectedFile.name} ({(selectedFile.size / (1024 * 1024)).toFixed(2)} MB)
-                </p>
-              )}
-            </div>
-
-            <FormInput
-              label="Or External URL / Video Link"
-              placeholder="https://..."
-              value={editingResource?.externalUrl || ''}
-              onChange={(e) => setEditingResource({ ...editingResource, externalUrl: e.target.value })}
+          {/* File Upload Section */}
+          <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-3">
+            <label className="block text-xs font-bold text-slate-300">Upload Material File (PDF, PPT, DOC, ZIP up to 50MB)</label>
+            <input
+              type="file"
+              onChange={handleFileChange}
+              className="block w-full text-xs text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-slate-800 file:text-slate-200 hover:file:bg-slate-700 cursor-pointer"
             />
+            {selectedFile && (
+              <p className="text-[11px] text-emerald-400 font-bold">
+                Selected: {selectedFile.name} ({(selectedFile.size / (1024 * 1024)).toFixed(2)} MB)
+              </p>
+            )}
+            {editingResource?.fileUrl && !selectedFile && (
+              <p className="text-[11px] text-slate-400 truncate">
+                Current File: <a href={editingResource.fileUrl} target="_blank" rel="noreferrer" className="text-blue-400 hover:underline">{editingResource.fileUrl}</a>
+              </p>
+            )}
           </div>
 
+          <FormInput
+            label="Or External Media / Slide URL"
+            placeholder="https://drive.google.com/... or https://youtube.com/..."
+            value={editingResource?.externalUrl || ''}
+            onChange={(e) => setEditingResource({ ...editingResource, externalUrl: e.target.value })}
+          />
+
           <FormToggle
-            label="Publish Immediately to Learning Hub"
-            description="If enabled, students can search and download this resource"
+            label="Publish to Student Learning Hub immediately"
+            description="If unchecked, this resource stays as a Draft visible only to admins."
             checked={editingResource?.isPublished ?? true}
             onChange={(checked) => setEditingResource({ ...editingResource, isPublished: checked })}
           />
         </form>
       </Modal>
 
-      {/* Confirm Delete Dialog */}
+      {/* Single Resource Delete Dialog */}
       <ConfirmDialog
         isOpen={Boolean(deleteResourceTarget)}
         onClose={() => setDeleteResourceTarget(null)}
         onConfirm={handleDeleteResourceExecute}
-        title="Delete Learning Resource"
-        message={
-          deleteResourceTarget
-            ? `Are you sure you want to permanently delete "${deleteResourceTarget.title}"? This will erase the file from storage and database.`
-            : ''
-        }
+        title="Confirm Delete Resource"
+        message={`Are you sure you want to delete "${deleteResourceTarget?.title}"? The associated storage file will be removed.`}
         confirmLabel="Delete Resource"
+        isDestructive={true}
+      />
+
+      {/* Bulk Resource Delete Dialog */}
+      <ConfirmDialog
+        isOpen={isBulkDeleteConfirmOpen}
+        onClose={() => setIsBulkDeleteConfirmOpen(false)}
+        onConfirm={handleBulkDeleteExecute}
+        title="Confirm Bulk Resource Deletion"
+        message={`Are you sure you want to delete ${selectedResourceIds.size} selected learning resource(s)? This action will remove all storage files and database records permanently.`}
+        confirmLabel={isBulkProcessing ? 'Deleting...' : `Delete ${selectedResourceIds.size} Resources`}
+        isDestructive={true}
       />
     </div>
   );

@@ -1,0 +1,28 @@
+graph TB
+    subgraph External Users & Personas
+        Student["Student / General Public<br/>(Anonymous / Public Visitor)"]
+        SubAdmin["Sub-Admin / Faculty Member<br/>(Scoped CMS Manager)"]
+        SuperAdmin["Super Administrator<br/>(Full Platform & User Manager)"]
+    end
+
+    subgraph UPSA IT Platform Boundary
+        WebApp["UPSA IT Studies Web Platform<br/>(React 19 + Vite Frontend SPA)"]
+    end
+
+    subgraph External Cloud Services
+        SupabaseAuth["Supabase Auth Service<br/>(Authentication & Session Tokens)"]
+        SupabaseDB["Supabase PostgreSQL Database<br/>(PostgREST REST & RPC API)"]
+        SupabaseStorage["Supabase Storage Service<br/>(learning-resources Bucket)"]
+        EdgeFunctions["Supabase Edge Functions<br/>(Deno Serverless Microservices)"]
+        VercelAnalytics["Vercel Analytics & Speed Insights<br/>(Telemetry & Performance Tracking)"]
+    end
+
+    Student -->|Browses Courses, Downloads Resources, Views Faculty| WebApp
+    SubAdmin -->|Manages Assigned CMS Modules & Course Content| WebApp
+    SuperAdmin -->|Manages Admins, RLS Roles & System Settings| WebApp
+
+    WebApp -->|User Sign-In & Recovery| SupabaseAuth
+    WebApp -->|Data Queries & Mutations via PostgREST| SupabaseDB
+    WebApp -->|File Uploads / Downloads| SupabaseStorage
+    WebApp -->|Invoke Admin Provisioning & Password Resets| EdgeFunctions
+    WebApp -->|Core Web Vitals Telemetry| VercelAnalytics

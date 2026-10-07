@@ -147,33 +147,67 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [fetchAdminDetails]);
 
-  const login = async (email: string, pass: string): Promise<{ error: string | null }> => {
+  const login = async (rawEmail: string, pass: string): Promise<{ error: string | null }> => {
     if (!isSupabaseConfigured || !supabase) {
       return { error: 'Authentication service not configured. Please verify VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY on Vercel.' };
     }
 
+    const email = rawEmail.trim().toLowerCase();
+    const password = pass;
+
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
-        password: pass,
+        password,
       });
 
       if (error) {
-        if (error.message.toLowerCase().includes('failed to fetch')) {
-          return { error: 'Unable to verify administrator permissions. Please check network connectivity or environment keys.' };
+        const errMsg = (error.message || '').toLowerCase();
+        const errCode = (error as any).code || '';
+
+        if (errCode === 'email_not_confirmed' || errMsg.includes('email not confirmed')) {
+          return { error: 'Email address not confirmed. Please check your inbox.' };
         }
-        if (error.message.toLowerCase().includes('invalid login credentials')) {
+        if (errCode === 'invalid_credentials' || errMsg.includes('invalid login credentials') || errMsg.includes('invalid credentials')) {
           return { error: 'Invalid email address or password.' };
+        }
+        if (errMsg.includes('failed to fetch')) {
+          return { error: 'Unable to verify administrator credentials. Please check network connectivity.' };
         }
         return { error: error.message };
       }
 
       if (data.user) {
-        // Update last_login_at in admin_profiles if exists
-        await supabase
+        // Fetch profile to verify active status and admin registration
+        const { data: profileData } = await supabase
           .from('admin_profiles')
-          .update({ last_login_at: new Date().toISOString() })
-          .eq('user_id', data.user.id);
+          .select('*')
+          .eq('user_id', data.user.id)
+          .maybeSingle();
+
+        if (profileData) {
+          if (profileData.is_active === false) {
+            await supabase.auth.signOut();
+            return { error: 'Account disabled. Please contact a Super Administrator.' };
+          }
+
+          await supabase
+            .from('admin_profiles')
+            .update({ last_login_at: new Date().toISOString() })
+            .eq('user_id', data.user.id);
+        } else {
+          // Fallback check against legacy admin_users table
+          const { data: legacyData } = await supabase
+            .from('admin_users')
+            .select('user_id')
+            .eq('user_id', data.user.id)
+            .maybeSingle();
+
+          if (!legacyData) {
+            await supabase.auth.signOut();
+            return { error: 'Access denied: You are not an administrator.' };
+          }
+        }
 
         await fetchAdminDetails(data.user);
 

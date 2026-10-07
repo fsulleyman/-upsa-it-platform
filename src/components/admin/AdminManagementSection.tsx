@@ -9,8 +9,24 @@ import { StatusBadge } from './ui/StatusBadge';
 import { FormInput } from './ui/FormField';
 import { Modal } from './ui/Modal';
 import { ConfirmDialog } from './ui/ConfirmDialog';
-import { Shield, Plus, Edit2, Trash2, KeyRound, AlertTriangle, RefreshCw } from 'lucide-react';
+import { Shield, Plus, Edit2, Trash2, KeyRound, AlertTriangle, RefreshCw, Eye, EyeOff } from 'lucide-react';
 import type { AdminProfile, AdminPermission } from '../../types';
+
+const getPasswordStrength = (pass: string): { label: string; color: string; bg: string; percentage: number } => {
+  if (!pass) return { label: '', color: '', bg: '', percentage: 0 };
+  if (pass.length < 6) return { label: 'Weak (Min 6 chars)', color: 'text-red-400', bg: 'bg-red-500', percentage: 25 };
+  
+  let score = 0;
+  if (pass.length >= 8) score += 1;
+  if (pass.length >= 12) score += 1;
+  if (/[A-Z]/.test(pass)) score += 1;
+  if (/[0-9]/.test(pass)) score += 1;
+  if (/[^A-Za-z0-9]/.test(pass)) score += 1;
+
+  if (score <= 1) return { label: 'Fair', color: 'text-amber-400', bg: 'bg-amber-500', percentage: 50 };
+  if (score <= 3) return { label: 'Good', color: 'text-blue-400', bg: 'bg-blue-500', percentage: 75 };
+  return { label: 'Strong', color: 'text-emerald-400', bg: 'bg-emerald-500', percentage: 100 };
+};
 
 const ALL_PERMISSIONS: { id: AdminPermission; label: string }[] = [
   { id: 'manage_faculty', label: 'Manage Faculty Directory' },
@@ -47,6 +63,7 @@ export const AdminManagementSection: React.FC = () => {
   const [newFullName, setNewFullName] = useState('');
   const [newEmail, setNewEmail] = useState('');
   const [newPassword, setNewPassword] = useState('');
+  const [showNewPassword, setShowNewPassword] = useState(false);
   const [newPermissions, setNewPermissions] = useState<AdminPermission[]>([
     'manage_faculty',
     'manage_events',
@@ -490,14 +507,42 @@ export const AdminManagementSection: React.FC = () => {
             onChange={(e) => setNewEmail(e.target.value)}
           />
 
-          <FormInput
-            label="Initial Password"
-            type="password"
-            required
-            placeholder="Min 6 characters..."
-            value={newPassword}
-            onChange={(e) => setNewPassword(e.target.value)}
-          />
+          <div className="space-y-1">
+            <div className="flex items-center justify-between">
+              <label className="block text-xs font-bold text-slate-300">Initial Password *</label>
+              {newPassword && (
+                <span className={`text-[11px] font-semibold ${getPasswordStrength(newPassword).color}`}>
+                  {getPasswordStrength(newPassword).label}
+                </span>
+              )}
+            </div>
+            <div className="relative">
+              <input
+                type={showNewPassword ? 'text' : 'password'}
+                required
+                placeholder="Min 6 characters..."
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                className="w-full px-3 py-2 pr-10 rounded-lg bg-slate-900 border border-slate-700 text-white text-xs font-medium focus:outline-none focus:border-blue-500"
+              />
+              <button
+                type="button"
+                onClick={() => setShowNewPassword(!showNewPassword)}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white p-1 transition-colors"
+                title={showNewPassword ? 'Hide password' : 'Show password'}
+              >
+                {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
+            </div>
+            {newPassword && (
+              <div className="w-full bg-slate-950 h-1.5 rounded-full overflow-hidden border border-slate-800 mt-1">
+                <div
+                  className={`h-full transition-all duration-300 ${getPasswordStrength(newPassword).bg}`}
+                  style={{ width: `${getPasswordStrength(newPassword).percentage}%` }}
+                />
+              </div>
+            )}
+          </div>
 
           <div className="space-y-2 pt-2">
             <span className="text-xs font-semibold text-slate-200 block">

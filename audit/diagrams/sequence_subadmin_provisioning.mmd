@@ -1,0 +1,28 @@
+sequenceDiagram
+    autonumber
+    actor SuperAdmin as Super Administrator
+    participant Client as React Admin Portal
+    participant EdgeFunc as Edge Function (create-sub-admin)
+    participant Auth as Supabase Auth (GoTrue)
+    participant DB as PostgreSQL Database
+
+    SuperAdmin->>Client: Fills sub-admin name, email, password & permissions
+    SuperAdmin->>Client: Clicks "Create Account"
+    Client->>EdgeFunc: POST /functions/v1/create-sub-admin (Bearer JWT + Payload)
+    EdgeFunc->>EdgeFunc: Validate Caller JWT & Check role == 'super_admin' in DB
+    EdgeFunc->>Auth: admin.createUser({ email, password, email_confirm: true })
+    Auth-->>EdgeFunc: Returns newAuth.user (user_id)
+    
+    alt Profile / Permission Insert Fails
+        EdgeFunc->>DB: Insert into admin_profiles & admin_users
+        DB-->>EdgeFunc: Error (e.g., constraint failure)
+        EdgeFunc->>Auth: admin.deleteUser(user_id) [ROLLBACK]
+        EdgeFunc-->>Client: HTTP 500 Error Response
+        Client-->>SuperAdmin: Displays Error Alert
+    else Success
+        EdgeFunc->>DB: Insert into admin_profiles & admin_users
+        EdgeFunc->>DB: Insert into admin_permissions
+        EdgeFunc->>DB: Insert into admin_activity_logs
+        EdgeFunc-->>Client: HTTP 200 OK ({ success: true })
+        Client-->>SuperAdmin: Closes modal & refreshes admin list
+    end

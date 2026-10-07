@@ -3,7 +3,7 @@ import { supabase, isSupabaseConfigured } from './supabase';
 function getOrCreateSessionId(): string {
   try {
     let sid = sessionStorage.getItem('upsa_analytics_session_id');
-    if (!sid) {
+    if (!sid || sid.length < 8 || sid.length > 100) {
       sid = 'sess_' + Math.random().toString(36).substring(2, 11) + '_' + Date.now();
       sessionStorage.setItem('upsa_analytics_session_id', sid);
     }
@@ -14,7 +14,7 @@ function getOrCreateSessionId(): string {
 }
 
 export async function trackAnalyticsEvent(
-  eventType: 'PAGE_VIEW' | 'FACULTY_PROFILE_VIEW' | 'EVENT_VIEW' | 'SEARCH' | 'CONTACT_CLICK' | 'DOCUMENT_VIEW',
+  eventType: 'PAGE_VIEW' | 'FACULTY_PROFILE_VIEW' | 'EVENT_VIEW' | 'SEARCH' | 'CONTACT_CLICK' | 'DOCUMENT_VIEW' | 'RESOURCE_VIEW' | 'RESOURCE_DOWNLOAD',
   pagePath: string,
   metadata?: Record<string, any>
 ): Promise<void> {
@@ -35,5 +35,26 @@ export async function trackAnalyticsEvent(
     }
   } catch (err) {
     console.warn('Failed to record analytics event:', err);
+  }
+}
+
+export async function trackResourceEvent(
+  resourceId: string,
+  event: 'view' | 'download'
+): Promise<void> {
+  if (!isSupabaseConfigured || !supabase || !resourceId) return;
+
+  try {
+    const sessionId = getOrCreateSessionId();
+    if (!sessionId || sessionId.length < 8 || sessionId.length > 100) return;
+
+    // Call RPC function track_resource_event strictly without fallback
+    await supabase.rpc('track_resource_event', {
+      p_resource_id: resourceId,
+      p_event: event,
+      p_session_id: sessionId
+    });
+  } catch {
+    // Fail completely silently to ensure user experience is never impacted
   }
 }

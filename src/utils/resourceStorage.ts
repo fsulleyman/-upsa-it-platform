@@ -115,7 +115,11 @@ export async function uploadLearningResourceFile(
     await ensureResourceBucketExists();
 
     const sanitizedCourse = courseCode.trim().toUpperCase().replace(/[^A-Z0-9_-]/g, '_');
-    const sanitizedFileName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+    const baseName = file.name.replace(/\\/g, '/').split('/').pop() || 'file';
+    const sanitizedFileName = baseName
+      .replace(/[^a-zA-Z0-9._-]/g, '_')
+      .replace(/\.\.+/g, '.')
+      .substring(0, 100);
     const uniqueToken = `${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
     const filePath = `${level}/semester-${semester}/${sanitizedCourse}/${resourceType}/${uniqueToken}_${sanitizedFileName}`;
 
@@ -179,7 +183,7 @@ export async function replaceLearningResourceFile(
  * Safely removes a file from Supabase Storage given its URL or storage path.
  */
 export async function deleteLearningResourceFile(urlOrPath: string): Promise<boolean> {
-  if (!urlOrPath || !isSupabaseConfigured || !supabase) return false;
+  if (!urlOrPath || !isSupabaseConfigured || !supabase) return true;
 
   try {
     let filePath = urlOrPath;
@@ -194,8 +198,25 @@ export async function deleteLearningResourceFile(urlOrPath: string): Promise<boo
       .from(LEARNING_RESOURCES_BUCKET)
       .remove([filePath]);
 
-    return !error;
-  } catch {
+    if (!error) return true;
+
+    // Treat 'file not found' / 404 response as success so DB row deletion can proceed
+    const errMsg = (error.message || '').toLowerCase();
+    const statusCode = (error as any).statusCode || (error as any).status;
+    if (
+      statusCode === 404 ||
+      errMsg.includes('not found') ||
+      errMsg.includes('not_found') ||
+      errMsg.includes('objectnotfound')
+    ) {
+      console.info(`Storage object already removed or missing (${filePath}). Proceeding with record cleanup.`);
+      return true;
+    }
+
+    console.warn(`Storage delete error for file ${filePath}:`, error.message);
+    return false;
+  } catch (err: any) {
+    console.warn(`Unexpected error deleting storage file ${urlOrPath}:`, err);
     return false;
   }
 }

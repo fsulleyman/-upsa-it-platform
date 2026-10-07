@@ -1,6 +1,8 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useLearningResources } from '../hooks/useLearningResources';
-import type { Course, NavSectionId } from '../types';
+import { useHashLocation } from '../utils/hashRouter';
+import { trackResourceEvent } from '../lib/analyticsTracker';
+import type { Course, LearningResource, NavSectionId } from '../types';
 import {
   GraduationCap,
   BookOpen,
@@ -14,25 +16,171 @@ import {
   Calendar,
   Clock,
   Sparkles,
-  ChevronRight
+  ChevronRight,
+  Download,
+  Copy,
+  Check,
+  Play,
+  X
 } from 'lucide-react';
 
 interface LearningHubPageProps {
   onNavigate?: (section: NavSectionId) => void;
 }
 
+interface VideoPlaybackTarget {
+  title: string;
+  resourceType: string;
+  type: 'youtube' | 'vimeo' | 'direct';
+  embedUrl?: string;
+  directUrl?: string;
+}
+
+function parseVideoUrl(urlStr?: string | null): VideoPlaybackTarget | null {
+  if (!urlStr) return null;
+
+  let parsed: URL;
+  try {
+    parsed = new URL(urlStr);
+    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+      return null;
+    }
+  } catch {
+    return null;
+  }
+
+  const hostname = parsed.hostname.toLowerCase();
+  const pathname = parsed.pathname;
+
+  // 1. YouTube link check
+  if (hostname.includes('youtube.com') || hostname.includes('youtu.be') || hostname.includes('youtube-nocookie.com')) {
+    let videoId: string | null = null;
+    if (hostname.includes('youtu.be')) {
+      videoId = pathname.slice(1).split('?')[0].split('/')[0];
+    } else if (pathname.includes('/watch')) {
+      videoId = parsed.searchParams.get('v');
+    } else if (pathname.includes('/embed/')) {
+      videoId = pathname.split('/embed/')[1]?.split('?')[0].split('/')[0];
+    } else if (pathname.includes('/v/')) {
+      videoId = pathname.split('/v/')[1]?.split('?')[0].split('/')[0];
+    }
+
+    if (videoId && /^[a-zA-Z0-9_-]{11}$/.test(videoId)) {
+      return {
+        title: '',
+        resourceType: 'video',
+        type: 'youtube',
+        embedUrl: `https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&rel=0`
+      };
+    }
+  }
+
+  // 2. Vimeo link check
+  if (hostname.includes('vimeo.com')) {
+    let vimeoId: string | null = null;
+    if (hostname.includes('player.vimeo.com') && pathname.includes('/video/')) {
+      vimeoId = pathname.split('/video/')[1]?.split('?')[0].split('/')[0];
+    } else {
+      vimeoId = pathname.slice(1).split('?')[0].split('/')[0];
+    }
+
+    if (vimeoId && /^\d+$/.test(vimeoId)) {
+      return {
+        title: '',
+        resourceType: 'video',
+        type: 'vimeo',
+        embedUrl: `https://player.vimeo.com/video/${vimeoId}?autoplay=1`
+      };
+    }
+  }
+
+  // 3. Direct HTML5 video check (.mp4, .webm, .ogg)
+  const ext = pathname.split('.').pop()?.toLowerCase() || '';
+  if (['mp4', 'webm', 'ogg'].includes(ext)) {
+    return {
+      title: '',
+      resourceType: 'video',
+      type: 'direct',
+      directUrl: parsed.toString()
+    };
+  }
+
+  return null;
+}
+
+function isValidHttpUrl(urlStr?: string | null): boolean {
+  if (!urlStr) return false;
+  try {
+    const url = new URL(urlStr);
+    return url.protocol === 'http:' || url.protocol === 'https:';
+  } catch {
+    return false;
+  }
+}
+
 export const LearningHubPage: React.FC<LearningHubPageProps> = () => {
   const { courses, resources, loading, error } = useLearningResources();
+  const [hashState, updateHash] = useHashLocation();
 
-  // Navigation and Filter States
+  // Navigation & Filter States
   const [selectedLevel, setSelectedLevel] = useState<string>('100');
   const [selectedSemester, setSelectedSemester] = useState<string>('All');
   const [selectedType, setSelectedType] = useState<string>('All');
   const [selectedResourceType, setSelectedResourceType] = useState<string>('All');
   const [searchQuery, setSearchQuery] = useState<string>('');
 
-  // Course Detail Modal State
+  // Course Detail & Not Found Modal States
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
+  const [notFoundCourseCode, setNotFoundCourseCode] = useState<string | null>(null);
+  const [copiedLink, setCopiedLink] = useState<boolean>(false);
+
+  // In-app Video Player State
+  const [playingVideo, setPlayingVideo] = useState<VideoPlaybackTarget | null>(null);
+
+  // Synchronize Level & Semester from hash query state
+  useEffect(() => {
+    if (hashState.level && ['100', '200', '300', '400', 'All'].includes(hashState.level)) {
+      setSelectedLevel(hashState.level);
+    }
+    if (hashState.semester && ['1', '2', 'All'].includes(hashState.semester)) {
+      setSelectedSemester(hashState.semester);
+    }
+  }, [hashState.level, hashState.semester]);
+
+  // Synchronize Course Modal from courseCode in hash state
+  useEffect(() => {
+    if (!loading && hashState.courseCode) {
+      const code = hashState.courseCode.toLowerCase();
+      const match = courses.find(
+        (c) => c.courseCode.toLowerCase() === code || c.id.toLowerCase() === code
+      );
+      if (match) {
+        setSelectedCourse(match);
+        setNotFoundCourseCode(null);
+      } else {
+        setSelectedCourse(null);
+        setNotFoundCourseCode(hashState.courseCode);
+      }
+    } else if (!hashState.courseCode) {
+      setSelectedCourse(null);
+      setNotFoundCourseCode(null);
+    }
+  }, [courses, loading, hashState.courseCode]);
+
+  // Handle Escape key to close active modal cleanly
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        if (playingVideo) {
+          setPlayingVideo(null);
+        } else if (selectedCourse || notFoundCourseCode) {
+          handleCloseCourseModal();
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [playingVideo, selectedCourse, notFoundCourseCode]);
 
   // Derived filtered courses
   const filteredCourses = useMemo(() => {
@@ -52,8 +200,8 @@ export const LearningHubPage: React.FC<LearningHubPageProps> = () => {
         const matchesCode = c.courseCode.toLowerCase().includes(query);
         const matchesTitle = c.title.toLowerCase().includes(query);
         const matchesDesc = (c.description || '').toLowerCase().includes(query);
-        
-        // Also check if any resource belonging to this course matches the search query
+
+        // Check if any resource of this course matches query
         const courseRes = resources.filter((r) => r.courseId === c.id);
         const matchesRes = courseRes.some(
           (r) => r.title.toLowerCase().includes(query) || (r.description || '').toLowerCase().includes(query)
@@ -73,7 +221,7 @@ export const LearningHubPage: React.FC<LearningHubPageProps> = () => {
     });
   }, [courses, resources, selectedLevel, selectedSemester, selectedType, selectedResourceType, searchQuery]);
 
-  // Derived resources for selected modal course
+  // Derived resources for active course modal
   const activeCourseResources = useMemo(() => {
     if (!selectedCourse) return [];
     let list = resources.filter((r) => r.courseId === selectedCourse.id);
@@ -83,9 +231,7 @@ export const LearningHubPage: React.FC<LearningHubPageProps> = () => {
     return list;
   }, [selectedCourse, resources, selectedResourceType]);
 
-
-
-  // Counts per level for tabs
+  // Counts per level
   const levelCounts = useMemo(() => {
     return {
       '100': courses.filter((c) => c.level === '100').length,
@@ -95,6 +241,62 @@ export const LearningHubPage: React.FC<LearningHubPageProps> = () => {
       All: courses.length
     };
   }, [courses]);
+
+  const handleSelectLevel = (level: string) => {
+    setSelectedLevel(level);
+    updateHash({ level });
+  };
+
+  const handleSelectSemester = (semester: string) => {
+    setSelectedSemester(semester);
+    updateHash({ semester });
+  };
+
+  const handleSelectCourse = (course: Course) => {
+    setSelectedCourse(course);
+    setNotFoundCourseCode(null);
+    updateHash({
+      courseCode: course.courseCode,
+      level: course.level,
+      semester: course.semester
+    });
+  };
+
+  const handleCloseCourseModal = () => {
+    setSelectedCourse(null);
+    setNotFoundCourseCode(null);
+    updateHash({ courseCode: null });
+  };
+
+  const handleCopyLink = (courseCode: string) => {
+    const fullUrl = `${window.location.origin}${window.location.pathname}#/learning-hub?course=${courseCode.toUpperCase()}`;
+    navigator.clipboard.writeText(fullUrl).then(() => {
+      setCopiedLink(true);
+      setTimeout(() => setCopiedLink(false), 2000);
+    }).catch((err) => console.warn('Copy failed:', err));
+  };
+
+  const handleAccessResource = (res: LearningResource) => {
+    const targetUrl = res.fileUrl || res.externalUrl || res.filePath || '';
+    if (!isValidHttpUrl(targetUrl)) return;
+
+    // Track resource event silently without delaying download or video modal
+    trackResourceEvent(res.id, res.resourceType === 'video' ? 'view' : 'download').catch(() => {});
+
+    if (res.resourceType === 'video') {
+      const videoPlayback = parseVideoUrl(targetUrl);
+      if (videoPlayback) {
+        setPlayingVideo({
+          ...videoPlayback,
+          title: res.title
+        });
+        return;
+      }
+    }
+
+    // Default: Open in new tab
+    window.open(targetUrl, '_blank', 'noopener,noreferrer');
+  };
 
   const getResourceTypeLabel = (type: string) => {
     switch (type) {
@@ -171,7 +373,7 @@ export const LearningHubPage: React.FC<LearningHubPageProps> = () => {
               return (
                 <button
                   key={item.level}
-                  onClick={() => setSelectedLevel(item.level)}
+                  onClick={() => handleSelectLevel(item.level)}
                   className={`p-4 rounded-xl text-left border transition-all relative overflow-hidden group ${
                     isSelected
                       ? 'bg-[#003366] border-[#F2B705] text-white shadow-xl shadow-[#003366]/40 ring-1 ring-[#F2B705]'
@@ -201,6 +403,7 @@ export const LearningHubPage: React.FC<LearningHubPageProps> = () => {
               <Search className="w-4 h-4 absolute left-3.5 top-3 text-slate-400" />
               <input
                 type="text"
+                aria-label="Search courses or resources"
                 placeholder="Search by course code, title, or resource name (e.g. BITM104, Programming, Past Question)..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -215,9 +418,10 @@ export const LearningHubPage: React.FC<LearningHubPageProps> = () => {
               <div className="flex items-center gap-1.5 bg-slate-950 px-3 py-1.5 rounded-lg border border-slate-800">
                 <span className="text-[10px] font-bold text-slate-400 uppercase">Semester:</span>
                 <select
+                  aria-label="Filter by semester"
                   value={selectedSemester}
-                  onChange={(e) => setSelectedSemester(e.target.value)}
-                  className="bg-transparent text-white font-bold focus:outline-none text-xs"
+                  onChange={(e) => handleSelectSemester(e.target.value)}
+                  className="bg-transparent text-white font-bold focus:outline-none text-xs cursor-pointer"
                 >
                   <option value="All" className="bg-slate-900">All Semesters</option>
                   <option value="1" className="bg-slate-900">First Semester</option>
@@ -229,9 +433,10 @@ export const LearningHubPage: React.FC<LearningHubPageProps> = () => {
               <div className="flex items-center gap-1.5 bg-slate-950 px-3 py-1.5 rounded-lg border border-slate-800">
                 <span className="text-[10px] font-bold text-slate-400 uppercase">Type:</span>
                 <select
+                  aria-label="Filter by course type"
                   value={selectedType}
                   onChange={(e) => setSelectedType(e.target.value)}
-                  className="bg-transparent text-white font-bold focus:outline-none text-xs"
+                  className="bg-transparent text-white font-bold focus:outline-none text-xs cursor-pointer"
                 >
                   <option value="All" className="bg-slate-900">All Types</option>
                   <option value="required" className="bg-slate-900">Required</option>
@@ -243,9 +448,10 @@ export const LearningHubPage: React.FC<LearningHubPageProps> = () => {
               <div className="flex items-center gap-1.5 bg-slate-950 px-3 py-1.5 rounded-lg border border-slate-800">
                 <span className="text-[10px] font-bold text-[#F2B705] uppercase">Resource Filter:</span>
                 <select
+                  aria-label="Filter by resource category"
                   value={selectedResourceType}
                   onChange={(e) => setSelectedResourceType(e.target.value)}
-                  className="bg-transparent text-white font-bold focus:outline-none text-xs"
+                  className="bg-transparent text-white font-bold focus:outline-none text-xs cursor-pointer"
                 >
                   <option value="All" className="bg-slate-900">All Resource Types</option>
                   <option value="past_question" className="bg-slate-900">Past Examination Questions</option>
@@ -262,7 +468,7 @@ export const LearningHubPage: React.FC<LearningHubPageProps> = () => {
           </div>
         </div>
 
-        {/* Results Info & Feedback Banner */}
+        {/* Results Info */}
         <div className="flex items-center justify-between text-xs text-slate-400 px-1">
           <div>
             Showing <strong className="text-white">{filteredCourses.length}</strong> undergraduate courses for{' '}
@@ -293,7 +499,7 @@ export const LearningHubPage: React.FC<LearningHubPageProps> = () => {
             {filteredCourses.map((c) => (
               <div
                 key={c.id}
-                onClick={() => setSelectedCourse(c)}
+                onClick={() => handleSelectCourse(c)}
                 className="bg-slate-900/80 hover:bg-slate-900 border border-slate-800 hover:border-[#003366] rounded-2xl p-5 shadow-lg transition-all duration-200 cursor-pointer flex flex-col justify-between group relative overflow-hidden"
               >
                 <div className="space-y-3">
@@ -369,8 +575,8 @@ export const LearningHubPage: React.FC<LearningHubPageProps> = () => {
           <div className="w-full max-w-4xl bg-slate-900 border border-slate-800 rounded-2xl p-6 lg:p-8 shadow-2xl text-white my-8 space-y-6">
             
             {/* Modal Header */}
-            <div className="flex items-start justify-between gap-4 pb-4 border-b border-slate-800">
-              <div className="space-y-2">
+            <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 pb-4 border-b border-slate-800">
+              <div className="space-y-2 flex-1">
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="px-3 py-1 rounded-lg bg-[#003366] text-[#F2B705] border border-[#F2B705]/40 font-mono font-black text-sm">
                     {selectedCourse.courseCode}
@@ -392,17 +598,51 @@ export const LearningHubPage: React.FC<LearningHubPageProps> = () => {
                 <p className="text-slate-400 text-xs">
                   Programme: <strong className="text-slate-200">{selectedCourse.programme}</strong>
                 </p>
+
+                {/* Course Outline Download & Copy Link CTAs */}
+                <div className="flex flex-wrap items-center gap-2.5 pt-2">
+                  {isValidHttpUrl(selectedCourse.courseOutlineUrl) && (
+                    <a
+                      href={selectedCourse.courseOutlineUrl!}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-3 py-1.5 rounded-lg bg-blue-600/20 hover:bg-blue-600/30 text-blue-300 border border-blue-500/40 text-xs font-bold inline-flex items-center gap-1.5 transition-colors shadow-xs"
+                    >
+                      <Download className="w-3.5 h-3.5 text-blue-400" />
+                      <span>Download Course Outline</span>
+                    </a>
+                  )}
+
+                  <button
+                    onClick={() => handleCopyLink(selectedCourse.courseCode)}
+                    aria-label="Copy course share link"
+                    className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 text-xs font-bold inline-flex items-center gap-1.5 transition-colors"
+                  >
+                    {copiedLink ? (
+                      <>
+                        <Check className="w-3.5 h-3.5 text-emerald-400" />
+                        <span className="text-emerald-400">Copied Link!</span>
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="w-3.5 h-3.5 text-slate-400" />
+                        <span>Copy Link</span>
+                      </>
+                    )}
+                  </button>
+                </div>
               </div>
 
               <button
-                onClick={() => setSelectedCourse(null)}
-                className="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white font-bold transition-colors shrink-0"
+                onClick={handleCloseCourseModal}
+                aria-label="Close course details"
+                className="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white font-bold transition-colors shrink-0 self-start"
               >
-                ✕
+                <X className="w-5 h-5" />
               </button>
             </div>
 
-            {/* Course Description */}
+            {/* Course Overview Description */}
             {selectedCourse.description && (
               <div className="bg-slate-950 p-4 rounded-xl border border-slate-800/80 text-xs text-slate-300 space-y-1">
                 <span className="text-[10px] font-extrabold text-[#F2B705] uppercase tracking-wider block">Course Overview</span>
@@ -428,8 +668,9 @@ export const LearningHubPage: React.FC<LearningHubPageProps> = () => {
               ) : (
                 <div className="space-y-3 max-h-[400px] overflow-y-auto pr-1">
                   {activeCourseResources.map((res) => {
-                    const hasUrl = Boolean(res.fileUrl || res.externalUrl || res.filePath);
-                    const targetUrl = res.fileUrl || res.externalUrl || res.filePath || '#';
+                    const targetUrl = res.fileUrl || res.externalUrl || res.filePath || '';
+                    const hasValidUrl = isValidHttpUrl(targetUrl);
+                    const isVideo = res.resourceType === 'video';
 
                     return (
                       <div
@@ -468,18 +709,25 @@ export const LearningHubPage: React.FC<LearningHubPageProps> = () => {
                           )}
                         </div>
 
-                        {/* Action Link / Button */}
+                        {/* Action Link / Media Button */}
                         <div className="shrink-0">
-                          {hasUrl ? (
-                            <a
-                              href={targetUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="px-4 py-2 rounded-lg bg-[#003366] hover:bg-blue-900 text-white font-extrabold text-xs uppercase tracking-wider inline-flex items-center gap-2 transition-colors border border-[#F2B705]/30 shadow-sm"
+                          {hasValidUrl ? (
+                            <button
+                              onClick={() => handleAccessResource(res)}
+                              className="px-4 py-2 rounded-lg bg-[#003366] hover:bg-blue-900 text-white font-extrabold text-xs uppercase tracking-wider inline-flex items-center gap-2 transition-colors border border-[#F2B705]/30 shadow-xs"
                             >
-                              <span>Access File</span>
-                              <ExternalLink className="w-3.5 h-3.5 text-[#F2B705]" />
-                            </a>
+                              {isVideo ? (
+                                <>
+                                  <Play className="w-3.5 h-3.5 text-[#F2B705] fill-current" />
+                                  <span>Watch Video</span>
+                                </>
+                              ) : (
+                                <>
+                                  <span>Access File</span>
+                                  <ExternalLink className="w-3.5 h-3.5 text-[#F2B705]" />
+                                </>
+                              )}
+                            </button>
                           ) : (
                             <span className="px-3 py-1.5 rounded bg-slate-800 text-slate-500 text-[11px] font-bold inline-block">
                               File Unavailable
@@ -499,10 +747,91 @@ export const LearningHubPage: React.FC<LearningHubPageProps> = () => {
                 Department of Information Technology Studies • UPSA
               </span>
               <button
-                onClick={() => setSelectedCourse(null)}
+                onClick={handleCloseCourseModal}
                 className="px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs"
               >
                 Close
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
+
+      {/* Course Not Found Alert Modal */}
+      {notFoundCourseCode && (
+        <div className="fixed inset-0 z-50 bg-black/85 flex items-center justify-center p-4 backdrop-blur-xs animate-in fade-in duration-200">
+          <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-2xl text-center space-y-4">
+            <AlertCircle className="w-12 h-12 mx-auto text-amber-400" />
+            <h3 className="text-lg font-black text-white">Course Not Found</h3>
+            <p className="text-xs text-slate-400 leading-relaxed">
+              No course was found matching code <strong className="text-amber-400 font-mono">{notFoundCourseCode}</strong> in the undergraduate IT curriculum.
+            </p>
+            <button
+              onClick={handleCloseCourseModal}
+              className="w-full py-2.5 rounded-xl bg-[#003366] hover:bg-blue-900 text-white font-extrabold text-xs uppercase tracking-wider transition-colors shadow-md"
+            >
+              Browse All Courses
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* In-App Video Player Modal */}
+      {playingVideo && (
+        <div className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4 backdrop-blur-md animate-in fade-in duration-200">
+          <div className="w-full max-w-4xl bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
+            
+            {/* Player Header */}
+            <div className="p-4 bg-slate-950 border-b border-slate-800 flex items-center justify-between gap-4 shrink-0">
+              <div className="flex items-center gap-2">
+                <span className="px-2.5 py-0.5 rounded bg-purple-500/20 text-purple-300 border border-purple-500/30 text-xs font-bold uppercase">
+                  Educational Video
+                </span>
+                <h3 className="text-sm font-extrabold text-white truncate max-w-md">
+                  {playingVideo.title}
+                </h3>
+              </div>
+              <button
+                onClick={() => setPlayingVideo(null)}
+                aria-label="Close video player"
+                className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Video Canvas Container */}
+            <div className="relative aspect-video bg-black flex items-center justify-center overflow-hidden shrink-0">
+              {playingVideo.type === 'youtube' || playingVideo.type === 'vimeo' ? (
+                <iframe
+                  src={playingVideo.embedUrl}
+                  title={playingVideo.title}
+                  className="w-full h-full border-0"
+                  sandbox="allow-scripts allow-same-origin allow-presentation"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                />
+              ) : playingVideo.type === 'direct' ? (
+                <video
+                  controls
+                  autoPlay
+                  className="w-full h-full object-contain"
+                >
+                  <source src={playingVideo.directUrl} />
+                  Your browser does not support HTML5 video playback.
+                </video>
+              ) : null}
+            </div>
+
+            {/* Player Footer */}
+            <div className="p-3 bg-slate-950 border-t border-slate-800 flex items-center justify-between text-xs text-slate-400">
+              <span>Department of Information Technology Studies • Video Repository</span>
+              <button
+                onClick={() => setPlayingVideo(null)}
+                className="px-3 py-1.5 rounded bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs"
+              >
+                Close Video
               </button>
             </div>
 

@@ -11,12 +11,12 @@ import { PromoSlider } from './components/common/PromoSlider';
 import { HeroSection } from './components/sections/HeroSection';
 import { AboutSection } from './components/sections/AboutSection';
 import { AcademicsSection } from './components/sections/AcademicsSection';
-import { DevelopersHubSection } from './components/sections/DevelopersHubSection';
 import { InnovationShowcase } from './components/sections/InnovationShowcase';
-import { CommunitySection } from './components/sections/CommunitySection';
 import { ContactSection } from './components/sections/ContactSection';
 import { FacultyPage } from './pages/FacultyPage';
 import { LearningHubPage } from './pages/LearningHubPage';
+import { DevelopersHubPage } from './pages/DevelopersHubPage';
+import { CommunityPage } from './pages/CommunityPage';
 import { ResetPasswordPage } from './pages/ResetPasswordPage';
 
 import { JoinHubModal } from './components/modals/JoinHubModal';
@@ -50,6 +50,8 @@ function AppContent() {
   const isAdminRoute = hashState.section === 'admin';
   const isFacultyRoute = hashState.section === 'faculty';
   const isLearningHubRoute = hashState.section === 'learning-hub';
+  const isHubRoute = hashState.section === 'hub';
+  const isCommunityRoute = hashState.section === 'community';
   const isResetPasswordRoute = hashState.section === 'reset-password';
 
   useEffect(() => {
@@ -63,6 +65,12 @@ function AppContent() {
     } else if (isLearningHubRoute) {
       document.title = 'IT Learning Hub & Repository | UPSA IT Studies';
       window.scrollTo({ top: 0, behavior: 'instant' });
+    } else if (isHubRoute) {
+      document.title = 'UPSA Developers Hub | UPSA IT Studies';
+      window.scrollTo({ top: 0, behavior: 'instant' });
+    } else if (isCommunityRoute) {
+      document.title = 'Community & Professional Growth | UPSA IT Studies';
+      window.scrollTo({ top: 0, behavior: 'instant' });
     } else if (isResetPasswordRoute) {
       document.title = 'Password Recovery | UPSA IT Studies';
       window.scrollTo({ top: 0, behavior: 'instant' });
@@ -75,7 +83,7 @@ function AppContent() {
         window.scrollTo({ top: 0, behavior: 'smooth' });
       }
     }
-  }, [hashState.section, isAdminRoute, isFacultyRoute, isLearningHubRoute, isResetPasswordRoute]);
+  }, [hashState.section, isAdminRoute, isFacultyRoute, isLearningHubRoute, isHubRoute, isCommunityRoute, isResetPasswordRoute]);
 
   const handleNavigateSection = (section: NavSectionId) => {
     updateHash({ section, modal: null, programmeId: null, projectId: null });
@@ -138,6 +146,14 @@ function AppContent() {
           <FacultyPage faculty={faculty} onNavigate={handleNavigateSection} />
         ) : isLearningHubRoute ? (
           <LearningHubPage onNavigate={handleNavigateSection} />
+        ) : isHubRoute ? (
+          <DevelopersHubPage
+            onNavigate={handleNavigateSection}
+            onOpenJoinModal={() => updateHash({ section: 'hub', modal: 'join-hub' })}
+            hubDetails={hubDetails}
+          />
+        ) : isCommunityRoute ? (
+          <CommunityPage onNavigate={handleNavigateSection} />
         ) : (
           <>
             <div id="home">
@@ -149,19 +165,12 @@ function AppContent() {
 
             <AcademicsSection programmes={programmes} onSelectProgramme={handleSelectProgramme} />
 
-            <DevelopersHubSection
-              hubDetails={hubDetails}
-              onOpenJoinModal={() => updateHash({ section: 'hub', modal: 'join-hub' })}
-            />
-
             <InnovationShowcase
               projects={projects}
               onSelectProject={handleSelectProject}
               activeCategoryFilter={hashState.categoryFilter}
               onFilterCategory={handleFilterCategory}
             />
-
-            <CommunitySection />
 
             <ContactSection institutionInfo={institutionInfo} footerContent={footerContent} />
           </>

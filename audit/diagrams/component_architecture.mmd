@@ -1,0 +1,47 @@
+graph TB
+    subgraph Frontend Components Architecture
+        App["App Component (src/App.tsx)"]
+        
+        subgraph Views & Routing
+            PublicPages["Public Pages<br/>(Hero, About, Programmes, Faculty, Projects, Hub, Events)"]
+            LearningHub["Learning Hub Page<br/>(LearningHubPage.tsx)"]
+            FacultyPage["Faculty Roster Page<br/>(FacultyPage.tsx)"]
+            AdminPortal["Admin Dashboard<br/>(AdminDashboard.tsx)"]
+        end
+
+        subgraph Admin Shell & Submodules
+            AdminLayout["Admin Layout Shell<br/>(AdminSidebar, AdminTopbar, AdminPageHeader)"]
+            ResMgmt["Resource Management Section<br/>(ResourceManagementSection.tsx)"]
+            CurricMgmt["Curriculum Management Section<br/>(CurriculumManagementSection.tsx)"]
+            AdminMgmt["Admin User Management Section<br/>(AdminManagementSection.tsx)"]
+            AnalyticsSec["Analytics Section<br/>(AnalyticsSection.tsx)"]
+            LogsSec["Activity Logs Section<br/>(ActivityLogsSection.tsx)"]
+        end
+
+        subgraph Core Services & Hooks
+            AuthCtx["Auth Context Provider<br/>(AuthContext.tsx)"]
+            UseData["CMS Data Hook<br/>(useData.ts)"]
+            UseResources["Learning Resources Hook<br/>(useLearningResources.ts)"]
+            ResourceStorage["Storage Utility<br/>(resourceStorage.ts)"]
+            AnalyticsTracker["Analytics Tracker<br/>(analyticsTracker.ts)"]
+        end
+    end
+
+    App --> PublicPages
+    App --> LearningHub
+    App --> FacultyPage
+    App --> AdminPortal
+
+    AdminPortal --> AdminLayout
+    AdminLayout --> ResMgmt
+    AdminLayout --> CurricMgmt
+    AdminLayout --> AdminMgmt
+    AdminLayout --> AnalyticsSec
+    AdminLayout --> LogsSec
+
+    ResMgmt --> ResourceStorage
+    ResMgmt --> UseResources
+    LearningHub --> UseResources
+    LearningHub --> AnalyticsTracker
+    AdminPortal --> AuthCtx
+    AdminPortal --> UseData

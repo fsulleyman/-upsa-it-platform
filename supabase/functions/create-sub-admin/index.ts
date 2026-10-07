@@ -88,72 +88,102 @@ serve(async (req) => {
       );
     }
 
+    const cleanEmail = String(email).trim().toLowerCase();
+    const exactPassword = String(password); // Passed exactly as entered without trimming or transformation
+
     // 6. Create Auth User using Supabase Admin API
     const { data: newAuth, error: createAuthErr } = await supabaseAdmin.auth.admin.createUser({
-      email: email.trim(),
-      password: password,
+      email: cleanEmail,
+      password: exactPassword,
       email_confirm: true,
-      user_metadata: { full_name: name.trim() },
+      user_metadata: { full_name: String(name).trim() },
     });
 
-    if (createAuthErr) {
+    if (createAuthErr || !newAuth?.user) {
       return new Response(
-        JSON.stringify({ error: createAuthErr.message || "Failed to create authentication user." }),
+        JSON.stringify({ error: createAuthErr?.message || "Failed to create authentication user." }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
     const newUserId = newAuth.user.id;
 
-    // 7. Insert or update admin_profiles row
+    // 7. Sync legacy admin_users table
+    const { error: insertUserErr } = await supabaseAdmin
+      .from("admin_users")
+      .upsert({
+        user_id: newUserId,
+        email: cleanEmail,
+      });
+
+    if (insertUserErr) {
+      // Rollback auth user
+      await supabaseAdmin.auth.admin.deleteUser(newUserId);
+      return new Response(
+        JSON.stringify({ error: `Admin user table record creation failed: ${insertUserErr.message}` }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // 8. Insert or update admin_profiles row
     const { error: insertProfileErr } = await supabaseAdmin
       .from("admin_profiles")
       .upsert({
         user_id: newUserId,
-        full_name: name.trim(),
-        email: email.trim(),
+        full_name: String(name).trim(),
+        email: cleanEmail,
         role: role,
         is_active: true,
         updated_at: new Date().toISOString(),
       });
 
     if (insertProfileErr) {
+      // Rollback auth user
+      await supabaseAdmin.auth.admin.deleteUser(newUserId);
       return new Response(
         JSON.stringify({ error: `Profile creation failed: ${insertProfileErr.message}` }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // 8. Insert permissions if sub_admin
+    // 9. Insert permissions if sub_admin
     if (role === "sub_admin" && Array.isArray(permissions) && permissions.length > 0) {
       const permRows = permissions.map((p: string) => ({
         admin_user_id: newUserId,
         permission: p,
       }));
 
-      await supabaseAdmin.from("admin_permissions").insert(permRows);
+      const { error: permErr } = await supabaseAdmin.from("admin_permissions").insert(permRows);
+      if (permErr) {
+        // Rollback auth user
+        await supabaseAdmin.auth.admin.deleteUser(newUserId);
+        return new Response(
+          JSON.stringify({ error: `Permissions setup failed: ${permErr.message}` }),
+          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
     }
 
-    // 9. Record Activity Log
+    // 10. Record Activity Log (No plaintext password logged)
     await supabaseAdmin.from("admin_activity_logs").insert({
       admin_user_id: callerUser.id,
       admin_name: callerProfile.full_name || callerUser.email || "Super Admin",
       action: "CREATE",
       resource_type: "Admin Account",
       resource_id: newUserId,
-      description: `Created ${role === "super_admin" ? "Super Admin" : "Sub Admin"} account for ${name} (${email})`,
+      description: `Created ${role === "super_admin" ? "Super Admin" : "Sub Admin"} account for ${name} (${cleanEmail})`,
       metadata: { role, permissions },
     });
 
-    // 10. Return success response
+    // 11. Return success response
     return new Response(
       JSON.stringify({
         success: true,
         message: `Account created successfully for ${name}`,
         user: {
           id: newUserId,
-          email: email.trim(),
-          fullName: name.trim(),
+          email: cleanEmail,
+          fullName: String(name).trim(),
           role: role,
         },
       }),

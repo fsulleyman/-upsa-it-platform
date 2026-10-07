@@ -1,0 +1,39 @@
+graph TB
+    subgraph Client Architecture (Modernized)
+        SPA["React 19 SPA (Vite)"]
+        Router["Declarative Router (GoRouter / React Router 7)"]
+        QueryClient["TanStack Query (Client-side Caching & Deduplication)"]
+    end
+
+    subgraph Security & API Gateway Layer
+        RateLimiter["Upstash / Cloudflare Rate Limiter"]
+        WAF["Web Application Firewall (WAF + Security Headers)"]
+    end
+
+    subgraph Managed Backend Services (Supabase)
+        AuthEngine["Supabase GoTrue (MFA + SSO + Email Confirmation)"]
+        PostgREST["PostgREST API Engine"]
+        StorageEngine["Supabase Storage Engine"]
+        EdgeFunctions["Serverless Edge Functions (Validated Payload Schemas via Zod)"]
+    end
+
+    subgraph Data & Observability Tier
+        PostgresDB[("Managed PostgreSQL 15 (Hardened RLS + Migration Versioning via Flyway)")]
+        AuditStore[("Immutable Audit Log Table / S3 Archive")]
+        SentryMonitoring["Sentry / Datadog (Error Tracking & APM)"]
+    end
+
+    SPA --> Router
+    Router --> QueryClient
+    QueryClient --> WAF
+    WAF --> RateLimiter
+    RateLimiter --> AuthEngine
+    RateLimiter --> PostgREST
+    RateLimiter --> StorageEngine
+    RateLimiter --> EdgeFunctions
+
+    PostgREST --> PostgresDB
+    StorageEngine --> PostgresDB
+    EdgeFunctions --> PostgresDB
+    EdgeFunctions --> AuditStore
+    SPA -.-> SentryMonitoring

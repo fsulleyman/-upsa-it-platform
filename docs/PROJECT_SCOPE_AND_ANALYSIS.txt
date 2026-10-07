@@ -1,0 +1,358 @@
+UPSA DEPARTMENT OF INFORMATION TECHNOLOGY STUDIES PLATFORM
+PROJECT SCOPE AND SYSTEM ANALYSIS DOCUMENT
+================================================================================
+
+1. PROJECT NAME AND OVERVIEW
+
+Official Name: UPSA Department of Information Technology Studies Platform (Web Portal & Central CMS Control Center)
+
+Summary:
+The UPSA Department of Information Technology Studies Platform is a complete web portal built for the Department of Information Technology Studies at the University of Professional Studies, Accra (UPSA). It serves as the primary digital gateway for the department, providing students, prospective applicants, and visitors with public access to academic degree programmes, course syllabi, faculty directories, student project showcases, event announcements, and a digital Learning Hub for course study materials. In addition, it includes a secure administrative portal (the Central CMS Control Center) that allows department leaders, faculty staff, and administrators to update website content, manage course materials, track visitor engagement, and delegate specific administrative permissions.
+
+Ownership and Audience:
+The platform is owned and operated by the Department of Information Technology Studies at UPSA. It serves three main audiences:
+1. Students and General Visitors: Public users who browse academic offerings, search faculty profiles, view student project showcases, and download study resources.
+2. Department Lecturers and Administrative Staff (Sub-Administrators): Authorized staff members who manage specific content areas such as course files, faculty profiles, or department announcements based on assigned duties.
+3. Department Leadership (Super Administrators): Department heads and primary administrators who have full control over the platform, including creating user accounts, assigning staff permissions, resetting passwords, viewing audit logs, and monitoring visitor analytics.
+
+
+================================================================================
+
+2. PURPOSE AND GOALS
+
+The Problem It Solves:
+Before this platform, students and department staff faced several challenges:
+- Academic information and study materials were scattered across different channels, making it difficult for students to find current course outlines, past exam questions, or lecture slides.
+- Department announcements, student innovation projects, and faculty research achievements lacked a central online showcase.
+- Administrative content updates required manual technical intervention, leading to outdated website information.
+- Department leadership lacked visibility into user engagement, download statistics, and administrative actions.
+
+Main Goals of the Platform:
+1. Centralized Academic Resource Hub: Provide students with direct, instant online access to course outlines, lecture slides, past exam questions, handouts, and lab manuals filtered by academic year, semester, and level.
+2. Digital Department Showcase: Highlight academic degree programmes, faculty qualifications, student software projects, and department events to promote the department to current students and prospective applicants.
+3. Delegated Content Management: Allow department leadership to assign specific management rights to staff members (such as managing faculty profiles or course materials) without giving up full system control.
+4. Transparency and Security: Maintain detailed audit logs of all administrative changes, enforce secure user logins, and gather anonymous visitor analytics to understand which resources are most useful to students.
+
+
+================================================================================
+
+3. USERS AND ROLES
+
+The platform supports three primary user roles:
+
+1. Public Visitors and Students (Unauthenticated Users)
+- Who they are: Current UPSA students, prospective students, external visitors, and research partners.
+- What they can see: Homepage slides, department overview, academic degree programmes, faculty directory, student showcase projects, developers hub details, event announcements, and the Learning Hub course catalog.
+- What they can do: Search and filter courses by level (100 to 400) and semester, view detailed course information, download approved study resources (slides, past questions, handouts), search faculty members by research area, share deep links to specific courses, and submit inquiries to join the developers hub. They cannot edit any website content or access administrative tools.
+
+2. Sub-Administrators (Authenticated Staff Members)
+- Who they are: Lecturers, teaching assistants, or administrative staff granted access to specific management sections.
+- What they can see: The public website plus assigned management sections in the Central CMS Control Center (such as Resource Management or Faculty Management).
+- What they can do: Upload, edit, publish, unpublish, or delete content within their assigned modules. For example, a staff member with academic management permission can upload past questions and lecture slides for specific courses. They cannot create new administrator accounts or modify system settings.
+
+3. Super Administrators (Authenticated Department Leadership)
+- Who they are: Department heads, lead IT administrators, and designated system managers.
+- What they can see: Everything on the platform, including all administrative management sections, system analytics, sub-admin user lists, and audit activity logs.
+- What they can do: Complete control over all content modules, website navigation, academic programmes, curriculum settings, sub-administrator creation, permission assignments, account activation/deactivation, password resets, activity log reviews, and system configuration.
+
+Simple "Who Can Do What" Summary:
+- View public website and download study materials: Public Visitors, Students, Sub-Admins, Super Admins
+- Upload and manage course study materials: Sub-Admins with Academic permission, Super Admins
+- Edit homepage, faculty directory, and events: Sub-Admins with assigned permissions, Super Admins
+- Create sub-admin accounts and assign permissions: Super Admins only
+- Reset staff passwords and view audit activity logs: Super Admins only
+
+
+================================================================================
+
+4. FULL LIST OF FEATURES
+
+PUBLIC WEBSITE FEATURES
+
+1. Homepage and Hero Banner
+- Description: Displays prominent department announcements, welcome messages, key statistics, and promotional slides.
+- Who uses it: Public Visitors, Students, Staff
+- Status: Complete
+
+2. Academic Programmes Showcase
+- Description: Presents degree and diploma offerings (such as Information Technology, Data Science, and Cybersecurity) with program overviews, duration, key skills, career paths, and entry requirements.
+- Who uses it: Prospective Students, Public Visitors
+- Status: Complete
+
+3. Faculty Directory
+- Description: Displays profiles of department lecturers and leadership, including academic titles, email addresses, office locations, research areas, and photos. Includes a dedicated search and detailed profile view.
+- Who uses it: Students, Visitors, Research Partners
+- Status: Complete
+
+4. Student Projects Showcase
+- Description: Displays innovative software applications and research projects developed by UPSA students, including project descriptions, technologies used, student names, mentor names, GitHub links, and live demonstration links.
+- Who uses it: Students, Employers, Visitors
+- Status: Complete
+
+5. Developers Hub Integration
+- Description: Promotes the department's student coding community and offers an interactive modal form for students to request joining the hub.
+- Who uses it: Students
+- Status: Complete
+
+6. Event Popup and Announcements
+- Description: Displays interactive popup dialogs and banners for upcoming department events, guest lectures, and academic workshops.
+- Who uses it: Public Visitors, Students
+- Status: Complete
+
+7. Learning Hub (Student Resource Center)
+- Description: A dedicated digital library where students select their academic level (Level 100, 200, 300, 400) and semester (Semester 1 or 2) to view matching courses. Each course opens a detail view showing course credits, descriptions, downloadable course outlines, and organized resource files (past questions, lecture slides, handouts, lab manuals, tutorial guides, video links). Supports direct link copying and web browser back-button navigation.
+- Who uses it: Students, Lecturers
+- Status: Complete
+
+
+ADMINISTRATIVE PORTAL FEATURES (CENTRAL CMS CONTROL CENTER)
+
+8. Secure Admin Gateway and Login
+- Description: A protected login gateway requiring valid administrator credentials. Features email normalization, detailed error explanations (such as incorrect password or disabled account), and automatic sign-out for unauthorized users.
+- Who uses it: Sub-Admins, Super Admins
+- Status: Complete
+
+9. Admin Dashboard Overview
+- Description: Provides quick statistics on total site visits, unique visitor sessions, resource opens, and quick action shortcuts.
+- Who uses it: Sub-Admins, Super Admins
+- Status: Complete
+
+10. Hero and Banner Management
+- Description: Allows administrators to update homepage main headlines, sub-headlines, action buttons, and promotional background slides.
+- Who uses it: Admins with Homepage permission, Super Admins
+- Status: Complete
+
+11. Navigation and Footer Management
+- Description: Allows administrators to customize top navigation menu items, footer contact details, quick links, and social media handles.
+- Who uses it: Admins with Navigation/Footer permission, Super Admins
+- Status: Complete
+
+12. Academic Programme Management
+- Description: Tools to add, edit, or delete academic degree programmes, core modules, career outcomes, and entry guidelines.
+- Who uses it: Admins with Academic permission, Super Admins
+- Status: Complete
+
+13. Curriculum and Course Management
+- Description: Tools to define courses, course codes, academic levels, semesters, course types (Core, Elective, Required), and course outline web links.
+- Who uses it: Admins with Academic permission, Super Admins
+- Status: Complete
+
+14. Learning Resource Management (Single and Bulk Operations)
+- Description: Comprehensive management interface to upload study files (up to 50 MB in PDF, PowerPoint, Word, Excel, ZIP, or media formats), edit resource titles, assign course tags, toggle publication status (Published vs. Draft), filter materials, and delete records. Includes bulk selection tools to publish, unpublish, or delete multiple resources simultaneously, ensuring file storage cleanup before removing records.
+- Who uses it: Admins with Academic permission, Super Admins
+- Status: Complete
+
+15. Student Project Management
+- Description: Tools to add, edit, or remove showcase projects, add sample/verified badges, and link source code repositories.
+- Who uses it: Admins with Innovation permission, Super Admins
+- Status: Complete
+
+16. Faculty Staff Management
+- Description: Tools to manage lecturer directory listings, update contact details, upload profile photos, specify research areas, and set featured status.
+- Who uses it: Admins with Faculty permission, Super Admins
+- Status: Complete
+
+17. Event Announcement Management
+- Description: Tools to schedule event banners, toggle event popups, and set event dates and locations.
+- Who uses it: Admins with Events permission, Super Admins
+- Status: Complete
+
+18. Sub-Admin Provisioning and Permission Management
+- Description: Allows Super Administrators to create new sub-admin accounts, set initial passwords with a typo-prevention visibility toggle and password strength check, assign specific module permissions, toggle account active status, and execute password resets via recovery emails or temporary passwords.
+- Who uses it: Super Admins only
+- Status: Complete
+
+19. System Visitor Analytics
+- Description: Displays visitor engagement metrics, top visited pages, and top opened learning resources using server-side database aggregation to ensure accurate counts.
+- Who uses it: Admins with Analytics permission, Super Admins
+- Status: Complete
+
+20. Activity Audit Logs
+- Description: A searchable log recording every administrative action (such as creating accounts, publishing resources, editing courses, or logging in) with admin name, timestamp, action type, and detailed notes.
+- Who uses it: Admins with Activity Log permission, Super Admins
+- Status: Complete
+
+FEATURE STATUS SUMMARY
+- Complete: 20 features
+- Partly built: 0 features
+- Not yet built: 3 features (Online Student Assignment Submission, Live Automated Notifications, Student Personal Accounts)
+
+
+================================================================================
+
+5. SCOPE
+
+In Scope (What the Platform Covers):
+- Official public website for the UPSA Department of Information Technology Studies.
+- Interactive course catalog and study resource download center (Learning Hub).
+- Showcase of academic programmes, faculty profiles, and student software projects.
+- Event announcement modal and registration inquiry system for the student developers hub.
+- Complete administrative control center for content management, staff permission delegation, visitor analytics, and audit logging.
+- Deep-linking and URL bookmarking for specific academic courses and levels.
+
+Out of Scope (What the Platform Does Not Do):
+- Online assignment submission or grading for students (this is handled by UPSA's main university learning management system).
+- Official student grade records, fee payments, or official university registration.
+- Live chat, real-time messaging, or video conferencing between students and lecturers.
+- Direct automated email sending from inside the web browser (email notifications rely on external service triggers or user email clients).
+
+Assumptions and Limitations:
+- It is assumed that students have standard web browsers on desktop or mobile devices to access the portal.
+- Uploaded study files are limited to a maximum size of 50 megabytes per file to maintain optimal storage performance.
+- Administrator account creation requires an active Super Administrator to perform the initial setup.
+
+
+================================================================================
+
+6. SYSTEM ANALYSIS
+
+Main Parts of the Platform:
+The platform consists of three main parts working together:
+1. The Web Frontend: The interactive pages and administrative screens that users see in their web browser.
+2. The Database Service: A cloud database that securely stores structured information such as course details, resource links, staff profiles, sub-admin permissions, and activity logs.
+3. The Serverless Cloud Functions: Independent background services that perform administrative actions requiring elevated security, such as creating new sub-admin accounts or updating passwords safely.
+
+Main User Journeys:
+
+Journey 1: A Student Finding and Downloading a Lecture Slide
+1. The student opens the website and clicks on "Learning Hub".
+2. The student selects "Level 200" and "Semester 1".
+3. The platform displays matching courses, such as "BITM 204: Database Management Systems".
+4. The student clicks on the course card to open the Course Detail view.
+5. The student reviews available materials under "Lecture Slides" and clicks "Download".
+6. The resource file opens or downloads directly, and the system records an anonymous resource access event for analytics.
+
+Journey 2: An Administrator Uploading a Past Exam Question
+1. The lecturer logs into the Central CMS Control Center.
+2. The lecturer selects "Resource Management" from the admin sidebar menu.
+3. The lecturer clicks "Add New Resource".
+4. The lecturer selects the target course, enters the resource title (e.g. "2025 Mid-Semester Exam"), selects resource type ("Past Question"), and selects the PDF file from their computer.
+5. The system checks the file format and size, uploads the file securely, and creates the course resource entry.
+6. The past question immediately becomes available for students in the Learning Hub.
+
+Journey 3: A Super Administrator Creating a Sub-Admin Account
+1. The Department Head logs into the admin portal as a Super Administrator.
+2. The Head selects "Admin Management" and clicks "Provision New Sub-Admin".
+3. The Head enters the new staff member's full name, official email, and initial password (using the show-password toggle to check for typos).
+4. The Head selects specific authorized areas (such as "Manage Programmes & Curriculum" and "Manage Faculty Directory").
+5. The system securely creates the staff account, assigns selected permissions, and records the event in the Activity Audit Log.
+
+Information Stored by the Platform:
+- Administrators and Profiles: Full name, official email, assigned role (Super Admin vs Sub Admin), active status, last login date, and granted module permissions.
+- Courses and Curriculum: Course code, course title, academic level, semester, course classification (Core, Elective, Required), course description, credit hours, and course outline web link.
+- Learning Resources: Resource title, description, resource classification (past question, slide, handout, lab manual, tutorial guide, video link), file web link, internal storage path, academic year, publication status, and display order.
+- Faculty Directory: Staff member name, academic designation, email address, phone number, office location, research interests, and profile photo link.
+- Student Projects: Project title, category, description, student developer name, project mentor name, technologies used, GitHub repository link, and live demo link.
+- Activity Logs: Historical record of administrative actions, showing who performed the action, what was changed, and when it occurred.
+- Visitor Analytics: Anonymous records of page visits and resource opens used to measure popular study materials.
+
+External Services Dependent On:
+- Web Hosting Service (Vercel): Hosts the website files so the portal is available online 24/7.
+- Cloud Database and Authentication Service (Supabase): Handles user logins, password encryption, database storage, and file hosting.
+
+
+================================================================================
+
+7. FUNCTIONAL REQUIREMENTS
+
+Feature Area: Student Learning Hub & Course Access
+- FR-01: The system shall allow users to filter academic courses by level (100, 200, 300, 400) and semester (Semester 1, Semester 2). [Implemented]
+- FR-02: The system shall allow users to search courses and study resources by keyword, course code, or title. [Implemented]
+- FR-03: The system shall allow users to open a course detail view to read course descriptions, credit hours, and download course outlines. [Implemented]
+- FR-04: The system shall allow users to download approved study resource files (slides, past questions, handouts, lab manuals) directly. [Implemented]
+- FR-05: The system shall support direct URL deep-linking so users can share or bookmark specific course modals. [Implemented]
+
+Feature Area: Public Information & Showcase
+- FR-06: The system shall display academic degree and diploma programmes with key skills, duration, and admission requirements. [Implemented]
+- FR-07: The system shall display a searchable faculty directory with lecturer contact info, office locations, and research areas. [Implemented]
+- FR-08: The system shall showcase student software projects with links to source code repositories and live demonstrations. [Implemented]
+- FR-09: The system shall display event announcements and popups for department activities. [Implemented]
+- FR-10: The system shall provide a form for students to submit inquiries to join the student developers hub. [Implemented]
+
+Feature Area: Administrative Portal & Content Management
+- FR-11: The system shall require user authentication before granting access to administrative tools. [Implemented]
+- FR-12: The system shall allow authorized administrators to create, update, publish, unpublish, and delete course study materials. [Implemented]
+- FR-13: The system shall support bulk selection of study materials for bulk publishing, unpublishing, or bulk deletion. [Implemented]
+- FR-14: The system shall ensure associated cloud storage files are safely deleted when study resource entries are removed. [Implemented]
+- FR-15: The system shall allow administrators to manage homepage content, promotional slides, faculty profiles, and event popups. [Implemented]
+
+Feature Area: User Management & Governance
+- FR-16: The system shall allow Super Administrators to provision sub-administrator accounts and assign specific module permissions. [Implemented]
+- FR-17: The system shall provide a password strength meter and password visibility toggle during sub-admin account creation. [Implemented]
+- FR-18: The system shall allow Super Administrators to reset staff passwords via email recovery links or temporary passwords. [Implemented]
+- FR-19: The system shall record all administrative updates, logins, and logouts in an audit activity log. [Implemented]
+- FR-20: The system shall aggregate anonymous visitor analytics and top opened resources server-side. [Implemented]
+
+
+================================================================================
+
+8. NON-FUNCTIONAL REQUIREMENTS
+
+Performance:
+- NFR-01: Page load time for public pages should be under 2 seconds on standard broadband connections. [Target: < 2.0s | Implemented]
+- NFR-02: Study resource file downloads should initiate within 1 second of clicking the download link. [Target: < 1.0s | Implemented]
+
+Availability:
+- NFR-03: The public platform should maintain 99.5% uptime availability. [Target: 99.5% | Implemented via Vercel/Supabase infrastructure]
+
+Security (Plain Terms):
+- NFR-04: User passwords must never be stored or logged in plain text. [Implemented]
+- NFR-05: Administrative functions must verify user authorization roles before executing any data changes. [Implemented]
+- NFR-06: Uploaded files must be validated for acceptable file formats and restricted to a 50 MB maximum file size. [Implemented]
+
+Usability and Accessibility:
+- NFR-07: The user interface must adapt seamlessly to desktop computers, laptops, tablets, and smartphones. [Implemented]
+- NFR-08: Administrative forms should provide clear error messages and confirmation prompts before deleting data. [Implemented]
+
+Scalability and Cost:
+- NFR-09: The database architecture must support thousands of downloadable resource files without degrading search performance. [Implemented]
+- NFR-10: The platform should utilize cost-effective serverless architecture to minimize operational expenses. [Implemented]
+
+
+================================================================================
+
+9. SYSTEM DESIGN (PLAIN LANGUAGE)
+
+Overall Design Approach:
+The platform is designed as a modern, unified web application that contains both the public website and the private administrative portal within a single platform. The public side focuses on high speed, clarity, and ease of use for students browsing on mobile phones or computers. The administrative side is designed like a professional dashboard with a dark theme, clear navigation sidebar, status badges, data tables, and confirmation popups to prevent accidental data loss.
+
+Page and Navigation Structure:
+The platform uses web address tags (hash routes) to move between pages smoothly without needing to reload the entire screen:
+- Main Landing Page (#/): Shows the homepage hero banner, department overview, degree programmes, faculty summary, student projects, developers hub, and footer.
+- Faculty Directory Page (#/faculty): Dedicated searchable page for faculty members.
+- Learning Hub Page (#/learning-hub): Dedicated academic study library with course filters and detailed modal views.
+- Admin Portal Gateway (#/admin): Protected login screen and administrative dashboard.
+- Password Reset Page (#/reset-password): Secure password recovery page.
+
+How the Admin Side and Public Side Relate:
+The public side and admin side are directly connected through the shared cloud database. When an administrator adds a new course outline, updates a faculty member's office location, or publishes a new lecture slide in the admin portal, that change becomes visible to students on the public website immediately.
+
+
+================================================================================
+
+10. GAPS AND RECOMMENDATIONS
+
+Features the Platform Lacks (Identified Gaps):
+1. Automated Email Notifications: The system does not currently send automated email alerts to students when new course materials are published.
+2. Direct Student Login Accounts: Currently, only administrators have accounts; students access materials as public users without individual student profiles.
+3. Automated Backup Export Tool: While the cloud database maintains automatic backups, there is no one-click manual export button in the admin interface for downloading local database backups.
+
+Suggested Next Features (in priority order):
+1. Student Email Alerts for New Uploads
+   Reason: Notifies students automatically whenever a lecturer uploads new past questions or lecture slides for their registered courses.
+2. Filter by Academic Year in Learning Hub
+   Reason: Helps students quickly separate current year study materials from older historical archives.
+3. One-Click Admin Backup Export
+   Reason: Provides department heads with an easy way to download a complete backup copy of all course records and audit logs to local office storage.
+
+
+================================================================================
+
+11. OPEN QUESTIONS FOR THE TEAM
+
+1. Email Service Configuration: Should the platform integrate an automated email delivery service (such as SendGrid or Resend) to send automatic notifications to students when new resources are published?
+2. Student Account Integration: Is there a future plan to integrate the Learning Hub with UPSA's main student portal login so students can see a personalized list of their registered courses upon sign-in?
+3. File Retention Policy: Should older study resource files (for example, lecture slides over 5 years old) be automatically archived or retained indefinitely in cloud storage?
+
+================================================================================
+END OF PROJECT SCOPE AND SYSTEM ANALYSIS DOCUMENT

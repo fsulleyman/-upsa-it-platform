@@ -1,0 +1,19 @@
+stateDiagram-v2
+    [*] --> Created: Provisioned via create-sub-admin Edge Function
+    Created --> Active: Default is_active = true, email_confirm = true
+    
+    state Active {
+        [*] --> LoggedOut
+        LoggedOut --> LoggedIn: Valid Credentials & Active Status
+        LoggedIn --> LoggedOut: Sign Out / Session Expiry
+    }
+
+    Active --> Inactive: Super Admin toggles is_active = false
+    
+    state Inactive {
+        [*] --> DisabledLogin: signInWithPassword fails / signout enforced
+    }
+
+    Inactive --> Active: Super Admin toggles is_active = true
+    Active --> [*]: Delete Admin Profile
+    Inactive --> [*]: Delete Admin Profile
