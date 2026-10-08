@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import type { NavSectionId, NavItem } from '../../types';
-import { Search, Menu, X, GraduationCap } from 'lucide-react';
+import { Search, Menu, X, GraduationCap, ChevronDown } from 'lucide-react';
 
 interface NavbarProps {
   activeSection: NavSectionId;
@@ -23,7 +23,7 @@ export const Navbar: React.FC<NavbarProps> = ({
     { id: 'academics', label: 'ACADEMICS' },
     { id: 'faculty', label: 'FACULTY' },
     { id: 'learning-hub', label: 'LEARNING HUB' },
-    { id: 'hub', label: 'DEVELOPERS HUB' },
+    { id: 'campus-life', label: 'CAMPUS LIFE' },
     { id: 'innovation', label: 'INNOVATION' },
     { id: 'community', label: 'COMMUNITY' },
     { id: 'contact', label: 'CONTACT' }
@@ -33,7 +33,10 @@ export const Navbar: React.FC<NavbarProps> = ({
     ? dynamicNavItems
         .filter((n) => n.isActive)
         .sort((a, b) => a.displayOrder - b.displayOrder)
-        .map((n) => ({ id: n.sectionId, label: n.label }))
+        .map((n) => ({
+          id: n.sectionId === 'hub' ? ('campus-life' as NavSectionId) : n.sectionId,
+          label: n.sectionId === 'hub' ? 'CAMPUS LIFE' : n.label
+        }))
     : defaultNavItems;
 
   // Deduplicate items by section ID
@@ -70,12 +73,24 @@ export const Navbar: React.FC<NavbarProps> = ({
     seenSections.add('learning-hub');
   }
 
+  // Guarantee CAMPUS LIFE is present in displayNavItems right after LEARNING HUB if omitted from CMS nav items
+  if (!seenSections.has('campus-life')) {
+    const learningHubIndex = displayNavItems.findIndex((item) => item.id === 'learning-hub');
+    const campusLifeItem = { id: 'campus-life' as NavSectionId, label: 'CAMPUS LIFE' };
+    if (learningHubIndex !== -1) {
+      displayNavItems.splice(learningHubIndex + 1, 0, campusLifeItem);
+    } else {
+      displayNavItems.push(campusLifeItem);
+    }
+    seenSections.add('campus-life');
+  }
+
   // Guarantee INNOVATION is present in displayNavItems if omitted from CMS nav items
   if (!seenSections.has('innovation')) {
-    const devHubIndex = displayNavItems.findIndex((item) => item.id === 'hub');
+    const campusLifeIndex = displayNavItems.findIndex((item) => item.id === 'campus-life');
     const innovationItem = { id: 'innovation' as NavSectionId, label: 'INNOVATION' };
-    if (devHubIndex !== -1) {
-      displayNavItems.splice(devHubIndex + 1, 0, innovationItem);
+    if (campusLifeIndex !== -1) {
+      displayNavItems.splice(campusLifeIndex + 1, 0, innovationItem);
     } else {
       displayNavItems.push(innovationItem);
     }
@@ -93,7 +108,6 @@ export const Navbar: React.FC<NavbarProps> = ({
     }
     seenSections.add('contact');
   }
-
 
   const handleNavClick = (id: NavSectionId) => {
     onNavigate(id);
@@ -125,8 +139,8 @@ export const Navbar: React.FC<NavbarProps> = ({
             <a href="#academics" onClick={() => onNavigate('academics')} className="hover:text-[#F2B705] transition-colors hidden sm:inline">
               PROGRAMMES
             </a>
-            <a href="#hub" onClick={() => onNavigate('hub')} className="hover:text-[#F2B705] transition-colors flex items-center gap-1">
-              <span>DEVELOPERS HUB</span>
+            <a href="#campus-life" onClick={() => onNavigate('campus-life')} className="hover:text-[#F2B705] transition-colors flex items-center gap-1">
+              <span>CAMPUS LIFE</span>
             </a>
           </div>
         </div>
@@ -160,6 +174,76 @@ export const Navbar: React.FC<NavbarProps> = ({
             <nav className="hidden lg:flex items-center gap-1 xl:gap-2">
               {displayNavItems.map((item) => {
                 const isActive = activeSection === item.id;
+                
+                if (item.id === 'campus-life') {
+                  return (
+                    <div key={item.id} className="relative group">
+                      <button
+                        onClick={() => handleNavClick(item.id)}
+                        className={`px-3 py-2 text-xs font-extrabold tracking-wider transition-all inline-flex items-center gap-1 relative ${
+                          isActive
+                            ? 'text-[#F2B705]'
+                            : 'text-slate-200 hover:text-white hover:bg-slate-800 rounded-md'
+                        }`}
+                      >
+                        <span>CAMPUS LIFE</span>
+                        <ChevronDown className="w-3.5 h-3.5 text-slate-400 group-hover:text-white transition-transform group-hover:rotate-180" />
+                        {isActive && (
+                          <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#F2B705] rounded-full" />
+                        )}
+                      </button>
+
+                      {/* Dropdown Menu */}
+                      <div className="absolute left-0 top-full pt-1 hidden group-hover:block w-52 z-50">
+                        <div className="bg-slate-900 border border-slate-700 rounded-xl shadow-2xl overflow-hidden p-1.5">
+                          <a
+                            href="#/campus-life?tab=clubs"
+                            onClick={(e) => { e.preventDefault(); window.location.hash = '#/campus-life?tab=clubs'; setSearchOpen(false); }}
+                            className="block px-3 py-2 text-xs font-bold text-slate-200 hover:text-[#F2B705] hover:bg-slate-800 rounded-lg transition-colors"
+                          >
+                            Clubs & Societies
+                          </a>
+                          <a
+                            href="#/community"
+                            onClick={(e) => { e.preventDefault(); handleNavClick('community'); }}
+                            className="block px-3 py-2 text-xs font-bold text-slate-200 hover:text-[#F2B705] hover:bg-slate-800 rounded-lg transition-colors"
+                          >
+                            Communities
+                          </a>
+                          <a
+                            href="#/campus-life?tab=events"
+                            onClick={(e) => { e.preventDefault(); window.location.hash = '#/campus-life?tab=events'; setSearchOpen(false); }}
+                            className="block px-3 py-2 text-xs font-bold text-slate-200 hover:text-[#F2B705] hover:bg-slate-800 rounded-lg transition-colors"
+                          >
+                            Events
+                          </a>
+                          <a
+                            href="#/campus-life?tab=activities"
+                            onClick={(e) => { e.preventDefault(); window.location.hash = '#/campus-life?tab=activities'; setSearchOpen(false); }}
+                            className="block px-3 py-2 text-xs font-bold text-slate-200 hover:text-[#F2B705] hover:bg-slate-800 rounded-lg transition-colors"
+                          >
+                            Activities
+                          </a>
+                          <a
+                            href="#/innovation"
+                            onClick={(e) => { e.preventDefault(); handleNavClick('innovation'); }}
+                            className="block px-3 py-2 text-xs font-bold text-slate-200 hover:text-[#F2B705] hover:bg-slate-800 rounded-lg transition-colors"
+                          >
+                            Student Projects
+                          </a>
+                          <a
+                            href="#/campus-life?tab=achievements"
+                            onClick={(e) => { e.preventDefault(); window.location.hash = '#/campus-life?tab=achievements'; setSearchOpen(false); }}
+                            className="block px-3 py-2 text-xs font-bold text-slate-200 hover:text-[#F2B705] hover:bg-slate-800 rounded-lg transition-colors"
+                          >
+                            Achievements
+                          </a>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                }
+
                 return (
                   <button
                     key={item.id}
@@ -233,6 +317,69 @@ export const Navbar: React.FC<NavbarProps> = ({
         <div className="lg:hidden bg-slate-900 border-b border-slate-800 px-4 pt-2 pb-6 space-y-2 animate-in slide-in-from-top duration-200">
           {displayNavItems.map((item) => {
             const isActive = activeSection === item.id;
+
+            if (item.id === 'campus-life') {
+              return (
+                <div key={item.id} className="space-y-1">
+                  <button
+                    onClick={() => handleNavClick('campus-life')}
+                    className={`w-full text-left px-4 py-3 rounded-lg text-xs font-extrabold tracking-wider transition-all flex items-center justify-between ${
+                      isActive
+                        ? 'bg-[#003366] text-[#F2B705] font-black border-l-4 border-[#F2B705]'
+                        : 'text-slate-200 hover:bg-slate-800 hover:text-white'
+                    }`}
+                  >
+                    <span>CAMPUS LIFE</span>
+                    <ChevronDown className="w-4 h-4 text-slate-400" />
+                  </button>
+                  <div className="pl-4 space-y-1 border-l border-slate-800 ml-4 py-1">
+                    <a
+                      href="#/campus-life?tab=clubs"
+                      onClick={(e) => { e.preventDefault(); window.location.hash = '#/campus-life?tab=clubs'; setMobileMenuOpen(false); }}
+                      className="block px-3 py-2 text-[11px] font-bold text-slate-300 hover:text-[#F2B705] hover:bg-slate-800/60 rounded-md transition-colors"
+                    >
+                      • Clubs & Societies
+                    </a>
+                    <a
+                      href="#/community"
+                      onClick={(e) => { e.preventDefault(); handleNavClick('community'); }}
+                      className="block px-3 py-2 text-[11px] font-bold text-slate-300 hover:text-[#F2B705] hover:bg-slate-800/60 rounded-md transition-colors"
+                    >
+                      • Communities
+                    </a>
+                    <a
+                      href="#/campus-life?tab=events"
+                      onClick={(e) => { e.preventDefault(); window.location.hash = '#/campus-life?tab=events'; setMobileMenuOpen(false); }}
+                      className="block px-3 py-2 text-[11px] font-bold text-slate-300 hover:text-[#F2B705] hover:bg-slate-800/60 rounded-md transition-colors"
+                    >
+                      • Events
+                    </a>
+                    <a
+                      href="#/campus-life?tab=activities"
+                      onClick={(e) => { e.preventDefault(); window.location.hash = '#/campus-life?tab=activities'; setMobileMenuOpen(false); }}
+                      className="block px-3 py-2 text-[11px] font-bold text-slate-300 hover:text-[#F2B705] hover:bg-slate-800/60 rounded-md transition-colors"
+                    >
+                      • Activities
+                    </a>
+                    <a
+                      href="#/innovation"
+                      onClick={(e) => { e.preventDefault(); handleNavClick('innovation'); }}
+                      className="block px-3 py-2 text-[11px] font-bold text-slate-300 hover:text-[#F2B705] hover:bg-slate-800/60 rounded-md transition-colors"
+                    >
+                      • Student Projects
+                    </a>
+                    <a
+                      href="#/campus-life?tab=achievements"
+                      onClick={(e) => { e.preventDefault(); window.location.hash = '#/campus-life?tab=achievements'; setMobileMenuOpen(false); }}
+                      className="block px-3 py-2 text-[11px] font-bold text-slate-300 hover:text-[#F2B705] hover:bg-slate-800/60 rounded-md transition-colors"
+                    >
+                      • Achievements
+                    </a>
+                  </div>
+                </div>
+              );
+            }
+
             return (
               <button
                 key={item.id}
@@ -253,3 +400,4 @@ export const Navbar: React.FC<NavbarProps> = ({
     </header>
   );
 };
+

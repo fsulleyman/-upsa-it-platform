@@ -10,6 +10,8 @@ export interface HashState {
   courseCode: string | null;
   level: string | null;
   semester: string | null;
+  tab: string | null;
+  clubId: string | null;
 }
 
 export function parseHash(hash: string): HashState {
@@ -23,7 +25,9 @@ export function parseHash(hash: string): HashState {
       categoryFilter: null,
       courseCode: null,
       level: null,
-      semester: null
+      semester: null,
+      tab: null,
+      clubId: null
     };
   }
 
@@ -38,6 +42,7 @@ export function parseHash(hash: string): HashState {
     'faculty',
     'learning-hub',
     'hub',
+    'campus-life',
     'innovation',
     'community',
     'contact',
@@ -62,7 +67,9 @@ export function parseHash(hash: string): HashState {
     categoryFilter: queryParams.get('category'),
     courseCode: queryParams.get('course'),
     level: validLevel,
-    semester: validSem
+    semester: validSem,
+    tab: queryParams.get('tab'),
+    clubId: queryParams.get('club')
   };
 }
 
@@ -76,6 +83,8 @@ export function buildHash(state: Partial<HashState>): string {
   const courseCode = state.courseCode !== undefined ? state.courseCode : current.courseCode;
   const level = state.level !== undefined ? state.level : current.level;
   const semester = state.semester !== undefined ? state.semester : current.semester;
+  const tab = state.tab !== undefined ? state.tab : current.tab;
+  const clubId = state.clubId !== undefined ? state.clubId : current.clubId;
 
   const params = new URLSearchParams();
   if (modal) params.set('modal', modal);
@@ -85,6 +94,8 @@ export function buildHash(state: Partial<HashState>): string {
   if (level && level !== 'All') params.set('level', level);
   if (semester && semester !== 'All') params.set('semester', semester);
   if (courseCode) params.set('course', courseCode.toUpperCase());
+  if (tab) params.set('tab', tab);
+  if (clubId) params.set('club', clubId);
 
   const queryString = params.toString();
   return `#${section}${queryString ? `?${queryString}` : ''}`;

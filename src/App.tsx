@@ -15,6 +15,7 @@ import { InnovationPreview } from './components/sections/InnovationPreview';
 import { FacultyPage } from './pages/FacultyPage';
 import { LearningHubPage } from './pages/LearningHubPage';
 import { DevelopersHubPage } from './pages/DevelopersHubPage';
+import { CampusLifePage } from './pages/CampusLifePage';
 import { CommunityPage } from './pages/CommunityPage';
 import { InnovationPage } from './pages/InnovationPage';
 import { ContactPage } from './pages/ContactPage';
@@ -52,6 +53,7 @@ function AppContent() {
   const isFacultyRoute = hashState.section === 'faculty';
   const isLearningHubRoute = hashState.section === 'learning-hub';
   const isHubRoute = hashState.section === 'hub';
+  const isCampusLifeRoute = hashState.section === 'campus-life';
   const isCommunityRoute = hashState.section === 'community';
   const isInnovationRoute = hashState.section === 'innovation';
   const isContactRoute = hashState.section === 'contact';
@@ -70,6 +72,9 @@ function AppContent() {
       window.scrollTo({ top: 0, behavior: 'instant' });
     } else if (isHubRoute) {
       document.title = 'UPSA Developers Hub | UPSA IT Studies';
+      window.scrollTo({ top: 0, behavior: 'instant' });
+    } else if (isCampusLifeRoute) {
+      document.title = 'Campus Life & Student Societies | UPSA IT Studies';
       window.scrollTo({ top: 0, behavior: 'instant' });
     } else if (isCommunityRoute) {
       document.title = 'Community & Professional Growth | UPSA IT Studies';
@@ -92,7 +97,7 @@ function AppContent() {
         window.scrollTo({ top: 0, behavior: 'smooth' });
       }
     }
-  }, [hashState.section, isAdminRoute, isFacultyRoute, isLearningHubRoute, isHubRoute, isCommunityRoute, isInnovationRoute, isContactRoute, isResetPasswordRoute]);
+  }, [hashState.section, isAdminRoute, isFacultyRoute, isLearningHubRoute, isHubRoute, isCampusLifeRoute, isCommunityRoute, isInnovationRoute, isContactRoute, isResetPasswordRoute]);
 
   const handleNavigateSection = (section: NavSectionId) => {
     updateHash({ section, modal: null, programmeId: null, projectId: null });
@@ -160,6 +165,15 @@ function AppContent() {
             onNavigate={handleNavigateSection}
             onOpenJoinModal={() => updateHash({ section: 'hub', modal: 'join-hub' })}
             hubDetails={hubDetails}
+          />
+        ) : isCampusLifeRoute ? (
+          <CampusLifePage
+            onNavigate={handleNavigateSection}
+            onOpenJoinModal={() => updateHash({ section: 'campus-life', modal: 'join-hub' })}
+            onSelectProject={handleSelectProject}
+            activeTab={hashState.tab}
+            activeClubId={hashState.clubId}
+            projects={projects}
           />
         ) : isCommunityRoute ? (
           <CommunityPage onNavigate={handleNavigateSection} />
