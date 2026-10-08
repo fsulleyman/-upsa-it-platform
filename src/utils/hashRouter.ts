@@ -32,7 +32,8 @@ export function parseHash(hash: string): HashState {
   }
 
   const parts = cleanHash.split('?');
-  const path = parts[0] || 'home';
+  const rawPath = (parts[0] || '').replace(/^\/+|\/+$/g, '');
+  const path = rawPath || 'home';
   const queryParams = new URLSearchParams(parts[1] || '');
 
   const validSections: NavSectionId[] = [
@@ -75,16 +76,18 @@ export function parseHash(hash: string): HashState {
 
 export function buildHash(state: Partial<HashState>): string {
   const current = parseHash(window.location.hash);
+  const isSectionChanging = state.section !== undefined && state.section !== current.section;
+
   const section = state.section !== undefined ? state.section : current.section;
-  const modal = state.modal !== undefined ? state.modal : current.modal;
-  const programmeId = state.programmeId !== undefined ? state.programmeId : current.programmeId;
-  const projectId = state.projectId !== undefined ? state.projectId : current.projectId;
-  const categoryFilter = state.categoryFilter !== undefined ? state.categoryFilter : current.categoryFilter;
-  const courseCode = state.courseCode !== undefined ? state.courseCode : current.courseCode;
-  const level = state.level !== undefined ? state.level : current.level;
-  const semester = state.semester !== undefined ? state.semester : current.semester;
-  const tab = state.tab !== undefined ? state.tab : current.tab;
-  const clubId = state.clubId !== undefined ? state.clubId : current.clubId;
+  const modal = state.modal !== undefined ? state.modal : (isSectionChanging ? null : current.modal);
+  const programmeId = state.programmeId !== undefined ? state.programmeId : (isSectionChanging ? null : current.programmeId);
+  const projectId = state.projectId !== undefined ? state.projectId : (isSectionChanging ? null : current.projectId);
+  const categoryFilter = state.categoryFilter !== undefined ? state.categoryFilter : (isSectionChanging ? null : current.categoryFilter);
+  const courseCode = state.courseCode !== undefined ? state.courseCode : (isSectionChanging ? null : current.courseCode);
+  const level = state.level !== undefined ? state.level : (isSectionChanging ? null : current.level);
+  const semester = state.semester !== undefined ? state.semester : (isSectionChanging ? null : current.semester);
+  const tab = state.tab !== undefined ? state.tab : (isSectionChanging ? null : current.tab);
+  const clubId = state.clubId !== undefined ? state.clubId : (isSectionChanging ? null : current.clubId);
 
   const params = new URLSearchParams();
   if (modal) params.set('modal', modal);
@@ -98,7 +101,7 @@ export function buildHash(state: Partial<HashState>): string {
   if (clubId) params.set('club', clubId);
 
   const queryString = params.toString();
-  return `#${section}${queryString ? `?${queryString}` : ''}`;
+  return `#/${section}${queryString ? `?${queryString}` : ''}`;
 }
 
 export function useHashLocation(): [HashState, (update: Partial<HashState>) => void] {
