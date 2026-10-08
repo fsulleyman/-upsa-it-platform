@@ -36,29 +36,21 @@ export const FacultyPage: React.FC<FacultyPageProps> = ({ faculty, onNavigate })
   return (
     <div className="space-y-12 pb-16">
       {/* Header Banner */}
-      <section className="bg-[#002244] border-b-4 border-[#F2B705] text-white py-4 px-4 sm:px-6 lg:px-8 overflow-hidden">
-        <div className="max-w-7xl mx-auto space-y-3">
-          <div className="flex items-center justify-between flex-wrap gap-4">
-            <div className="flex items-center gap-2 text-xs font-bold text-[#F2B705] uppercase tracking-wider font-mono">
-              <Users className="w-4 h-4" />
-              <span>DEPARTMENT OF INFORMATION TECHNOLOGY STUDIES</span>
-            </div>
-            <button
-              onClick={() => onNavigate('home')}
-              className="text-xs font-bold text-slate-200 hover:text-white flex items-center gap-1 bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg transition-colors cursor-pointer"
-            >
-              ← Back to Main Page
-            </button>
-          </div>
+      <section className="relative w-full border-b-4 border-[#F2B705] bg-slate-900 overflow-hidden">
+        {/* Back to Main Page Floating Button */}
+        <button
+          onClick={() => onNavigate('home')}
+          className="absolute top-4 left-4 sm:top-6 sm:left-8 z-20 text-xs font-bold text-slate-100 hover:text-white bg-slate-950/70 hover:bg-slate-950/90 backdrop-blur-md px-3.5 py-2 rounded-lg border border-white/20 shadow-lg transition-all cursor-pointer flex items-center gap-1.5"
+        >
+          ← Back to Main Page
+        </button>
 
-          <div className="w-full rounded-2xl overflow-hidden shadow-lg border border-white/10 bg-slate-900">
-            <img
-              src="/images/banner_faculty_directory.png"
-              alt="Faculty & Staff Directory Banner"
-              className="w-full h-auto object-cover object-center max-h-[380px]"
-            />
-          </div>
-        </div>
+        {/* Edge-to-Edge Full-Width Responsive Banner Image */}
+        <img
+          src="/images/banner_faculty_directory.png"
+          alt="Faculty & Staff Directory Banner"
+          className="w-full h-auto object-cover object-center max-h-[420px] block"
+        />
       </section>
 
       {/* Search & Filter Bar */}
