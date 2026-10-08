@@ -4,7 +4,6 @@ import { useHashLocation } from '../utils/hashRouter';
 import { trackResourceEvent } from '../lib/analyticsTracker';
 import type { Course, LearningResource, NavSectionId } from '../types';
 import {
-  GraduationCap,
   BookOpen,
   Search,
   FileText,
@@ -118,7 +117,7 @@ function isValidHttpUrl(urlStr?: string | null): boolean {
   }
 }
 
-export const LearningHubPage: React.FC<LearningHubPageProps> = () => {
+export const LearningHubPage: React.FC<LearningHubPageProps> = ({ onNavigate }) => {
   const { courses, resources, loading, error } = useLearningResources();
   const [hashState, updateHash] = useHashLocation();
 
@@ -328,25 +327,30 @@ export const LearningHubPage: React.FC<LearningHubPageProps> = () => {
   return (
     <div className="min-h-screen bg-slate-950 text-white font-sans selection:bg-[#F2B705] selection:text-[#003366]">
       {/* Header Banner */}
-      <div className="relative bg-[#002244] border-b border-[#003366] text-white py-12 px-4 sm:px-6 lg:px-8 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-[#001830] via-[#002244] to-[#003366] opacity-90" />
-        <div className="absolute -right-10 -bottom-10 opacity-10 pointer-events-none">
-          <GraduationCap className="w-96 h-96 text-[#F2B705]" />
-        </div>
-
-        <div className="relative max-w-7xl mx-auto space-y-4">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#003366]/80 text-[#F2B705] border border-[#F2B705]/40 text-xs font-bold font-mono uppercase tracking-wider">
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>UPSA FITCS • UNDERGRADUATE ACADEMIC REPOSITORY</span>
+      <div className="relative bg-[#002244] border-b border-[#003366] text-white py-4 px-4 sm:px-6 lg:px-8 overflow-hidden">
+        <div className="relative max-w-7xl mx-auto space-y-3">
+          <div className="flex items-center justify-between flex-wrap gap-4">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#003366]/80 text-[#F2B705] border border-[#F2B705]/40 text-xs font-bold font-mono uppercase tracking-wider">
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>UPSA FITCS • UNDERGRADUATE ACADEMIC REPOSITORY</span>
+            </div>
+            {onNavigate && (
+              <button
+                onClick={() => onNavigate('home')}
+                className="text-xs font-bold text-slate-200 hover:text-white flex items-center gap-1 bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg transition-colors cursor-pointer"
+              >
+                ← Back to Main Page
+              </button>
+            )}
           </div>
 
-          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white tracking-tight">
-            IT Learning Hub & Resource Repository
-          </h1>
-
-          <p className="max-w-3xl text-slate-300 text-sm sm:text-base leading-relaxed font-medium">
-            Official academic repository for the <strong className="text-white">BSc Information Technology Management</strong> programme at the Department of Information Technology Studies, UPSA Accra. Access lecture slides, comprehensive notes, assignments, and past examination questions organized by academic level and semester.
-          </p>
+          <div className="w-full rounded-2xl overflow-hidden shadow-lg border border-white/10 bg-slate-900">
+            <img
+              src="/images/banner_learning_hub_page.png"
+              alt="IT Learning Hub & Resource Repository Banner"
+              className="w-full h-auto object-cover object-center max-h-[380px]"
+            />
+          </div>
         </div>
       </div>
 

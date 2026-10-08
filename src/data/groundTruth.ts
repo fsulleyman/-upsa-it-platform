@@ -346,6 +346,15 @@ export const FACULTY_DIRECTORY: FacultyMember[] = [
 
 export const PROMO_SLIDES: PromoSlide[] = [
   {
+    id: "learning-hub-repository",
+    badgeText: "ACADEMIC REPOSITORY",
+    title: "IT Learning Hub & Resource Repository",
+    subtext: "A central space for study materials, lecture slides, academic resources and learning support for UPSA IT Studies students.",
+    imageUrl: "/images/banner_learning_hub_promo.png",
+    ctaText: "Explore Learning Hub",
+    ctaLink: "learning-hub"
+  },
+  {
     id: "congregation-2026",
     badgeText: "14TH CONGREGATION CEREMONY",
     title: "2026 Graduating Class — Undergraduate & Diploma",
@@ -382,4 +391,5 @@ export const PROMO_SLIDES: PromoSlide[] = [
     ctaLink: "community"
   }
 ];
+
 

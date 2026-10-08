@@ -36,7 +36,7 @@ export const FacultyPage: React.FC<FacultyPageProps> = ({ faculty, onNavigate })
   return (
     <div className="space-y-12 pb-16">
       {/* Header Banner */}
-      <section className="bg-[#003366] text-white py-14 px-4 sm:px-6 lg:px-8 border-b-4 border-[#F2B705]">
+      <section className="bg-[#002244] border-b-4 border-[#F2B705] text-white py-4 px-4 sm:px-6 lg:px-8 overflow-hidden">
         <div className="max-w-7xl mx-auto space-y-3">
           <div className="flex items-center justify-between flex-wrap gap-4">
             <div className="flex items-center gap-2 text-xs font-bold text-[#F2B705] uppercase tracking-wider font-mono">
@@ -45,15 +45,19 @@ export const FacultyPage: React.FC<FacultyPageProps> = ({ faculty, onNavigate })
             </div>
             <button
               onClick={() => onNavigate('home')}
-              className="text-xs font-bold text-slate-200 hover:text-white flex items-center gap-1 bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg transition-colors"
+              className="text-xs font-bold text-slate-200 hover:text-white flex items-center gap-1 bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg transition-colors cursor-pointer"
             >
               ← Back to Main Page
             </button>
           </div>
-          <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight">Faculty & Staff Directory</h1>
-          <p className="text-slate-200 text-sm sm:text-base max-w-3xl leading-relaxed">
-            Meet the academic, research, and teaching staff guiding Information Technology Studies at the University of Professional Studies, Accra.
-          </p>
+
+          <div className="w-full rounded-2xl overflow-hidden shadow-lg border border-white/10 bg-slate-900">
+            <img
+              src="/images/banner_faculty_directory.png"
+              alt="Faculty & Staff Directory Banner"
+              className="w-full h-auto object-cover object-center max-h-[380px]"
+            />
+          </div>
         </div>
       </section>
 
