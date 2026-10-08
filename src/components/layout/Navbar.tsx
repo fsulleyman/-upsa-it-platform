@@ -67,6 +67,31 @@ export const Navbar: React.FC<NavbarProps> = ({
     } else {
       displayNavItems.push(hubItem);
     }
+    seenSections.add('learning-hub');
+  }
+
+  // Guarantee INNOVATION is present in displayNavItems if omitted from CMS nav items
+  if (!seenSections.has('innovation')) {
+    const devHubIndex = displayNavItems.findIndex((item) => item.id === 'hub');
+    const innovationItem = { id: 'innovation' as NavSectionId, label: 'INNOVATION' };
+    if (devHubIndex !== -1) {
+      displayNavItems.splice(devHubIndex + 1, 0, innovationItem);
+    } else {
+      displayNavItems.push(innovationItem);
+    }
+    seenSections.add('innovation');
+  }
+
+  // Guarantee CONTACT is present in displayNavItems if omitted from CMS nav items
+  if (!seenSections.has('contact')) {
+    const communityIndex = displayNavItems.findIndex((item) => item.id === 'community');
+    const contactItem = { id: 'contact' as NavSectionId, label: 'CONTACT' };
+    if (communityIndex !== -1) {
+      displayNavItems.splice(communityIndex + 1, 0, contactItem);
+    } else {
+      displayNavItems.push(contactItem);
+    }
+    seenSections.add('contact');
   }
 
 

@@ -11,12 +11,13 @@ import { PromoSlider } from './components/common/PromoSlider';
 import { HeroSection } from './components/sections/HeroSection';
 import { AboutSection } from './components/sections/AboutSection';
 import { AcademicsSection } from './components/sections/AcademicsSection';
-import { InnovationShowcase } from './components/sections/InnovationShowcase';
-import { ContactSection } from './components/sections/ContactSection';
+import { InnovationPreview } from './components/sections/InnovationPreview';
 import { FacultyPage } from './pages/FacultyPage';
 import { LearningHubPage } from './pages/LearningHubPage';
 import { DevelopersHubPage } from './pages/DevelopersHubPage';
 import { CommunityPage } from './pages/CommunityPage';
+import { InnovationPage } from './pages/InnovationPage';
+import { ContactPage } from './pages/ContactPage';
 import { ResetPasswordPage } from './pages/ResetPasswordPage';
 
 import { JoinHubModal } from './components/modals/JoinHubModal';
@@ -52,6 +53,8 @@ function AppContent() {
   const isLearningHubRoute = hashState.section === 'learning-hub';
   const isHubRoute = hashState.section === 'hub';
   const isCommunityRoute = hashState.section === 'community';
+  const isInnovationRoute = hashState.section === 'innovation';
+  const isContactRoute = hashState.section === 'contact';
   const isResetPasswordRoute = hashState.section === 'reset-password';
 
   useEffect(() => {
@@ -71,6 +74,12 @@ function AppContent() {
     } else if (isCommunityRoute) {
       document.title = 'Community & Professional Growth | UPSA IT Studies';
       window.scrollTo({ top: 0, behavior: 'instant' });
+    } else if (isInnovationRoute) {
+      document.title = 'Student Innovations & Systems | UPSA IT Studies';
+      window.scrollTo({ top: 0, behavior: 'instant' });
+    } else if (isContactRoute) {
+      document.title = 'Contact & Secretariat | UPSA IT Studies';
+      window.scrollTo({ top: 0, behavior: 'instant' });
     } else if (isResetPasswordRoute) {
       document.title = 'Password Recovery | UPSA IT Studies';
       window.scrollTo({ top: 0, behavior: 'instant' });
@@ -83,7 +92,7 @@ function AppContent() {
         window.scrollTo({ top: 0, behavior: 'smooth' });
       }
     }
-  }, [hashState.section, isAdminRoute, isFacultyRoute, isLearningHubRoute, isHubRoute, isCommunityRoute, isResetPasswordRoute]);
+  }, [hashState.section, isAdminRoute, isFacultyRoute, isLearningHubRoute, isHubRoute, isCommunityRoute, isInnovationRoute, isContactRoute, isResetPasswordRoute]);
 
   const handleNavigateSection = (section: NavSectionId) => {
     updateHash({ section, modal: null, programmeId: null, projectId: null });
@@ -154,6 +163,20 @@ function AppContent() {
           />
         ) : isCommunityRoute ? (
           <CommunityPage onNavigate={handleNavigateSection} />
+        ) : isInnovationRoute ? (
+          <InnovationPage
+            projects={projects}
+            onSelectProject={handleSelectProject}
+            activeCategoryFilter={hashState.categoryFilter}
+            onFilterCategory={handleFilterCategory}
+            onNavigate={handleNavigateSection}
+          />
+        ) : isContactRoute ? (
+          <ContactPage
+            institutionInfo={institutionInfo}
+            footerContent={footerContent}
+            onNavigate={handleNavigateSection}
+          />
         ) : (
           <>
             <div id="home">
@@ -165,14 +188,11 @@ function AppContent() {
 
             <AcademicsSection programmes={programmes} onSelectProgramme={handleSelectProgramme} />
 
-            <InnovationShowcase
+            <InnovationPreview
               projects={projects}
               onSelectProject={handleSelectProject}
-              activeCategoryFilter={hashState.categoryFilter}
-              onFilterCategory={handleFilterCategory}
+              onNavigate={handleNavigateSection}
             />
-
-            <ContactSection institutionInfo={institutionInfo} footerContent={footerContent} />
           </>
         )}
       </main>
