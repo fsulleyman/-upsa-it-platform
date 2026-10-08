@@ -14,7 +14,6 @@ import {
   Layers,
   Calendar,
   Clock,
-  Sparkles,
   ChevronRight,
   Download,
   Copy,
@@ -327,32 +326,24 @@ export const LearningHubPage: React.FC<LearningHubPageProps> = ({ onNavigate }) 
   return (
     <div className="min-h-screen bg-slate-950 text-white font-sans selection:bg-[#F2B705] selection:text-[#003366]">
       {/* Header Banner */}
-      <div className="relative bg-[#002244] border-b border-[#003366] text-white py-4 px-4 sm:px-6 lg:px-8 overflow-hidden">
-        <div className="relative max-w-7xl mx-auto space-y-3">
-          <div className="flex items-center justify-between flex-wrap gap-4">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#003366]/80 text-[#F2B705] border border-[#F2B705]/40 text-xs font-bold font-mono uppercase tracking-wider">
-              <Sparkles className="w-3.5 h-3.5" />
-              <span>UPSA FITCS • UNDERGRADUATE ACADEMIC REPOSITORY</span>
-            </div>
-            {onNavigate && (
-              <button
-                onClick={() => onNavigate('home')}
-                className="text-xs font-bold text-slate-200 hover:text-white flex items-center gap-1 bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg transition-colors cursor-pointer"
-              >
-                ← Back to Main Page
-              </button>
-            )}
-          </div>
+      <section className="relative w-full border-b border-[#003366] bg-slate-900 overflow-hidden">
+        {/* Back to Main Page Floating Button */}
+        {onNavigate && (
+          <button
+            onClick={() => onNavigate('home')}
+            className="absolute top-4 left-4 sm:left-auto sm:top-6 sm:right-8 z-20 text-xs font-bold text-slate-100 hover:text-white bg-slate-950/70 hover:bg-slate-950/90 backdrop-blur-md px-3.5 py-2 rounded-lg border border-white/20 shadow-lg transition-all cursor-pointer flex items-center gap-1.5"
+          >
+            ← Back to Main Page
+          </button>
+        )}
 
-          <div className="w-full rounded-2xl overflow-hidden shadow-lg border border-white/10 bg-slate-900">
-            <img
-              src="/images/banner_learning_hub_page.png"
-              alt="IT Learning Hub & Resource Repository Banner"
-              className="w-full h-auto object-cover object-center max-h-[380px]"
-            />
-          </div>
-        </div>
-      </div>
+        {/* Edge-to-Edge Full-Width Responsive Banner Image */}
+        <img
+          src="/images/banner_learning_hub_page.png"
+          alt="IT Learning Hub & Resource Repository Banner"
+          className="w-full h-auto object-cover object-center max-h-[420px] block"
+        />
+      </section>
 
       {/* Main Container */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
